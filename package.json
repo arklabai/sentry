@@ -7,7 +7,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && node scripts/build-extension.js",
-    "package": "npm run build && (cd dist && zip -r ../sentry-ai-v1.0.0.zip .)",
+    "build:chrome": "tsc && node scripts/build-extension.js --target=chrome",
+    "build:firefox": "tsc && node scripts/build-extension.js --target=firefox",
+    "package:chrome": "rm -f sentry-ai-v1.0.0.zip && npm run build:chrome && (cd dist && zip -r ../sentry-ai-v1.0.0.zip .)",
+    "package:firefox": "rm -f sentry-ai-firefox-v1.0.0.zip && npm run build:firefox && (cd dist && zip -r ../sentry-ai-firefox-v1.0.0.zip .)",
+    "package": "npm run package:chrome && npm run package:firefox",
     "preview": "vite preview"
   },
   "dependencies": {

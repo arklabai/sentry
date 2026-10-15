@@ -1,13 +1,26 @@
 import { build } from 'vite';
 import { resolve } from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const rootDir = resolve(__dirname, '..');
 
+// Parse target: --target=chrome (default) or --target=firefox
+const targetArg = process.argv.find((arg) => arg.startsWith('--target='));
+const target = targetArg ? targetArg.split('=')[1].toLowerCase() : 'chrome';
+
 async function buildAll() {
+  console.log(`=== Sentry AI Extension Builder (Target: ${target.toUpperCase()}) ===`);
+
+  const distDir = resolve(rootDir, 'dist');
+  if (fs.existsSync(distDir)) {
+    console.log('--- Cleaning previous dist directory ---');
+    fs.rmSync(distDir, { recursive: true, force: true });
+  }
+
   console.log('--- Step 1: Building Extension Pages & Service Worker ---');
   await build({
     root: rootDir,
@@ -15,7 +28,7 @@ async function buildAll() {
     plugins: [react(), tailwindcss()],
     build: {
       outDir: 'dist',
-      emptyOutDir: true,
+      emptyOutDir: false,
       target: 'esnext',
       rollupOptions: {
         input: {
@@ -68,7 +81,23 @@ async function buildAll() {
     });
   }
 
-  console.log('Build completed successfully! All content scripts are pure standalone IIFE without imports.');
+  console.log('--- Step 3: Finalizing Manifest & Asset Hygiene ---');
+  // Handle Target-Specific Manifest
+  if (target === 'firefox') {
+    const firefoxManifest = resolve(rootDir, 'public/manifest.firefox.json');
+    if (fs.existsSync(firefoxManifest)) {
+      fs.copyFileSync(firefoxManifest, resolve(distDir, 'manifest.json'));
+      console.log('Injected Firefox AMO Manifest (gecko ID + sidebar_action).');
+    }
+  }
+
+  // Remove unwanted manifest.firefox.json from dist if present
+  const distFirefoxManifest = resolve(distDir, 'manifest.firefox.json');
+  if (fs.existsSync(distFirefoxManifest)) {
+    fs.unlinkSync(distFirefoxManifest);
+  }
+
+  console.log(`[SUCCESS] Build completed successfully for ${target.toUpperCase()}!`);
 }
 
 buildAll().catch((err) => {

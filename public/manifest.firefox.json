@@ -1,0 +1,118 @@
+{
+  "manifest_version": 3,
+  "name": "Sentry AI - Be Fearless Online",
+  "short_name": "Sentry AI",
+  "version": "1.0.0",
+  "description": "Sentry AI: Be Fearless Online. Stop surveillance trackers, scramble browser fingerprints, block unconsented AI training scrapers, and manage personal data broker deletions.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "sentry-ai@arklab.ai",
+      "strict_min_version": "128.0"
+    }
+  },
+  "permissions": [
+    "declarativeNetRequest",
+    "storage",
+    "activeTab",
+    "scripting",
+    "alarms",
+    "tabs",
+    "webNavigation",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": ["background/serviceWorker.js"],
+    "type": "module"
+  },
+  "sidebar_action": {
+    "default_panel": "sidepanel.html",
+    "default_title": "Sentry AI - Be Fearless Online",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "action": {
+    "default_title": "Sentry AI - Be Fearless Online",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "commands": {
+    "_execute_sidebar_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "Open Sentry AI Privacy Sidebar"
+    },
+    "activate_element_zapper": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+E",
+        "mac": "Command+Shift+E"
+      },
+      "description": "Activate Sentry AI Element Zapper"
+    }
+  },
+  "options_ui": {
+    "page": "dashboard.html",
+    "open_in_tab": true
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "rules_ai_trackers",
+        "enabled": true,
+        "path": "rules/rules_ai_trackers.json"
+      },
+      {
+        "id": "rules_privacy_headers",
+        "enabled": true,
+        "path": "rules/rules_privacy_headers.json"
+      },
+      {
+        "id": "rules_url_cleaner",
+        "enabled": true,
+        "path": "rules/rules_url_cleaner.json"
+      }
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/canvasDefender.js", "content/urlCleaner.js"],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/aiShield.js", "content/domZapper.js"],
+      "run_at": "document_start",
+      "world": "ISOLATED",
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/*"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
