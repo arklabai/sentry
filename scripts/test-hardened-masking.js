@@ -157,16 +157,32 @@ const sandbox = {
     putImageData() {}
   }
 
-  class MockElement {
+  class MockNode {
+    constructor() {
+      this._text = '';
+    }
+    get textContent() { return this._text; }
+    set textContent(v) { this._text = v; }
+  }
+
+  class MockElement extends MockNode {
+    constructor() {
+      super();
+      this._html = '';
+    }
+    get innerHTML() { return this._html; }
+    set innerHTML(v) { this._html = v; }
     getBoundingClientRect() {
       return { width: 100, height: 50, top: 10, left: 10, right: 110, bottom: 60, x: 10, y: 10 };
     }
   }
 
+  sandbox.Node = MockNode;
   sandbox.Element = MockElement;
   sandbox.HTMLCanvasElement = MockHTMLCanvasElement;
   sandbox.CanvasRenderingContext2D = MockCanvasRenderingContext2D;
   sandbox.WebGL2RenderingContext = MockWebGLContext;
+  sandbox.window.Node = MockNode;
   sandbox.window.Element = MockElement;
   sandbox.window.HTMLCanvasElement = MockHTMLCanvasElement;
   sandbox.window.CanvasRenderingContext2D = MockCanvasRenderingContext2D;
@@ -265,6 +281,16 @@ assert(updatedRenderer.includes('NVIDIA GeForce GTX 1660 SUPER'), `Dynamic GPU p
 // Verify Timezone Spoofed to Europe/London
 const intlResolved = new sandbox.Intl.DateTimeFormat().resolvedOptions();
 assert(intlResolved.timeZone === 'Europe/London', `Timezone dynamically spoofed to Europe/London: ${intlResolved.timeZone}`);
+
+// TEST 8: Verify DOM innerHTML & textContent timezone cloaking (preventing host timezone leak)
+const testEl = new sandbox.Element();
+testEl.innerHTML = '<div id="local-tz">Local Time Zone: Asia/Dhaka</div>';
+assert(!testEl.innerHTML.includes('Asia/Dhaka'), 'innerHTML setter automatically masks host timezone Asia/Dhaka');
+assert(testEl.innerHTML.includes('Europe/London'), 'innerHTML setter replaces host timezone with spoofed Europe/London');
+
+testEl.textContent = 'Host system detected: Asia/Dhaka (live)';
+assert(!testEl.textContent.includes('Asia/Dhaka'), 'textContent setter automatically masks host timezone Asia/Dhaka');
+assert(testEl.textContent.includes('Europe/London'), 'textContent setter replaces host timezone with spoofed Europe/London');
 
 // Wait for promises to settle
 setTimeout(() => {

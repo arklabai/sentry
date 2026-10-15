@@ -611,35 +611,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 function setupContextMenus() {
   if (!chrome.contextMenus) return;
   chrome.contextMenus.removeAll(() => {
-    // 1. Zap Element (uBlock Origin style - targets clicked element or activates zapper)
+    // 1. Single Unified Zap Element (targets right-clicked element or activates interactive zapper)
     chrome.contextMenus.create({
       id: 'sentry-zap-element',
-      title: 'Zap Element (Sentry AI)',
+      title: 'Zap Element',
       contexts: ['all'],
     });
 
-    // 2. Interactive Element Zapper Mode
-    chrome.contextMenus.create({
-      id: 'sentry-zap-mode',
-      title: 'Enter Element Zapper Mode',
-      contexts: ['page', 'frame'],
-    });
-
-    // 3. Copy Untrackable Link (Scrubbed of UTMs, fbclid, gclid, affiliate tags)
+    // 2. Copy Untrackable Link (Scrubbed of UTMs, fbclid, gclid, affiliate tags)
     chrome.contextMenus.create({
       id: 'sentry-copy-untrackable-link',
       title: 'Copy Untrackable Link',
       contexts: ['link'],
     });
 
-    // 4. Copy Untrackable Page Link
-    chrome.contextMenus.create({
-      id: 'sentry-copy-page-untrackable-link',
-      title: 'Copy Untrackable Page Link',
-      contexts: ['page'],
-    });
-
-    // 5. Open Untrackable Link in New Tab
+    // 3. Open Untrackable Link in New Tab
     chrome.contextMenus.create({
       id: 'sentry-open-clean-link',
       title: 'Open Untrackable Link in New Tab',
@@ -647,6 +633,12 @@ function setupContextMenus() {
     });
   });
 }
+
+// Ensure context menus are cleanly set up on worker evaluation and browser startup
+setupContextMenus();
+chrome.runtime?.onStartup?.addListener(() => {
+  setupContextMenus();
+});
 
 function copyToClipboardWithFeedback(tabId: number, text: string, toastMessage: string) {
   chrome.scripting
@@ -783,23 +775,7 @@ chrome.contextMenus?.onClicked.addListener(async (info, tab) => {
     return;
   }
 
-  // 4. COPY UNTRACKABLE PAGE LINK (Page clicked)
-  if (info.menuItemId === 'sentry-copy-page-untrackable-link') {
-    const rawUrl = info.pageUrl || tab?.url;
-    if (!rawUrl) return;
-    const cleanRes = cleanUrl(rawUrl);
-    const toastMsg = cleanRes.hasChanged
-      ? `Sentry AI: Clean page link copied! (stripped ${cleanRes.strippedParams.length} tracker parameter${cleanRes.strippedParams.length > 1 ? 's' : ''})`
-      : 'Sentry AI: Clean page link copied to clipboard!';
-
-    if (tab?.id) {
-      copyToClipboardWithFeedback(tab.id, cleanRes.cleanedUrl, toastMsg);
-    }
-    recordCleanUrlStats(cleanRes, tab);
-    return;
-  }
-
-  // 5. OPEN UNTRACKABLE LINK IN NEW TAB
+  // 4. OPEN UNTRACKABLE LINK IN NEW TAB
   if (info.menuItemId === 'sentry-open-clean-link') {
     if (!info.linkUrl) return;
     const cleanRes = cleanUrl(info.linkUrl);

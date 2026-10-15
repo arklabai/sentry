@@ -66,11 +66,12 @@ const swPath = path.resolve(__dirname, '../src/background/serviceWorker.ts');
 const swCode = fs.readFileSync(swPath, 'utf8');
 
 assert(swCode.includes("id: 'sentry-zap-element'"), "Context menu contains 'sentry-zap-element'");
-assert(swCode.includes("title: 'Zap Element (Sentry AI)'"), "Context menu title 'Zap Element (Sentry AI)' configured");
+assert(swCode.includes("title: 'Zap Element'"), "Context menu title 'Zap Element' configured (clean without brand suffix)");
 assert(swCode.includes("contexts: ['all']"), "Zap Element context menu configured for all contexts (['all'])");
+assert(!swCode.includes("id: 'sentry-zap-mode'"), "Duplicate zap context menu item is completely eliminated");
 assert(swCode.includes("id: 'sentry-copy-untrackable-link'"), "Context menu contains 'sentry-copy-untrackable-link'");
 assert(swCode.includes("title: 'Copy Untrackable Link'"), "Context menu title 'Copy Untrackable Link' configured");
-assert(swCode.includes("id: 'sentry-copy-page-untrackable-link'"), "Context menu contains 'sentry-copy-page-untrackable-link'");
+assert(!swCode.includes("id: 'sentry-copy-page-untrackable-link'"), "Page-level copy untrackable link is removed to prevent menu clutter");
 assert(swCode.includes("id: 'sentry-open-clean-link'"), "Context menu contains 'sentry-open-clean-link'");
 
 // =========================================================================

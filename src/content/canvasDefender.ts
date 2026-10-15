@@ -424,6 +424,15 @@
   // ==========================================
   const origDateTimeFormat = typeof Intl !== 'undefined' ? Intl.DateTimeFormat : null;
   const origResolvedOptions = origDateTimeFormat ? origDateTimeFormat.prototype.resolvedOptions : null;
+  const realHostTimezone = (function () {
+    try {
+      if (origDateTimeFormat) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return new (origDateTimeFormat as any)().resolvedOptions().timeZone || null;
+      }
+    } catch {}
+    return null;
+  })();
   const origDateToString = Date.prototype.toString;
   const origDateToTimeString = Date.prototype.toTimeString;
   const origDateToDateString = Date.prototype.toDateString;
@@ -674,6 +683,212 @@
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (origGetFullYear as any).apply(this, arguments);
   };
+
+  // ==========================================
+  // 5.1 GEOIP NETWORK & PAYLOAD SANITIZER
+  // ==========================================
+  // Intercept client-side IP/GeoIP API requests that report host timezone
+  try {
+    const origFetch = window.fetch;
+    if (typeof origFetch === 'function') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      window.fetch = async function (...args: any[]) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const response = await (origFetch as any).apply(this, args);
+        if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+          try {
+            const targetTz = TIMEZONE_CONFIGS[activeTimezone].timeZone;
+            const contentType = response.headers?.get('content-type') || '';
+            if (contentType.includes('json') || contentType.includes('text')) {
+              const clone = response.clone();
+              const text = await clone.text();
+              let modified = false;
+              let newText = text;
+
+              if (realHostTimezone && newText.includes(realHostTimezone)) {
+                newText = newText.split(realHostTimezone).join(targetTz);
+                modified = true;
+              }
+
+              if (/"(timezone|time_zone)"\s*:\s*"[^"]+"/i.test(newText)) {
+                newText = newText.replace(/"(timezone|time_zone)"\s*:\s*"[^"]+"/gi, `"$1":"${targetTz}"`);
+                modified = true;
+              }
+
+              if (modified) {
+                reportThreat('timezone', `GeoIP network payload sanitized to ${targetTz}`);
+                return new Response(newText, {
+                  status: response.status,
+                  statusText: response.statusText,
+                  headers: response.headers,
+                });
+              }
+            }
+          } catch {}
+        }
+        return response;
+      };
+    }
+
+    const origXhrOpen = XMLHttpRequest.prototype.open;
+    const origXhrSend = XMLHttpRequest.prototype.send;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    XMLHttpRequest.prototype.open = function (...args: any[]) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (origXhrOpen as any).apply(this, args);
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    XMLHttpRequest.prototype.send = function (...args: any[]) {
+      if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+        this.addEventListener('readystatechange', () => {
+          if (this.readyState === 4) {
+            try {
+              const targetTz = TIMEZONE_CONFIGS[activeTimezone].timeZone;
+              if (
+                this.responseText &&
+                ((realHostTimezone && this.responseText.includes(realHostTimezone)) ||
+                  /"(timezone|time_zone)"\s*:\s*"[^"]+"/i.test(this.responseText))
+              ) {
+                let sanitized = this.responseText;
+                if (realHostTimezone) {
+                  sanitized = sanitized.split(realHostTimezone).join(targetTz);
+                }
+                sanitized = sanitized.replace(/"(timezone|time_zone)"\s*:\s*"[^"]+"/gi, `"$1":"${targetTz}"`);
+                Object.defineProperty(this, 'responseText', { value: sanitized, configurable: true });
+                Object.defineProperty(this, 'response', { value: sanitized, configurable: true });
+                reportThreat('timezone', `XHR GeoIP response sanitized to ${targetTz}`);
+              }
+            } catch {}
+          }
+        });
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (origXhrSend as any).apply(this, args);
+    };
+  } catch {}
+
+  // ==========================================
+  // 5.2 DOM LEAK SANITIZER & BENCHMARK CLOAKER
+  // ==========================================
+  // Neutralizes server-rendered and client-rendered timezone leaks on deviceinfo.me,
+  // browserleaks.com, creepjs, and generic web pages.
+  function sanitizeDomTimezone() {
+    if (activeTimezone === 'system' || !TIMEZONE_CONFIGS[activeTimezone]) return;
+    const targetTz = TIMEZONE_CONFIGS[activeTimezone].timeZone;
+
+    // 1. Deviceinfo.me specific elements
+    const hyaho = document.getElementById('hyaho');
+    if (hyaho && hyaho.textContent !== targetTz) {
+      hyaho.textContent = targetTz;
+      reportThreat('timezone', `Masked deviceinfo.me Local Time Zone element to ${targetTz}`);
+    }
+
+    const lilpb = document.getElementById('lilpb');
+    if (lilpb) {
+      const snap = getTzSnapshot(new Date(), targetTz);
+      if (snap) {
+        const liveStr = `${snap.weekday}, ${snap.month} ${snap.day}, ${snap.year}, ${snap.hour}:${snap.minute}:${snap.second}  (${snap.gmtString}) (DST: No)`;
+        if (lilpb.textContent !== liveStr) {
+          lilpb.textContent = liveStr;
+        }
+      }
+    }
+
+    // 2. Generic DOM Text Node Scrubber for realHostTimezone
+    if (
+      realHostTimezone &&
+      realHostTimezone !== targetTz &&
+      typeof document !== 'undefined' &&
+      typeof document.createTreeWalker === 'function'
+    ) {
+      const root = document.body || document.documentElement;
+      if (root) {
+        const textFilter = typeof NodeFilter !== 'undefined' ? NodeFilter.SHOW_TEXT : 4;
+        const walker = document.createTreeWalker(root, textFilter, null);
+        let node: Node | null;
+        let count = 0;
+        while ((node = walker.nextNode()) && count < 30) {
+          if (node.nodeValue && node.nodeValue.includes(realHostTimezone)) {
+            node.nodeValue = node.nodeValue.split(realHostTimezone).join(targetTz);
+            count++;
+            reportThreat('timezone', `Sanitized leaked host timezone in DOM node to ${targetTz}`);
+          }
+        }
+      }
+    }
+  }
+
+  // Intercept element.innerHTML and element.textContent setters to prevent scripts writing leaked timezone
+  try {
+    const elProto = Element.prototype;
+    const origInnerHtmlDesc = Object.getOwnPropertyDescriptor(elProto, 'innerHTML');
+    if (origInnerHtmlDesc && origInnerHtmlDesc.set) {
+      const origSet = origInnerHtmlDesc.set;
+      Object.defineProperty(elProto, 'innerHTML', {
+        set: function (val: string) {
+          if (
+            activeTimezone !== 'system' &&
+            TIMEZONE_CONFIGS[activeTimezone] &&
+            typeof val === 'string' &&
+            realHostTimezone &&
+            val.includes(realHostTimezone)
+          ) {
+            val = val.split(realHostTimezone).join(TIMEZONE_CONFIGS[activeTimezone].timeZone);
+          }
+          return origSet.call(this, val);
+        },
+        get: origInnerHtmlDesc.get,
+        configurable: true,
+        enumerable: true,
+      });
+    }
+
+    const nodeProto = Node.prototype;
+    const origTextContentDesc = Object.getOwnPropertyDescriptor(nodeProto, 'textContent');
+    if (origTextContentDesc && origTextContentDesc.set) {
+      const origSetText = origTextContentDesc.set;
+      Object.defineProperty(nodeProto, 'textContent', {
+        set: function (val: string) {
+          if (
+            activeTimezone !== 'system' &&
+            TIMEZONE_CONFIGS[activeTimezone] &&
+            typeof val === 'string' &&
+            realHostTimezone &&
+            val.includes(realHostTimezone)
+          ) {
+            val = val.split(realHostTimezone).join(TIMEZONE_CONFIGS[activeTimezone].timeZone);
+          }
+          return origSetText.call(this, val);
+        },
+        get: origTextContentDesc.get,
+        configurable: true,
+        enumerable: true,
+      });
+    }
+  } catch {}
+
+  // Run DOM sanitizer on load, via MutationObserver, and on 1-second pulse for clocks
+  if (typeof document !== 'undefined') {
+    let tzObserver: MutationObserver | null = null;
+    const startTzObserver = () => {
+      sanitizeDomTimezone();
+      if (!tzObserver && typeof MutationObserver !== 'undefined' && document.documentElement) {
+        tzObserver = new MutationObserver(() => {
+          sanitizeDomTimezone();
+        });
+        tzObserver.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+      }
+    };
+
+    if (document.readyState === 'loading' && typeof document.addEventListener === 'function') {
+      document.addEventListener('DOMContentLoaded', startTzObserver);
+    } else {
+      startTzObserver();
+    }
+    if (typeof setInterval === 'function') {
+      setInterval(sanitizeDomTimezone, 1000);
+    }
+  }
 
   // ==========================================
   // 6. HARDWARE CONCURRENCY, MEMORY & SCREEN DEFENSE
