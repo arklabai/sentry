@@ -1,0 +1,72 @@
+/**
+ * Sentry AI DeclarativeNetRequest (DNR) Helper
+ * Manages dynamic and session rules for whitelisting and user-level overrides
+ */
+
+const DYNAMIC_RULE_ID_BASE = 20000;
+
+/**
+ * Updates dynamic rules to whitelist or blacklist specific hostnames
+ */
+export async function updateDomainRules(whitelistedDomains: string[]): Promise<void> {
+  if (!chrome.declarativeNetRequest) return;
+
+  // Retrieve existing dynamic rules
+  const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
+  const removeRuleIds = existingRules
+    .filter((r) => r.id >= DYNAMIC_RULE_ID_BASE)
+    .map((r) => r.id);
+
+  // Build new allow rules for whitelisted domains
+  const addRules: chrome.declarativeNetRequest.Rule[] = whitelistedDomains.map(
+    (domain, index) => ({
+      id: DYNAMIC_RULE_ID_BASE + index,
+      priority: 10, // Higher priority than static block rules
+      action: {
+        type: chrome.declarativeNetRequest.RuleActionType.ALLOW,
+      },
+      condition: {
+        initiatorDomains: [domain],
+        resourceTypes: [
+          chrome.declarativeNetRequest.ResourceType.MAIN_FRAME,
+          chrome.declarativeNetRequest.ResourceType.SUB_FRAME,
+          chrome.declarativeNetRequest.ResourceType.STYLESHEET,
+          chrome.declarativeNetRequest.ResourceType.SCRIPT,
+          chrome.declarativeNetRequest.ResourceType.IMAGE,
+          chrome.declarativeNetRequest.ResourceType.FONT,
+          chrome.declarativeNetRequest.ResourceType.OBJECT,
+          chrome.declarativeNetRequest.ResourceType.XMLHTTPREQUEST,
+          chrome.declarativeNetRequest.ResourceType.PING,
+          chrome.declarativeNetRequest.ResourceType.CSP_REPORT,
+          chrome.declarativeNetRequest.ResourceType.MEDIA,
+          chrome.declarativeNetRequest.ResourceType.WEBSOCKET,
+          chrome.declarativeNetRequest.ResourceType.OTHER,
+        ],
+      },
+    })
+  );
+
+  await chrome.declarativeNetRequest.updateDynamicRules({
+    removeRuleIds,
+    addRules,
+  });
+}
+
+/**
+ * Toggles static rulesets on/off (e.g. when Master Shield is toggled)
+ */
+export async function toggleStaticRulesets(enable: boolean): Promise<void> {
+  if (!chrome.declarativeNetRequest) return;
+
+  const rulesetIds = ['rules_ai_trackers', 'rules_privacy_headers'];
+
+  if (enable) {
+    await chrome.declarativeNetRequest.updateEnabledRulesets({
+      enableRulesetIds: rulesetIds,
+    });
+  } else {
+    await chrome.declarativeNetRequest.updateEnabledRulesets({
+      disableRulesetIds: rulesetIds,
+    });
+  }
+}
