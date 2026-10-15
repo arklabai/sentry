@@ -21,6 +21,7 @@ import {
   updateBrokerStatus,
   scheduleBrokerAlarm,
 } from './brokerSync';
+import { cleanUrl, cleanUrls } from '../lib/urlCleaner';
 
 // In-memory per-tab threat statistics
 const tabStatsMap = new Map<number, TabThreatStats>();
@@ -31,13 +32,18 @@ let globalStats: GlobalPrivacyStats = {
   totalFingerprintsScrambled: 0,
   totalAiScrapersBlocked: 0,
   totalElementsZapped: 0,
+  totalUrlsCleaned: 0,
+  totalParamsStripped: 0,
   activeSince: Date.now(),
 };
 
 // Load global stats from storage
 chrome.storage.local.get(['sentry_global_stats']).then((res) => {
   if (res.sentry_global_stats) {
-    globalStats = res.sentry_global_stats;
+    globalStats = {
+      ...globalStats,
+      ...res.sentry_global_stats,
+    };
   }
 });
 
@@ -65,6 +71,8 @@ function getOrCreateTabStats(tabId: number, url: string = ''): TabThreatStats {
       audioFaked: 0,
       webglFaked: 0,
       aiBeaconsBlocked: 0,
+      urlsCleaned: 0,
+      paramsStripped: 0,
       safetyScore: 'A+',
       threatEvents: [],
       networkLogs: [],
@@ -125,6 +133,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       audioFaked: 0,
       webglFaked: 0,
       aiBeaconsBlocked: 0,
+      urlsCleaned: 0,
+      paramsStripped: 0,
       safetyScore: 'A+',
       threatEvents: [],
       networkLogs: [],
@@ -362,6 +372,36 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;
     }
 
+    case 'CLEAN_URL': {
+      const result = cleanUrl(message.url, message.options);
+      if (result.hasChanged) {
+        globalStats.totalUrlsCleaned += 1;
+        globalStats.totalParamsStripped += result.strippedParams.length;
+        saveGlobalStats();
+      }
+      sendResponse(result);
+      return true;
+    }
+
+    case 'CLEAN_URLS': {
+      const results = cleanUrls(message.urls, message.options);
+      let newCleaned = 0;
+      let newStripped = 0;
+      for (const r of results) {
+        if (r.hasChanged) {
+          newCleaned += 1;
+          newStripped += r.strippedParams.length;
+        }
+      }
+      if (newCleaned > 0) {
+        globalStats.totalUrlsCleaned += newCleaned;
+        globalStats.totalParamsStripped += newStripped;
+        saveGlobalStats();
+      }
+      sendResponse(results);
+      return true;
+    }
+
     case 'CLEAR_TAB_LOGS': {
       chrome.tabs.query({ active: true, currentWindow: true }).then(([activeTab]) => {
         if (activeTab && activeTab.id) {
@@ -382,6 +422,68 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
+// Context Menu: Setup & Event Handlers (ClearURLs feature)
+function setupContextMenus() {
+  if (!chrome.contextMenus) return;
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: 'sentry-copy-clean-link',
+      title: 'Copy Clean Link (Sentry AI)',
+      contexts: ['link'],
+    });
+    chrome.contextMenus.create({
+      id: 'sentry-open-clean-link',
+      title: 'Open Clean Link in New Tab',
+      contexts: ['link'],
+    });
+  });
+}
+
+chrome.contextMenus?.onClicked.addListener((info, tab) => {
+  if (!info.linkUrl) return;
+  const cleanRes = cleanUrl(info.linkUrl);
+
+  if (info.menuItemId === 'sentry-copy-clean-link') {
+    if (tab?.id) {
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: (text: string) => {
+          navigator.clipboard.writeText(text);
+        },
+        args: [cleanRes.cleanedUrl],
+      }).catch(() => {});
+    }
+  } else if (info.menuItemId === 'sentry-open-clean-link') {
+    chrome.tabs.create({ url: cleanRes.cleanedUrl, active: false });
+  }
+
+  if (cleanRes.hasChanged) {
+    globalStats.totalUrlsCleaned += 1;
+    globalStats.totalParamsStripped += cleanRes.strippedParams.length;
+    saveGlobalStats();
+
+    if (tab?.id) {
+      const stats = getOrCreateTabStats(tab.id, tab.url);
+      stats.urlsCleaned = (stats.urlsCleaned || 0) + 1;
+      stats.paramsStripped = (stats.paramsStripped || 0) + cleanRes.strippedParams.length;
+      let host = 'link';
+      try {
+        host = new URL(cleanRes.originalUrl).hostname;
+      } catch {
+        // fallback
+      }
+      stats.threatEvents.unshift({
+        id: Math.random().toString(36).substring(2, 9),
+        timestamp: Date.now(),
+        type: 'url_cleaner',
+        source: host,
+        description: `Link Scrubbed: Removed ${cleanRes.strippedParams.length} tracker parameter(s) [${cleanRes.strippedParams.slice(0, 3).join(', ')}]`,
+      });
+      saveGlobalStats();
+    }
+  }
+});
+
 // Extension install / update lifecycle
 chrome.runtime.onInstalled.addListener(async () => {
   console.log('[Sentry AI] Extension initialized.');
@@ -390,6 +492,7 @@ chrome.runtime.onInstalled.addListener(async () => {
       .setPanelBehavior({ openPanelOnActionClick: true })
       .catch(() => {});
   }
+  setupContextMenus();
   const settings = await getSettings();
   await applySettings(settings);
   await initializeBrokers();

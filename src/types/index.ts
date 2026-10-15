@@ -68,6 +68,24 @@ export interface AiDefenseSettings {
   linkedInTrainingLock: boolean;
 }
 
+export interface UrlCleanerSettings {
+  enabled: boolean;
+  stripMarketingParams: boolean;
+  stripReferralTokens: boolean;
+  blockHyperlinkPings: boolean;
+  unwrapRedirects: boolean;
+  sanitizeHistoryApi: boolean;
+  bypassSearchRedirection: boolean;
+}
+
+export interface CleanUrlResult {
+  originalUrl: string;
+  cleanedUrl: string;
+  hasChanged: boolean;
+  strippedParams: string[];
+  redirectUnwrapped?: boolean;
+}
+
 export interface PrivacySettings {
   masterShield: boolean;
   mode: ProtectionMode;
@@ -82,10 +100,11 @@ export interface PrivacySettings {
   whitelistedDomains: string[];
   customRules: string[];
   
-  // Detailed uBlock & CanvasBlocker modules
+  // Detailed modules
   canvasBlocker: CanvasBlockerSettings;
   uBlock: UBlockSettings;
   aiDefense: AiDefenseSettings;
+  urlCleaner: UrlCleanerSettings;
 }
 
 export interface NetworkLogEntry {
@@ -114,6 +133,8 @@ export interface TabThreatStats {
   audioFaked: number;
   webglFaked: number;
   aiBeaconsBlocked: number;
+  urlsCleaned?: number;
+  paramsStripped?: number;
   safetyScore: SafetyGrade;
   threatEvents: ThreatEvent[];
   networkLogs: NetworkLogEntry[];
@@ -123,7 +144,7 @@ export interface TabThreatStats {
 export interface ThreatEvent {
   id: string;
   timestamp: number;
-  type: 'canvas' | 'audio' | 'webgl' | 'tracker' | 'ai_crawler' | 'zapper' | 'domrect';
+  type: 'canvas' | 'audio' | 'webgl' | 'tracker' | 'ai_crawler' | 'zapper' | 'domrect' | 'url_cleaner' | 'ping';
   source: string;
   description: string;
 }
@@ -133,6 +154,8 @@ export interface GlobalPrivacyStats {
   totalFingerprintsScrambled: number;
   totalAiScrapersBlocked: number;
   totalElementsZapped: number;
+  totalUrlsCleaned: number;
+  totalParamsStripped: number;
   activeSince: number;
 }
 

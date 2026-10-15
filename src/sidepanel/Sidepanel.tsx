@@ -21,6 +21,10 @@ import {
   HiMoon,
   HiComputerDesktop,
   HiCheckCircle,
+  HiLink,
+  HiClipboardDocument,
+  HiCheck,
+  HiSparkles,
 } from 'react-icons/hi2';
 import {
   PrivacySettings,
@@ -30,11 +34,13 @@ import {
   NoiseIntensity,
   NetworkLogEntry,
   BrokerEntry,
+  CleanUrlResult,
 } from '../types';
+import { cleanUrl } from '../lib/urlCleaner';
 import SentryShieldLogo from '../components/SentryShieldLogo';
 import { useTheme } from '../hooks/useTheme';
 
-type SidebarTab = 'overview' | 'matrix' | 'fingerprint' | 'network' | 'broker';
+type SidebarTab = 'overview' | 'matrix' | 'fingerprint' | 'network' | 'broker' | 'cleaner';
 
 export default function Sidepanel() {
   const { themeMode, cycleTheme } = useTheme();
@@ -59,6 +65,12 @@ export default function Sidepanel() {
   // Live Canvas fingerprint test simulator state
   const [testCanvasHash, setTestCanvasHash] = useState<string>('');
   const [isTestingCanvas, setIsTestingCanvas] = useState(false);
+
+  // URL Cleaner interactive tool state
+  const [manualUrlInput, setManualUrlInput] = useState('');
+  const [manualCleanResult, setManualCleanResult] = useState<CleanUrlResult | null>(null);
+  const [copiedCleanUrl, setCopiedCleanUrl] = useState(false);
+  const [copiedCurrentCleanUrl, setCopiedCurrentCleanUrl] = useState(false);
 
   // Fetch live tab state
   useEffect(() => {
@@ -106,12 +118,83 @@ export default function Sidepanel() {
   };
 
   const handleToggleFeature = (
-    key: 'canvasShield' | 'audioShield' | 'webglShield' | 'aiScraperShield' | 'elementZapperEnabled'
+    key: 'canvasShield' | 'audioShield' | 'webglShield' | 'aiScraperShield' | 'elementZapperEnabled' | 'urlCleaner'
   ) => {
     if (!settings) return;
+    if (key === 'urlCleaner') {
+      const isEnabled = !(settings.urlCleaner?.enabled ?? true);
+      const updated: PrivacySettings = {
+        ...settings,
+        urlCleaner: {
+          ...(settings.urlCleaner || {
+            enabled: true,
+            stripMarketingParams: true,
+            stripReferralTokens: true,
+            blockHyperlinkPings: true,
+            unwrapRedirects: true,
+            sanitizeHistoryApi: true,
+            bypassSearchRedirection: true,
+          }),
+          enabled: isEnabled,
+        },
+      };
+      setSettings(updated);
+      chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
+      return;
+    }
     const updated = { ...settings, [key]: !settings[key] };
     setSettings(updated);
     chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
+  };
+
+  const handleToggleUrlCleanerSetting = <K extends keyof PrivacySettings['urlCleaner']>(
+    key: K,
+    val?: boolean
+  ) => {
+    if (!settings) return;
+    const currentVal = settings.urlCleaner?.[key] ?? true;
+    const nextVal = typeof val === 'boolean' ? val : !currentVal;
+    const updated: PrivacySettings = {
+      ...settings,
+      urlCleaner: {
+        ...(settings.urlCleaner || {
+          enabled: true,
+          stripMarketingParams: true,
+          stripReferralTokens: true,
+          blockHyperlinkPings: true,
+          unwrapRedirects: true,
+          sanitizeHistoryApi: true,
+          bypassSearchRedirection: true,
+        }),
+        [key]: nextVal,
+      },
+    };
+    setSettings(updated);
+    chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
+  };
+
+  const handleManualScrub = (input: string) => {
+    setManualUrlInput(input);
+    if (!input.trim()) {
+      setManualCleanResult(null);
+      return;
+    }
+    const res = cleanUrl(input, settings?.urlCleaner);
+    setManualCleanResult(res);
+  };
+
+  const handleCopyCleanUrl = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedCleanUrl(true);
+    setTimeout(() => setCopiedCleanUrl(false), 2000);
+  };
+
+  const handleCopyCurrentTabCleanUrl = () => {
+    if (!stats?.url) return;
+    const res = cleanUrl(stats.url, settings?.urlCleaner);
+    navigator.clipboard.writeText(res.cleanedUrl);
+    setCopiedCurrentCleanUrl(true);
+    setTimeout(() => setCopiedCurrentCleanUrl(false), 2000);
   };
 
   const handleToggleWhitelist = () => {
@@ -444,6 +527,7 @@ export default function Sidepanel() {
           { id: 'overview' as const, label: 'Overview', icon: HiOutlineShieldCheck },
           { id: 'matrix' as const, label: 'Matrix', icon: HiSquares2X2 },
           { id: 'fingerprint' as const, label: 'Entropy', icon: HiFingerPrint },
+          { id: 'cleaner' as const, label: 'Cleaner', icon: HiLink },
           { id: 'network' as const, label: 'Traffic', icon: HiChartBar },
           { id: 'broker' as const, label: 'Brokers', icon: HiCircleStack },
         ].map((tab) => {
@@ -724,9 +808,18 @@ export default function Sidepanel() {
                     desc: 'X-Robots-Tag & crawler blocks',
                     icon: HiSignal,
                   },
+                  {
+                    key: 'urlCleaner' as const,
+                    label: 'URL Sanitizer & Link Guard',
+                    desc: 'Strip surveillance parameters & redirects',
+                    icon: HiLink,
+                  },
                 ].map((item) => {
                   const Icon = item.icon;
-                  const isEnabled = settings[item.key];
+                  const isEnabled =
+                    item.key === 'urlCleaner'
+                      ? settings.urlCleaner?.enabled ?? true
+                      : settings[item.key];
                   return (
                     <div
                       key={item.key}
@@ -775,6 +868,71 @@ export default function Sidepanel() {
                 })}
               </div>
             </div>
+
+            {/* QUICK LINK PURIFIER CARD */}
+            {(() => {
+              const currentUrl = stats?.url || '';
+              const cleaned = cleanUrl(currentUrl, settings?.urlCleaner);
+              const hasParams = cleaned.hasChanged && cleaned.strippedParams.length > 0;
+              return (
+                <div
+                  className="sentry-card p-3 space-y-2.5"
+                  style={{
+                    backgroundColor: 'var(--bg-surface)',
+                    borderColor: 'var(--border-subtle)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-1.5">
+                      <HiLink className="h-4 w-4" style={{ color: 'var(--green-primary)' }} />
+                      <span className="text-xs font-bold leading-none">URL & Link Guard</span>
+                    </div>
+                    <span
+                      className="text-[9px] font-mono px-1.5 py-0.5 rounded font-semibold"
+                      style={{
+                        backgroundColor: hasParams ? 'var(--amber-subtle)' : 'var(--green-subtle)',
+                        color: hasParams ? 'var(--amber-primary)' : 'var(--green-text)',
+                        border: `1px solid ${hasParams ? 'var(--amber-border)' : 'var(--green-border)'}`,
+                      }}
+                    >
+                      {hasParams ? `${cleaned.strippedParams.length} TOKENS STRIPPED` : 'VERIFIED CLEAN'}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] leading-relaxed truncate font-mono" style={{ color: 'var(--text-secondary)' }}>
+                    {cleaned.cleanedUrl || currentUrl || 'No page loaded'}
+                  </p>
+
+                  <div className="flex items-center space-x-2 pt-0.5">
+                    <button
+                      onClick={handleCopyCurrentTabCleanUrl}
+                      className="flex-1 flex items-center justify-center space-x-1.5 rounded-lg py-1.5 px-2 text-xs font-semibold transition cursor-pointer"
+                      style={{
+                        backgroundColor: copiedCurrentCleanUrl ? 'var(--green-primary)' : 'var(--bg-surface-subtle)',
+                        color: copiedCurrentCleanUrl ? 'var(--text-inverse)' : 'var(--text-primary)',
+                        border: '1px solid var(--border-subtle)',
+                      }}
+                    >
+                      {copiedCurrentCleanUrl ? <HiCheck className="h-3.5 w-3.5" /> : <HiClipboardDocument className="h-3.5 w-3.5" />}
+                      <span>{copiedCurrentCleanUrl ? 'Copied Clean Link!' : 'Copy Clean URL'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab('cleaner')}
+                      className="rounded-lg py-1.5 px-2.5 text-xs font-semibold transition cursor-pointer"
+                      style={{
+                        backgroundColor: 'var(--green-subtle)',
+                        color: 'var(--green-text)',
+                        border: '1px solid var(--green-border)',
+                      }}
+                    >
+                      Studio
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* DOMAIN REPUTATION & QUICK ACTIONS */}
             <div className="grid grid-cols-2 gap-2 pt-1">
@@ -1348,6 +1506,420 @@ export default function Sidepanel() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB 6: URL SANITIZER & LINK GUARD */}
+        {/* ========================================================= */}
+        {activeTab === 'cleaner' && (
+          <div className="space-y-3.5">
+            {/* HEADER STATUS CARD */}
+            <div
+              className="sentry-card p-3.5 space-y-2"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div
+                    className="flex h-8 w-8 items-center justify-center rounded-xl"
+                    style={{
+                      backgroundColor: 'var(--green-subtle)',
+                      color: 'var(--green-primary)',
+                      border: '1px solid var(--green-border)',
+                    }}
+                  >
+                    <HiLink className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>
+                      URL Sanitizer & Link Guard
+                    </h3>
+                    <p className="text-[10px] leading-tight" style={{ color: 'var(--text-muted)' }}>
+                      MV3 Declarative Parameter Stripping
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handleToggleFeature('urlCleaner')}
+                  className="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                  style={{
+                    backgroundColor: (settings.urlCleaner?.enabled ?? true) ? 'var(--green-primary)' : 'var(--border-strong)',
+                  }}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      (settings.urlCleaner?.enabled ?? true) ? 'translate-x-4' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div
+                className="grid grid-cols-2 gap-2 pt-1 border-t"
+                style={{ borderColor: 'var(--border-subtle)' }}
+              >
+                <div
+                  className="rounded-lg p-2 text-center"
+                  style={{ backgroundColor: 'var(--bg-surface-subtle)' }}
+                >
+                  <div className="text-[9px] font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                    Cleaned URLs
+                  </div>
+                  <div className="text-base font-bold font-mono mt-0.5" style={{ color: 'var(--green-primary)' }}>
+                    {globalStats?.totalUrlsCleaned || 0}
+                  </div>
+                </div>
+                <div
+                  className="rounded-lg p-2 text-center"
+                  style={{ backgroundColor: 'var(--bg-surface-subtle)' }}
+                >
+                  <div className="text-[9px] font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                    Tokens Stripped
+                  </div>
+                  <div className="text-base font-bold font-mono mt-0.5" style={{ color: 'var(--green-primary)' }}>
+                    {globalStats?.totalParamsStripped || 0}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ACTIVE TAB LINK SECTION */}
+            <div
+              className="sentry-card p-3.5 space-y-2.5"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase tracking-wider font-semibold" style={{ color: 'var(--text-muted)' }}>
+                  Current Page Link
+                </span>
+                {(() => {
+                  const res = cleanUrl(stats?.url || '', settings?.urlCleaner);
+                  return (
+                    <span
+                      className="text-[9px] font-mono px-1.5 py-0.5 rounded font-semibold"
+                      style={{
+                        backgroundColor: res.hasChanged ? 'var(--amber-subtle)' : 'var(--green-subtle)',
+                        color: res.hasChanged ? 'var(--amber-primary)' : 'var(--green-text)',
+                        border: `1px solid ${res.hasChanged ? 'var(--amber-border)' : 'var(--green-border)'}`,
+                      }}
+                    >
+                      {res.hasChanged ? `${res.strippedParams.length} TRACKERS STRIPPED` : 'SAFE & CLEAN'}
+                    </span>
+                  );
+                })()}
+              </div>
+
+              {(() => {
+                const res = cleanUrl(stats?.url || '', settings?.urlCleaner);
+                return (
+                  <div className="space-y-2">
+                    <div
+                      className="rounded-lg p-2 font-mono text-[10.5px] break-all leading-normal"
+                      style={{
+                        backgroundColor: 'var(--bg-surface-subtle)',
+                        border: '1px solid var(--border-subtle)',
+                        color: 'var(--text-primary)',
+                      }}
+                    >
+                      {res.cleanedUrl || stats?.url || 'No active tab URL'}
+                    </div>
+
+                    {res.strippedParams.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {res.strippedParams.map((p) => (
+                          <span
+                            key={p}
+                            className="inline-flex items-center space-x-1 rounded px-1.5 py-0.5 text-[9.5px] font-mono line-through opacity-85"
+                            style={{
+                              backgroundColor: 'var(--danger-subtle)',
+                              color: 'var(--danger-primary)',
+                              border: '1px solid var(--danger-border)',
+                            }}
+                          >
+                            <span>{p}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <button
+                      onClick={handleCopyCurrentTabCleanUrl}
+                      className="w-full flex items-center justify-center space-x-1.5 rounded-lg py-2 text-xs font-semibold transition cursor-pointer"
+                      style={{
+                        backgroundColor: copiedCurrentCleanUrl ? 'var(--green-primary)' : 'var(--bg-surface-subtle)',
+                        color: copiedCurrentCleanUrl ? 'var(--text-inverse)' : 'var(--text-primary)',
+                        border: '1px solid var(--border-subtle)',
+                      }}
+                    >
+                      {copiedCurrentCleanUrl ? (
+                        <HiCheck className="h-4 w-4" />
+                      ) : (
+                        <HiClipboardDocument className="h-4 w-4" />
+                      )}
+                      <span>{copiedCurrentCleanUrl ? 'Clean URL Copied!' : 'Copy Cleaned Page URL'}</span>
+                    </button>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* MANUAL URL SCRUBBER */}
+            <div
+              className="sentry-card p-3.5 space-y-2.5"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase tracking-wider font-semibold" style={{ color: 'var(--text-muted)' }}>
+                  Interactive URL Purifier
+                </span>
+                <span className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
+                  Instant Preview
+                </span>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={manualUrlInput}
+                    onChange={(e) => handleManualScrub(e.target.value)}
+                    placeholder="Paste link (Amazon, YouTube, Google, UTM)..."
+                    className="w-full rounded-lg px-2.5 py-2 text-xs font-mono focus:outline-none transition"
+                    style={{
+                      backgroundColor: 'var(--bg-surface-subtle)',
+                      border: '1px solid var(--border-subtle)',
+                      color: 'var(--text-primary)',
+                    }}
+                  />
+                  {manualUrlInput && (
+                    <button
+                      onClick={() => handleManualScrub('')}
+                      className="absolute right-2 top-2 text-[10px] font-mono px-1 rounded opacity-60 hover:opacity-100"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                {/* Sample URL Chips */}
+                <div className="flex flex-wrap gap-1 pt-1">
+                  <span className="text-[10px] font-mono mr-1" style={{ color: 'var(--text-muted)' }}>
+                    Test:
+                  </span>
+                  {[
+                    {
+                      label: 'Amazon Ref',
+                      url: 'https://www.amazon.com/dp/B08N5WRWNW/ref=sr_1_1?keywords=keyboard&qid=1610000000&sr=8-1',
+                    },
+                    {
+                      label: 'YouTube SI',
+                      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ?si=trackingToken987',
+                    },
+                    {
+                      label: 'Google Redirect',
+                      url: 'https://www.google.com/url?q=https://example.com/target-page&sa=D&sntz=1',
+                    },
+                    {
+                      label: 'UTM Campaign',
+                      url: 'https://shop.example.com/sale?utm_source=facebook&utm_medium=cpc&utm_campaign=summer&fbclid=IwAR0987xyz',
+                    },
+                  ].map((s) => (
+                    <button
+                      key={s.label}
+                      onClick={() => handleManualScrub(s.url)}
+                      className="rounded px-1.5 py-0.5 text-[9.5px] font-mono transition cursor-pointer hover:opacity-90"
+                      style={{
+                        backgroundColor: 'var(--bg-surface-subtle)',
+                        color: 'var(--green-primary)',
+                        border: '1px solid var(--border-subtle)',
+                      }}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {manualCleanResult && (
+                <div
+                  className="rounded-lg p-2.5 space-y-2 border transition-all"
+                  style={{
+                    backgroundColor: 'var(--bg-surface-subtle)',
+                    borderColor: manualCleanResult.hasChanged ? 'var(--green-border)' : 'var(--border-subtle)',
+                  }}
+                >
+                  <div className="flex items-center justify-between text-[10px] font-mono">
+                    <span style={{ color: 'var(--text-muted)' }}>Sanitized Output:</span>
+                    <span
+                      style={{
+                        color: manualCleanResult.hasChanged ? 'var(--green-primary)' : 'var(--text-muted)',
+                      }}
+                    >
+                      {manualCleanResult.hasChanged
+                        ? `${manualCleanResult.strippedParams.length} trackers stripped`
+                        : 'No trackers found'}
+                    </span>
+                  </div>
+
+                  <div
+                    className="font-mono text-[10.5px] break-all leading-relaxed"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    {manualCleanResult.cleanedUrl}
+                  </div>
+
+                  {manualCleanResult.strippedParams.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {manualCleanResult.strippedParams.map((p) => (
+                        <span
+                          key={p}
+                          className="inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-mono line-through opacity-85"
+                          style={{
+                            backgroundColor: 'var(--danger-subtle)',
+                            color: 'var(--danger-primary)',
+                            border: '1px solid var(--danger-border)',
+                          }}
+                        >
+                          {p}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => handleCopyCleanUrl(manualCleanResult.cleanedUrl)}
+                    className="w-full flex items-center justify-center space-x-1.5 rounded-lg py-1.5 text-xs font-semibold transition cursor-pointer"
+                    style={{
+                      backgroundColor: copiedCleanUrl ? 'var(--green-primary)' : 'var(--bg-surface)',
+                      color: copiedCleanUrl ? 'var(--text-inverse)' : 'var(--text-primary)',
+                      border: '1px solid var(--border-subtle)',
+                    }}
+                  >
+                    {copiedCleanUrl ? <HiCheck className="h-3.5 w-3.5" /> : <HiClipboardDocument className="h-3.5 w-3.5" />}
+                    <span>{copiedCleanUrl ? 'Copied Clean Link!' : 'Copy Clean Link'}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* DEFENSE SUB-SYSTEM TOGGLES */}
+            <div
+              className="sentry-card p-3.5 space-y-2.5"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase tracking-wider font-semibold" style={{ color: 'var(--text-muted)' }}>
+                  Link Guard Protections
+                </span>
+                <span className="text-[10px] font-mono font-medium" style={{ color: 'var(--green-primary)' }}>
+                  MV3 ENGINE
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                {[
+                  {
+                    key: 'stripMarketingParams' as const,
+                    label: 'Universal Tracking Parameters',
+                    desc: 'utm_*, ga_*, _openstat, wt_mc, etc.',
+                  },
+                  {
+                    key: 'stripReferralTokens' as const,
+                    label: 'Platform & Referral Tokens',
+                    desc: 'Amazon ref_, YouTube si, TikTok, Twitter',
+                  },
+                  {
+                    key: 'blockHyperlinkPings' as const,
+                    label: 'Hyperlink Auditing Defeater',
+                    desc: 'Purge <a ping> tracking beacons across DOM',
+                  },
+                  {
+                    key: 'unwrapRedirects' as const,
+                    label: 'Redirection Wrapper Unmasker',
+                    desc: 'google.com/url, facebook.com/l.php, out.php',
+                  },
+                  {
+                    key: 'bypassSearchRedirection' as const,
+                    label: 'Search Engine Click Hijack Bypass',
+                    desc: 'Neutralize Google & Yandex rwt click rewriters',
+                  },
+                  {
+                    key: 'sanitizeHistoryApi' as const,
+                    label: 'History API Inoculation',
+                    desc: 'Block pushState / replaceState tracker re-injection',
+                  },
+                ].map((item) => {
+                  const isEnabled = settings.urlCleaner?.[item.key] ?? true;
+                  return (
+                    <div
+                      key={item.key}
+                      className="flex items-center justify-between rounded-xl p-2.5 transition"
+                      style={{
+                        backgroundColor: 'var(--bg-surface-subtle)',
+                        border: '1px solid var(--border-subtle)',
+                      }}
+                    >
+                      <div className="min-w-0 pr-2">
+                        <div className="font-semibold text-xs leading-tight truncate" style={{ color: 'var(--text-primary)' }}>
+                          {item.label}
+                        </div>
+                        <div className="text-[10px] leading-tight truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                          {item.desc}
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleToggleUrlCleanerSetting(item.key)}
+                        className="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                        style={{
+                          backgroundColor: isEnabled ? 'var(--green-primary)' : 'var(--border-strong)',
+                        }}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            isEnabled ? 'translate-x-4' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* FULLSCREEN STUDIO LAUNCHER */}
+            <button
+              onClick={() => chrome.runtime.openOptionsPage()}
+              className="w-full flex items-center justify-center space-x-2 rounded-xl p-3 text-xs font-bold transition cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+              style={{
+                backgroundColor: 'var(--green-subtle)',
+                color: 'var(--green-text)',
+                border: '1px solid var(--green-border)',
+              }}
+            >
+              <HiSparkles className="h-4 w-4" />
+              <span>Launch Batch Cleaner & Parameter Directory</span>
+              <HiArrowTopRightOnSquare className="h-3.5 w-3.5" />
+            </button>
           </div>
         )}
       </div>

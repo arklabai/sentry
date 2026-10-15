@@ -1,0 +1,175 @@
+[
+  {
+    "id": 201,
+    "priority": 2,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "transform": {
+          "queryTransform": {
+            "removeParams": [
+              "utm_source",
+              "utm_medium",
+              "utm_campaign",
+              "utm_term",
+              "utm_content",
+              "utm_id",
+              "utm_name",
+              "utm_cid",
+              "utm_reader",
+              "utm_viz_id",
+              "utm_pubreferrer",
+              "utm_swu",
+              "fbclid",
+              "gclid",
+              "gbraid",
+              "wbraid",
+              "msclkid",
+              "yclid",
+              "twclid",
+              "ttclid",
+              "li_fat_id",
+              "mc_eid",
+              "mc_cid",
+              "igshid",
+              "share_id",
+              "_ga",
+              "_gl",
+              "_hsenc",
+              "_hsmi",
+              "hsCtaTracking",
+              "_openstat",
+              "wickedid",
+              "wt_mc",
+              "wt_zmc",
+              "dclid",
+              "s_kwcid",
+              "mkt_tok",
+              "vero_id",
+              "_kx"
+            ]
+          }
+        }
+      }
+    },
+    "condition": {
+      "urlFilter": "|http*",
+      "resourceTypes": ["main_frame", "sub_frame"]
+    }
+  },
+  {
+    "id": 202,
+    "priority": 2,
+    "action": { "type": "block" },
+    "condition": {
+      "resourceTypes": ["ping"]
+    }
+  },
+  {
+    "id": 203,
+    "priority": 3,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "transform": {
+          "queryTransform": {
+            "removeParams": [
+              "pf_rd_r",
+              "pf_rd_m",
+              "pf_rd_t",
+              "pf_rd_i",
+              "pf_rd_p",
+              "pf_rd_s",
+              "pd_rd_r",
+              "pd_rd_w",
+              "pd_rd_wg",
+              "pd_rd_i",
+              "ref_",
+              "qid",
+              "sr",
+              "keywords",
+              "crid",
+              "sprefix"
+            ]
+          }
+        }
+      }
+    },
+    "condition": {
+      "urlFilter": "||amazon.*/*",
+      "resourceTypes": ["main_frame", "sub_frame"]
+    }
+  },
+  {
+    "id": 204,
+    "priority": 3,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "transform": {
+          "queryTransform": {
+            "removeParams": ["si", "feature", "pp"]
+          }
+        }
+      }
+    },
+    "condition": {
+      "urlFilter": "||youtube.com/*",
+      "resourceTypes": ["main_frame", "sub_frame"]
+    }
+  },
+  {
+    "id": 205,
+    "priority": 3,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "transform": {
+          "queryTransform": {
+            "removeParams": ["ref_src", "ref_url"]
+          }
+        }
+      }
+    },
+    "condition": {
+      "urlFilter": "||twitter.com/*",
+      "resourceTypes": ["main_frame", "sub_frame"]
+    }
+  },
+  {
+    "id": 206,
+    "priority": 3,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "transform": {
+          "queryTransform": {
+            "removeParams": ["ref_src", "ref_url"]
+          }
+        }
+      }
+    },
+    "condition": {
+      "urlFilter": "||x.com/*",
+      "resourceTypes": ["main_frame", "sub_frame"]
+    }
+  },
+  {
+    "id": 207,
+    "priority": 3,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "transform": {
+          "queryTransform": {
+            "removeParams": ["_r", "_t", "checksum", "sec_uid"]
+          }
+        }
+      }
+    },
+    "condition": {
+      "urlFilter": "||tiktok.com/*",
+      "resourceTypes": ["main_frame", "sub_frame"]
+    }
+  }
+]

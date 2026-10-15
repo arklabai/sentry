@@ -55,18 +55,28 @@ export async function updateDomainRules(whitelistedDomains: string[]): Promise<v
 /**
  * Toggles static rulesets on/off (e.g. when Master Shield is toggled)
  */
-export async function toggleStaticRulesets(enable: boolean): Promise<void> {
+export async function toggleStaticRulesets(
+  enable: boolean,
+  urlCleanerEnabled: boolean = true
+): Promise<void> {
   if (!chrome.declarativeNetRequest) return;
 
-  const rulesetIds = ['rules_ai_trackers', 'rules_privacy_headers'];
+  const enableIds: string[] = [];
+  const disableIds: string[] = [];
 
   if (enable) {
-    await chrome.declarativeNetRequest.updateEnabledRulesets({
-      enableRulesetIds: rulesetIds,
-    });
+    enableIds.push('rules_ai_trackers', 'rules_privacy_headers');
+    if (urlCleanerEnabled) {
+      enableIds.push('rules_url_cleaner');
+    } else {
+      disableIds.push('rules_url_cleaner');
+    }
   } else {
-    await chrome.declarativeNetRequest.updateEnabledRulesets({
-      disableRulesetIds: rulesetIds,
-    });
+    disableIds.push('rules_ai_trackers', 'rules_privacy_headers', 'rules_url_cleaner');
   }
+
+  await chrome.declarativeNetRequest.updateEnabledRulesets({
+    enableRulesetIds: enableIds,
+    disableRulesetIds: disableIds,
+  });
 }

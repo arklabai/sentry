@@ -27,6 +27,11 @@ import {
   HiMoon,
   HiComputerDesktop,
   HiXMark,
+  HiLink,
+  HiSparkles,
+  HiArrowDownTray,
+  HiArrowRight,
+  HiBolt,
 } from 'react-icons/hi2';
 import {
   BrokerEntry,
@@ -37,13 +42,138 @@ import {
   UserProfile,
   EncryptedVault,
   ThreatEvent,
+  CleanUrlResult,
 } from '../types';
+import { cleanUrl, cleanUrls } from '../lib/urlCleaner';
 import { encryptProfile, decryptProfile } from '../lib/crypto';
 import brokerListJson from '../lib/brokerList.json';
 import SentryShieldLogo from '../components/SentryShieldLogo';
 import { useTheme } from '../hooks/useTheme';
 
-type ActiveTab = 'brokers' | 'ai-shield' | 'matrix' | 'ledger';
+type ActiveTab = 'brokers' | 'ai-shield' | 'matrix' | 'ledger' | 'cleaner';
+
+interface ParameterEntry {
+  name: string;
+  category: 'analytics' | 'clicks' | 'platforms' | 'redirects';
+  badge: string;
+  company: string;
+  desc: string;
+}
+
+const TRACKING_DICTIONARY: ParameterEntry[] = [
+  {
+    name: 'utm_source / utm_medium / utm_campaign',
+    category: 'analytics',
+    badge: 'Marketing',
+    company: 'Google / Adobe Analytics',
+    desc: 'Surveillance tags tracking campaigns, traffic origins, referral mediums, and A/B test variations across third-party websites.',
+  },
+  {
+    name: 'utm_term / utm_content / utm_id',
+    category: 'analytics',
+    badge: 'Marketing',
+    company: 'Google Analytics',
+    desc: 'Paid search keyword identifiers and creative variation tags linking clicks to specific advertising placements.',
+  },
+  {
+    name: '_ga / _gl / _hsenc / _hsmi',
+    category: 'analytics',
+    badge: 'Cross-Domain',
+    company: 'Google / HubSpot',
+    desc: 'Session linking tokens that track individual identities across separate root domains and third-party checkout flows.',
+  },
+  {
+    name: 'fbclid',
+    category: 'clicks',
+    badge: 'AdTech',
+    company: 'Meta (Facebook & Instagram)',
+    desc: 'Unique 128-bit click identifier appended to all outbound links from Meta apps to tie external conversions to your Facebook profile.',
+  },
+  {
+    name: 'gclid / gbraid / wbraid',
+    category: 'clicks',
+    badge: 'AdTech',
+    company: 'Google Ads & DoubleClick',
+    desc: 'Encrypted tracking tokens linking ad clicks to conversions, actively designed to bypass browser anti-tracking protections.',
+  },
+  {
+    name: 'msclkid',
+    category: 'clicks',
+    badge: 'AdTech',
+    company: 'Microsoft / Bing Ads',
+    desc: 'Microsoft Advertising Click ID tracking conversion events and linking user activity across Microsoft properties.',
+  },
+  {
+    name: 'twclid / ttclid',
+    category: 'clicks',
+    badge: 'AdTech',
+    company: 'Twitter/X & TikTok',
+    desc: 'First-party conversion tracking identifiers injected into link clicks to circumvent third-party cookie restrictions.',
+  },
+  {
+    name: 'yclid',
+    category: 'clicks',
+    badge: 'AdTech',
+    company: 'Yandex Direct',
+    desc: 'Yandex advertising click identifier used for attribution and browser fingerprint linkage.',
+  },
+  {
+    name: 'li_fat_id',
+    category: 'clicks',
+    badge: 'AdTech',
+    company: 'LinkedIn Insight Tag',
+    desc: 'LinkedIn advertising tag matching external web visits back to professional member profiles.',
+  },
+  {
+    name: 'igshid',
+    category: 'clicks',
+    badge: 'Social',
+    company: 'Instagram Share',
+    desc: 'Instagram Share ID tracking viral transmission paths and interpersonal communication graphs.',
+  },
+  {
+    name: 'ref_ / pd_rd_* / pf_rd_*',
+    category: 'platforms',
+    badge: 'Retail',
+    company: 'Amazon',
+    desc: 'Internal product browsing session history, affiliate referral tags, and personalized product recommendation identifiers.',
+  },
+  {
+    name: 'si',
+    category: 'platforms',
+    badge: 'Social',
+    company: 'YouTube / Alphabet',
+    desc: 'Source identifier embedded in video share links to track user sharing graphs across messaging apps.',
+  },
+  {
+    name: 'mc_eid / mc_cid / mkt_tok',
+    category: 'analytics',
+    badge: 'CRM',
+    company: 'Mailchimp / Marketo / Klaviyo',
+    desc: 'Direct email subscriber tracking keys unmasking anonymous browsing sessions to an exact email address upon arrival.',
+  },
+  {
+    name: 'google.com/url?q=...',
+    category: 'redirects',
+    badge: 'Search',
+    company: 'Google Search Redirector',
+    desc: 'Intermediary tracking gateway logging user click timestamps and search query intents before redirecting.',
+  },
+  {
+    name: 'facebook.com/l.php?u=...',
+    category: 'redirects',
+    badge: 'Social',
+    company: 'Facebook Link Shim',
+    desc: 'Intermediate redirect wrapper monitoring external link clicks and manipulating HTTP Referer headers.',
+  },
+  {
+    name: '<a ping="...">',
+    category: 'redirects',
+    badge: 'Beacon',
+    company: 'W3C Hyperlink Auditing',
+    desc: 'Asynchronous POST request beacons transmitted behind the scenes whenever a link is clicked, reporting IP and timestamps.',
+  },
+];
 
 export default function Dashboard() {
   const { themeMode, isDark, cycleTheme } = useTheme();
@@ -81,6 +211,34 @@ export default function Dashboard() {
 
   // New whitelist domain input
   const [newWhitelistDomain, setNewWhitelistDomain] = useState('');
+
+  // URL Cleaner interactive single purifier state
+  const [cleanerInput, setCleanerInput] = useState(
+    'https://www.amazon.com/dp/B08N5WRWNW/ref=sr_1_1?keywords=keyboard&qid=1610000000&sr=8-1&utm_source=twitter&fbclid=IwAR29182xyz'
+  );
+  const [cleanerResult, setCleanerResult] = useState<CleanUrlResult | null>(() => {
+    return cleanUrl(
+      'https://www.amazon.com/dp/B08N5WRWNW/ref=sr_1_1?keywords=keyboard&qid=1610000000&sr=8-1&utm_source=twitter&fbclid=IwAR29182xyz'
+    );
+  });
+  const [copiedCleanLink, setCopiedCleanLink] = useState(false);
+
+  // Batch Multi-URL Scrubber state
+  const [batchInput, setBatchInput] = useState(
+    `https://www.amazon.com/dp/B08N5WRWNW/ref=sr_1_1?keywords=keyboard&qid=1610000000&sr=8-1
+https://www.youtube.com/watch?v=dQw4w9WgXcQ?si=trackingToken987
+https://www.google.com/url?q=https://example.com/target-page&sa=D&sntz=1
+https://shop.example.com/sale?utm_source=facebook&utm_medium=cpc&utm_campaign=summer&fbclid=IwAR0987xyz
+https://news.ycombinator.com/item?id=123456`
+  );
+  const [batchResults, setBatchResults] = useState<CleanUrlResult[] | null>(null);
+  const [batchCopied, setBatchCopied] = useState(false);
+
+  // Parameter dictionary explorer search & category
+  const [paramSearch, setParamSearch] = useState('');
+  const [selectedParamCategory, setSelectedParamCategory] = useState<
+    'all' | 'analytics' | 'clicks' | 'platforms' | 'redirects'
+  >('all');
 
   // Fetch initial data
   useEffect(() => {
@@ -200,6 +358,84 @@ export default function Dashboard() {
     chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
   };
 
+  // URL Cleaner Settings & Actions
+  const handleToggleUrlCleanerSetting = <K extends keyof PrivacySettings['urlCleaner']>(
+    key: K,
+    val?: boolean
+  ) => {
+    if (!settings) return;
+    const currentVal = settings.urlCleaner?.[key] ?? true;
+    const nextVal = typeof val === 'boolean' ? val : !currentVal;
+    const updated: PrivacySettings = {
+      ...settings,
+      urlCleaner: {
+        ...(settings.urlCleaner || {
+          enabled: true,
+          stripMarketingParams: true,
+          stripReferralTokens: true,
+          blockHyperlinkPings: true,
+          unwrapRedirects: true,
+          sanitizeHistoryApi: true,
+          bypassSearchRedirection: true,
+        }),
+        [key]: nextVal,
+      },
+    };
+    setSettings(updated);
+    chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
+  };
+
+  const handleCleanSingleUrl = (url: string) => {
+    setCleanerInput(url);
+    if (!url.trim()) {
+      setCleanerResult(null);
+      return;
+    }
+    const res = cleanUrl(url, settings?.urlCleaner);
+    setCleanerResult(res);
+  };
+
+  const handleCopySingleCleanUrl = () => {
+    if (!cleanerResult?.cleanedUrl) return;
+    navigator.clipboard.writeText(cleanerResult.cleanedUrl);
+    setCopiedCleanLink(true);
+    setTimeout(() => setCopiedCleanLink(false), 2000);
+  };
+
+  const handleProcessBatch = () => {
+    if (!batchInput.trim()) return;
+    chrome.runtime.sendMessage(
+      { action: 'CLEAN_URLS', urls: batchInput, options: settings?.urlCleaner },
+      (results) => {
+        if (results && Array.isArray(results)) {
+          setBatchResults(results);
+        } else {
+          setBatchResults(cleanUrls(batchInput, settings?.urlCleaner));
+        }
+      }
+    );
+  };
+
+  const handleCopyAllBatch = () => {
+    if (!batchResults || batchResults.length === 0) return;
+    const text = batchResults.map((r) => r.cleanedUrl).join('\n');
+    navigator.clipboard.writeText(text);
+    setBatchCopied(true);
+    setTimeout(() => setBatchCopied(false), 2000);
+  };
+
+  const handleDownloadBatch = () => {
+    if (!batchResults || batchResults.length === 0) return;
+    const text = batchResults.map((r) => r.cleanedUrl).join('\n');
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sentry-clean-urls-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   // Filter brokers
   const filteredBrokers = brokers.filter((b) => {
     const matchesCategory = selectedCategory === 'All' || b.category === selectedCategory;
@@ -313,6 +549,18 @@ export default function Dashboard() {
                 <HiChartBar className="h-4 w-4" />
                 <span>Live Threat Ledger</span>
               </button>
+
+              <button
+                onClick={() => setActiveTab('cleaner')}
+                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+                  activeTab === 'cleaner'
+                    ? 'bg-emerald-700 text-white shadow-xs dark:bg-emerald-600 dark:text-white'
+                    : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
+                }`}
+              >
+                <HiLink className="h-4 w-4" />
+                <span>URL Cleaner & Link Guard</span>
+              </button>
             </nav>
 
             {/* Theme Toggle Button */}
@@ -337,7 +585,7 @@ export default function Dashboard() {
       {/* Main Container */}
       <main className="max-w-7xl mx-auto w-full flex-1 p-6 space-y-6">
         {/* Global Protection Metrics Banner */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <div
             className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors"
             style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
@@ -378,6 +626,20 @@ export default function Dashboard() {
               {globalStats?.totalAiScrapersBlocked || 0}
             </div>
             <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">Meta, ByteDance, TikTok pixels</p>
+          </div>
+
+          <div
+            className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors"
+            style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+          >
+            <div className="flex items-center justify-between text-stone-500 dark:text-[#A6ADC8] mb-1">
+              <span className="text-xs font-mono uppercase tracking-wider">Cleaned URLs / Params</span>
+              <HiLink className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+            </div>
+            <div className="text-2xl font-bold font-mono text-emerald-800 dark:text-emerald-300">
+              {globalStats?.totalUrlsCleaned || 0} / {globalStats?.totalParamsStripped || 0}
+            </div>
+            <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">Marketing & click trackers sanitized</p>
           </div>
 
           <div
@@ -1041,6 +1303,535 @@ export default function Dashboard() {
                 Active monitoring in progress. Threat events will stream here live as pages load.
               </div>
             )}
+          </div>
+        )}
+
+        {/* TAB 5: URL CLEANER & LINK GUARD STUDIO */}
+        {activeTab === 'cleaner' && (
+          <div className="space-y-6">
+            {/* HERO MODULE HEADER */}
+            <div
+              className="sentry-card p-6 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors"
+              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+            >
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center space-x-3.5">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 shrink-0">
+                    <HiLink className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <h2 className="text-lg font-black tracking-tight text-stone-900 dark:text-white">
+                        Sentry URL Sanitizer & Link Guard
+                      </h2>
+                      <span className="rounded bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/30 px-2 py-0.5 font-mono text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
+                        MV3 ZERO-LATENCY
+                      </span>
+                    </div>
+                    <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-1">
+                      Native parameter scrubbing, hyperlink auditing neutralizer, search redirect unmasker, and History API guard.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <span className="text-xs font-mono text-stone-500 dark:text-[#A6ADC8]">
+                    Master Link Guard:
+                  </span>
+                  <button
+                    onClick={() => handleToggleUrlCleanerSetting('enabled')}
+                    className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                    style={{
+                      backgroundColor: (settings?.urlCleaner?.enabled ?? true)
+                        ? 'var(--green-primary)'
+                        : 'var(--border-strong)',
+                    }}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        (settings?.urlCleaner?.enabled ?? true) ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 1: SINGLE URL PURIFIER & LIVE INSPECTOR */}
+            <div
+              className="sentry-card p-6 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors"
+              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+            >
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-stone-100 dark:border-[#383852] pb-3">
+                <div>
+                  <h3 className="text-base font-bold text-stone-900 dark:text-white flex items-center space-x-2">
+                    <HiSparkles className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
+                    <span>Single URL Purifier & Inspector</span>
+                  </h3>
+                  <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-0.5">
+                    Test how Sentry AI scrubs tracking parameters, referral tokens, and unwraps redirects in real time.
+                  </p>
+                </div>
+
+                {/* Sample Test Link Buttons */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] font-mono text-stone-400 dark:text-[#9399B2] mr-1">
+                    Try Sample:
+                  </span>
+                  {[
+                    {
+                      label: 'Amazon Referral',
+                      url: 'https://www.amazon.com/dp/B08N5WRWNW/ref=sr_1_1?keywords=keyboard&qid=1610000000&sr=8-1',
+                    },
+                    {
+                      label: 'YouTube SI',
+                      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ?si=trackingToken987',
+                    },
+                    {
+                      label: 'Google Redirect',
+                      url: 'https://www.google.com/url?q=https://example.com/target-page&sa=D&sntz=1',
+                    },
+                    {
+                      label: 'Multi-Campaign (UTM + FB)',
+                      url: 'https://shop.example.com/sale?utm_source=facebook&utm_medium=cpc&utm_campaign=summer&fbclid=IwAR0987xyz&gclid=CjwKCAiA',
+                    },
+                  ].map((s) => (
+                    <button
+                      key={s.label}
+                      onClick={() => handleCleanSingleUrl(s.url)}
+                      className="rounded-lg bg-stone-100 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] px-2.5 py-1 text-[11px] font-mono font-medium text-emerald-800 dark:text-emerald-300 hover:border-emerald-500 transition cursor-pointer"
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* URL Input */}
+              <div className="space-y-2">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={cleanerInput}
+                    onChange={(e) => handleCleanSingleUrl(e.target.value)}
+                    placeholder="Enter or paste any URL with tracking parameters..."
+                    className="w-full rounded-xl bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] p-3 text-xs font-mono text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
+                  />
+                  {cleanerInput && (
+                    <button
+                      onClick={() => handleCleanSingleUrl('')}
+                      className="absolute right-3 top-3 text-xs font-mono text-stone-400 hover:text-stone-700 dark:hover:text-white"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Live Inspection Results */}
+              {cleanerResult && (
+                <div className="space-y-3 pt-1">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Original URL Box */}
+                    <div className="rounded-xl border border-stone-200 dark:border-[#383852] bg-stone-50/70 dark:bg-[#181825]/70 p-3.5 space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] font-mono text-stone-500 dark:text-[#A6ADC8]">
+                        <span>Original Input URL:</span>
+                        <span className="text-[10px] uppercase font-bold text-stone-400">RAW</span>
+                      </div>
+                      <div className="text-xs font-mono text-stone-700 dark:text-[#CDD6F4] break-all leading-relaxed">
+                        {cleanerResult.originalUrl}
+                      </div>
+                    </div>
+
+                    {/* Sanitized URL Box */}
+                    <div className="rounded-xl border border-emerald-300 dark:border-emerald-500/40 bg-emerald-50/40 dark:bg-emerald-950/20 p-3.5 space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] font-mono text-emerald-800 dark:text-emerald-300">
+                        <span>Sanitized Privacy-Clean URL:</span>
+                        <span className="rounded bg-emerald-100 dark:bg-emerald-950/80 px-1.5 py-0.5 text-[9px] uppercase font-bold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
+                          {cleanerResult.hasChanged ? 'PURIFIED' : 'ALREADY CLEAN'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-mono font-semibold text-emerald-950 dark:text-emerald-200 break-all leading-relaxed">
+                        {cleanerResult.cleanedUrl}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stripped Tokens Badges */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-xl border border-stone-200 dark:border-[#383852] bg-stone-50 dark:bg-[#181825] p-3">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs font-mono font-bold text-stone-600 dark:text-[#A6ADC8]">
+                        Tracking Tokens Removed ({cleanerResult.strippedParams.length}):
+                      </span>
+                      {cleanerResult.strippedParams.length === 0 ? (
+                        <span className="text-xs font-mono text-stone-400 dark:text-[#9399B2]">
+                          Zero tracking parameters detected. URL is safe.
+                        </span>
+                      ) : (
+                        <div className="flex flex-wrap gap-1">
+                          {cleanerResult.strippedParams.map((p) => (
+                            <span
+                              key={p}
+                              className="rounded bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 px-2 py-0.5 font-mono text-[10px] font-semibold text-rose-700 dark:text-rose-400 line-through"
+                            >
+                              {p}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={handleCopySingleCleanUrl}
+                      className="flex items-center justify-center space-x-1.5 rounded-lg bg-emerald-700 dark:bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition cursor-pointer shrink-0"
+                    >
+                      {copiedCleanLink ? (
+                        <HiCheck className="h-4 w-4" />
+                      ) : (
+                        <HiClipboardDocument className="h-4 w-4" />
+                      )}
+                      <span>{copiedCleanLink ? 'Copied to Clipboard!' : 'Copy Sanitized Link'}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* SECTION 2: BATCH MULTI-URL SCRUBBER STUDIO */}
+            <div
+              className="sentry-card p-6 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors"
+              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+            >
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-stone-100 dark:border-[#383852] pb-3">
+                <div>
+                  <h3 className="text-base font-bold text-stone-900 dark:text-white flex items-center space-x-2">
+                    <HiBolt className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
+                    <span>Batch Multi-URL Scrubber Studio</span>
+                  </h3>
+                  <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-0.5">
+                    Paste lists of links (one per line) from chats, spreadsheets, bookmarks, or social feeds for bulk decontamination.
+                  </p>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={handleProcessBatch}
+                    className="flex items-center space-x-1.5 rounded-lg bg-emerald-700 dark:bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-emerald-800 transition cursor-pointer"
+                  >
+                    <HiBolt className="h-4 w-4" />
+                    <span>Scrub Batch</span>
+                  </button>
+
+                  {batchResults && batchResults.length > 0 && (
+                    <>
+                      <button
+                        onClick={handleCopyAllBatch}
+                        className="flex items-center space-x-1.5 rounded-lg bg-stone-100 dark:bg-[#181825] border border-stone-300 dark:border-[#4E4E70] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 hover:border-emerald-600 transition cursor-pointer"
+                      >
+                        {batchCopied ? <HiCheck className="h-3.5 w-3.5 text-emerald-600" /> : <HiClipboardDocument className="h-3.5 w-3.5" />}
+                        <span>{batchCopied ? 'All Copied!' : 'Copy All Clean'}</span>
+                      </button>
+
+                      <button
+                        onClick={handleDownloadBatch}
+                        className="flex items-center space-x-1.5 rounded-lg bg-stone-100 dark:bg-[#181825] border border-stone-300 dark:border-[#4E4E70] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 hover:border-emerald-600 transition cursor-pointer"
+                      >
+                        <HiArrowDownTray className="h-3.5 w-3.5" />
+                        <span>Export (.txt)</span>
+                      </button>
+                    </>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      setBatchInput('');
+                      setBatchResults(null);
+                    }}
+                    className="p-1.5 text-stone-400 hover:text-rose-600 rounded-lg transition"
+                    title="Clear input"
+                  >
+                    <HiTrash className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Textarea */}
+              <div>
+                <textarea
+                  rows={5}
+                  value={batchInput}
+                  onChange={(e) => setBatchInput(e.target.value)}
+                  placeholder="Paste multiple URLs here, one per line..."
+                  className="w-full rounded-xl bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] p-3 text-xs font-mono text-stone-900 dark:text-white placeholder-stone-400 leading-relaxed focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
+                />
+              </div>
+
+              {/* Batch Results Output */}
+              {batchResults && (
+                <div className="space-y-3 pt-1">
+                  {/* Summary Counters */}
+                  {(() => {
+                    const cleanedCount = batchResults.filter((r) => r.hasChanged).length;
+                    const totalParams = batchResults.reduce((acc, r) => acc + r.strippedParams.length, 0);
+                    return (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="rounded-xl border border-stone-200 dark:border-[#383852] bg-stone-50 dark:bg-[#181825] p-3 text-center">
+                          <div className="text-[10px] font-mono uppercase tracking-wider text-stone-400 dark:text-[#9399B2]">
+                            Total Links Analyzed
+                          </div>
+                          <div className="text-xl font-bold font-mono text-stone-800 dark:text-stone-200 mt-0.5">
+                            {batchResults.length}
+                          </div>
+                        </div>
+
+                        <div className="rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/30 p-3 text-center">
+                          <div className="text-[10px] font-mono uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
+                            Sanitized Links
+                          </div>
+                          <div className="text-xl font-bold font-mono text-emerald-800 dark:text-emerald-300 mt-0.5">
+                            {cleanedCount}
+                          </div>
+                        </div>
+
+                        <div className="rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/30 p-3 text-center">
+                          <div className="text-[10px] font-mono uppercase tracking-wider text-rose-700 dark:text-rose-400">
+                            Parameters Stripped
+                          </div>
+                          <div className="text-xl font-bold font-mono text-rose-700 dark:text-rose-400 mt-0.5">
+                            {totalParams}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Results List */}
+                  <div className="rounded-xl border border-stone-200 dark:border-[#383852] overflow-hidden">
+                    <div className="max-h-72 overflow-y-auto divide-y divide-stone-200 dark:divide-[#383852]">
+                      {batchResults.map((res, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center justify-between p-3 text-xs font-mono hover:bg-stone-50 dark:hover:bg-[#181825] transition"
+                        >
+                          <div className="min-w-0 pr-3 space-y-1">
+                            <div className="flex items-center space-x-2">
+                              <span
+                                className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${
+                                  res.hasChanged
+                                    ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300'
+                                    : 'bg-stone-200 text-stone-700 dark:bg-stone-800 dark:text-stone-300'
+                                }`}
+                              >
+                                {res.hasChanged ? 'CLEANED' : 'SAFE'}
+                              </span>
+                              <span className="font-semibold text-stone-900 dark:text-white truncate max-w-xl">
+                                {res.cleanedUrl}
+                              </span>
+                            </div>
+
+                            {res.strippedParams.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {res.strippedParams.map((p) => (
+                                  <span
+                                    key={p}
+                                    className="rounded bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 px-1 py-0.2 text-[9px] line-through"
+                                  >
+                                    {p}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(res.cleanedUrl);
+                            }}
+                            className="rounded p-1 text-stone-400 hover:text-emerald-700 dark:hover:text-emerald-400 transition"
+                            title="Copy link"
+                          >
+                            <HiClipboardDocument className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* SECTION 3: SUBSYSTEM DEFENSE MODULES */}
+            <div
+              className="sentry-card p-6 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors"
+              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+            >
+              <div>
+                <h3 className="text-base font-bold text-stone-900 dark:text-white">
+                  Link Guard Subsystem Protection Modules
+                </h3>
+                <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-0.5">
+                  Fine-tune granular network filters, DOM mutation observers, and History API wrappers.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[
+                  {
+                    key: 'stripMarketingParams' as const,
+                    title: 'Universal Tracking Parameters',
+                    desc: 'Strips utm_source, utm_medium, utm_campaign, ga_*, _openstat, wt_mc, etc.',
+                  },
+                  {
+                    key: 'stripReferralTokens' as const,
+                    title: 'Platform & Referral Tokens',
+                    desc: 'Strips Amazon ref_/pd_rd_*, YouTube si, TikTok ttclid, Twitter twclid, fbclid, gclid.',
+                  },
+                  {
+                    key: 'blockHyperlinkPings' as const,
+                    title: 'Hyperlink Auditing Defeater',
+                    desc: 'Eliminates HTML5 <a ping> attributes and blocks resourceType: ping at network layer.',
+                  },
+                  {
+                    key: 'unwrapRedirects' as const,
+                    title: 'Redirection Wrapper Unmasker',
+                    desc: 'Decodes google.com/url?q=..., facebook.com/l.php?u=..., and out.php tracking links.',
+                  },
+                  {
+                    key: 'bypassSearchRedirection' as const,
+                    title: 'Search Hijack Neutralizer',
+                    desc: 'Defeats Google and Yandex rwt click rewriters and removes data-cthref attributes.',
+                  },
+                  {
+                    key: 'sanitizeHistoryApi' as const,
+                    title: 'History API Inoculation',
+                    desc: 'Intercepts pushState & replaceState to prevent SPAs from silently re-injecting trackers.',
+                  },
+                ].map((item) => {
+                  const isEnabled = settings?.urlCleaner?.[item.key] ?? true;
+                  return (
+                    <div
+                      key={item.key}
+                      className="rounded-xl border border-stone-200 dark:border-[#383852] bg-stone-50/70 dark:bg-[#181825]/70 p-4 flex flex-col justify-between space-y-3"
+                    >
+                      <div>
+                        <div className="font-semibold text-xs text-stone-900 dark:text-white">
+                          {item.title}
+                        </div>
+                        <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] mt-1 leading-relaxed">
+                          {item.desc}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-[10px] font-mono text-stone-400">
+                          {isEnabled ? 'ENABLED' : 'PAUSED'}
+                        </span>
+                        <button
+                          onClick={() => handleToggleUrlCleanerSetting(item.key)}
+                          className="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                          style={{
+                            backgroundColor: isEnabled ? 'var(--green-primary)' : 'var(--border-strong)',
+                          }}
+                        >
+                          <span
+                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                              isEnabled ? 'translate-x-4' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* SECTION 4: SURVEILLANCE PARAMETER DIRECTORY */}
+            <div
+              className="sentry-card p-6 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors"
+              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+            >
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-stone-100 dark:border-[#383852] pb-3">
+                <div>
+                  <h3 className="text-base font-bold text-stone-900 dark:text-white">
+                    Surveillance Parameter Dictionary & Intelligence
+                  </h3>
+                  <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-0.5">
+                    Catalog of prominent surveillance tokens, click identifiers, and session linkers purged by Sentry AI.
+                  </p>
+                </div>
+
+                {/* Search & Category Pills */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="relative">
+                    <HiMagnifyingGlass className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-stone-400" />
+                    <input
+                      type="text"
+                      placeholder="Search parameters..."
+                      value={paramSearch}
+                      onChange={(e) => setParamSearch(e.target.value)}
+                      className="rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] pl-8 pr-3 py-1.5 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600"
+                    />
+                  </div>
+
+                  <div className="flex space-x-1 rounded-lg bg-stone-100 dark:bg-[#181825] p-1 border border-stone-200 dark:border-[#383852]">
+                    {(['all', 'analytics', 'clicks', 'platforms', 'redirects'] as const).map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedParamCategory(cat)}
+                        className={`rounded px-2.5 py-0.5 text-[10px] font-mono capitalize transition ${
+                          selectedParamCategory === cat
+                            ? 'bg-emerald-700 text-white dark:bg-emerald-600 font-bold'
+                            : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-white'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Grid of Dictionary Items */}
+              {(() => {
+                const filteredParams = TRACKING_DICTIONARY.filter((p) => {
+                  const matchesCat =
+                    selectedParamCategory === 'all' || p.category === selectedParamCategory;
+                  const matchesSearch =
+                    paramSearch === '' ||
+                    p.name.toLowerCase().includes(paramSearch.toLowerCase()) ||
+                    p.company.toLowerCase().includes(paramSearch.toLowerCase()) ||
+                    p.desc.toLowerCase().includes(paramSearch.toLowerCase());
+                  return matchesCat && matchesSearch;
+                });
+
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {filteredParams.map((p) => (
+                      <div
+                        key={p.name}
+                        className="rounded-xl border border-stone-200 dark:border-[#383852] bg-stone-50/50 dark:bg-[#181825]/50 p-3.5 space-y-2 hover:border-emerald-400 transition"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-xs font-bold text-stone-900 dark:text-white truncate max-w-[200px]">
+                            {p.name}
+                          </span>
+                          <span className="rounded bg-stone-200 dark:bg-[#2E2E44] px-1.5 py-0.5 text-[9px] font-mono font-bold text-stone-700 dark:text-[#CDD6F4]">
+                            {p.badge}
+                          </span>
+                        </div>
+                        <div className="text-[11px] font-mono font-semibold text-emerald-800 dark:text-emerald-400">
+                          {p.company}
+                        </div>
+                        <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
+                          {p.desc}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
           </div>
         )}
 

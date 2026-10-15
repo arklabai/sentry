@@ -54,14 +54,26 @@ assert(fs.existsSync(headerRulesPath), 'rules_privacy_headers.json exists');
 const headerRules = JSON.parse(fs.readFileSync(headerRulesPath, 'utf8'));
 assert(headerRules[0].action.requestHeaders.some((h) => h.header === 'Sec-GPC'), 'Sec-GPC header injection declared');
 
+const urlCleanerRulesPath = path.join(distDir, 'rules/rules_url_cleaner.json');
+assert(fs.existsSync(urlCleanerRulesPath), 'rules_url_cleaner.json exists');
+const urlCleanerRules = JSON.parse(fs.readFileSync(urlCleanerRulesPath, 'utf8'));
+assert(Array.isArray(urlCleanerRules) && urlCleanerRules.length > 0, `rules_url_cleaner contains ${urlCleanerRules.length} rules`);
+urlCleanerRules.forEach((r) => {
+  if (ruleIds.has(r.id)) duplicates++;
+  ruleIds.add(r.id);
+});
+assert(duplicates === 0, 'All DNR rule IDs across all rulesets are completely unique');
+
 // 4. Verify Built HTML & Assets
 assert(fs.existsSync(path.join(distDir, 'popup.html')), 'dist/popup.html exists');
 assert(fs.existsSync(path.join(distDir, 'sidepanel.html')), 'dist/sidepanel.html exists');
 assert(fs.existsSync(path.join(distDir, 'dashboard.html')), 'dist/dashboard.html exists');
 assert(manifest.side_panel?.default_path === 'sidepanel.html', 'Side panel configured in manifest');
 assert(manifest.permissions.includes('sidePanel'), 'sidePanel permission declared');
+assert(manifest.permissions.includes('contextMenus'), 'contextMenus permission declared');
 assert(fs.existsSync(path.join(distDir, 'background/serviceWorker.js')), 'dist/background/serviceWorker.js exists');
 assert(fs.existsSync(path.join(distDir, 'content/canvasDefender.js')), 'dist/content/canvasDefender.js exists');
+assert(fs.existsSync(path.join(distDir, 'content/urlCleaner.js')), 'dist/content/urlCleaner.js exists');
 assert(fs.existsSync(path.join(distDir, 'content/aiShield.js')), 'dist/content/aiShield.js exists');
 assert(fs.existsSync(path.join(distDir, 'content/domZapper.js')), 'dist/content/domZapper.js exists');
 

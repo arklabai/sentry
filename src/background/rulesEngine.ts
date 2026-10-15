@@ -127,6 +127,17 @@ export const DEFAULT_SETTINGS: PrivacySettings = {
     googleGeminiLock: true,
     linkedInTrainingLock: true,
   },
+
+  // Full URL Cleaner & Link Guard Settings (ClearURLs Integration)
+  urlCleaner: {
+    enabled: true,
+    stripMarketingParams: true,
+    stripReferralTokens: true,
+    blockHyperlinkPings: true,
+    unwrapRedirects: true,
+    sanitizeHistoryApi: true,
+    bypassSearchRedirection: true,
+  },
 };
 
 /**
@@ -143,7 +154,8 @@ export function calculateSafetyScore(
     stats.canvasFaked +
     stats.audioFaked +
     stats.webglFaked +
-    stats.aiBeaconsBlocked;
+    stats.aiBeaconsBlocked +
+    (stats.urlsCleaned || 0);
 
   if (totalThreats === 0) return 'A+';
   if (totalThreats <= 3) return 'A';
@@ -159,8 +171,8 @@ export function calculateSafetyScore(
 export async function applySettings(settings: PrivacySettings): Promise<void> {
   await chrome.storage.local.set({ sentry_settings: settings });
 
-  // Update static rulesets based on master toggle
-  await toggleStaticRulesets(settings.masterShield);
+  // Update static rulesets based on master toggle & url cleaner toggle
+  await toggleStaticRulesets(settings.masterShield, settings.urlCleaner?.enabled !== false);
 
   // Update dynamic whitelist rules
   await updateDomainRules(settings.whitelistedDomains);
@@ -245,6 +257,10 @@ export async function getSettings(): Promise<PrivacySettings> {
     aiDefense: {
       ...DEFAULT_SETTINGS.aiDefense,
       ...(result.sentry_settings.aiDefense || {}),
+    },
+    urlCleaner: {
+      ...DEFAULT_SETTINGS.urlCleaner,
+      ...(result.sentry_settings.urlCleaner || {}),
     },
   };
 }

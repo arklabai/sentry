@@ -19,6 +19,7 @@ export default defineConfig({
         canvasDefender: resolve(__dirname, 'src/content/canvasDefender.ts'),
         aiShield: resolve(__dirname, 'src/content/aiShield.ts'),
         domZapper: resolve(__dirname, 'src/content/domZapper.ts'),
+        urlCleaner: resolve(__dirname, 'src/content/urlCleaner.ts'),
       },
       output: {
         entryFileNames: (chunkInfo) => {
@@ -28,7 +29,8 @@ export default defineConfig({
           if (
             chunkInfo.name === 'canvasDefender' ||
             chunkInfo.name === 'aiShield' ||
-            chunkInfo.name === 'domZapper'
+            chunkInfo.name === 'domZapper' ||
+            chunkInfo.name === 'urlCleaner'
           ) {
             return 'content/[name].js';
           }

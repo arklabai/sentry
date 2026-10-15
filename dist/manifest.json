@@ -13,7 +13,8 @@
     "scripting",
     "alarms",
     "tabs",
-    "webNavigation"
+    "webNavigation",
+    "contextMenus"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -61,13 +62,18 @@
         "id": "rules_privacy_headers",
         "enabled": true,
         "path": "rules/rules_privacy_headers.json"
+      },
+      {
+        "id": "rules_url_cleaner",
+        "enabled": true,
+        "path": "rules/rules_url_cleaner.json"
       }
     ]
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content/canvasDefender.js"],
+      "js": ["content/canvasDefender.js", "content/urlCleaner.js"],
       "run_at": "document_start",
       "world": "MAIN",
       "all_frames": true
