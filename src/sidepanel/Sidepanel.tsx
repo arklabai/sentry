@@ -1524,16 +1524,7 @@ export default function Sidepanel() {
                       </div>
                     ))}
 
-                    <div className="flex items-center justify-between pt-1">
-                      <button
-                        onClick={handleActivateZapper}
-                        className="flex items-center space-x-1 text-[11px] font-semibold transition cursor-pointer"
-                        style={{ color: 'var(--danger-primary)' }}
-                      >
-                        <HiBolt className="h-3.5 w-3.5" />
-                        <span>Zap Another Element</span>
-                      </button>
-
+                    <div className="flex items-center justify-end pt-1">
                       <button
                         onClick={handleClearSiteZapRules}
                         className="text-[10px] font-mono text-stone-400 hover:text-rose-500 transition cursor-pointer"
