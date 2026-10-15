@@ -74,7 +74,7 @@
     },
     {
       "matches": ["<all_urls>"],
-      "js": ["content/aiShield.js"],
+      "js": ["content/aiShield.js", "content/domZapper.js"],
       "run_at": "document_start",
       "world": "ISOLATED",
       "all_frames": true

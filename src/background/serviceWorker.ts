@@ -326,9 +326,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     case 'ACTIVATE_ELEMENT_ZAPPER': {
-      chrome.tabs.query({ active: true, currentWindow: true }).then(([activeTab]) => {
+      chrome.tabs.query({ active: true, currentWindow: true }).then(async ([activeTab]) => {
         if (activeTab && activeTab.id) {
-          chrome.tabs.sendMessage(activeTab.id, { action: 'ACTIVATE_ZAPPER' });
+          try {
+            await chrome.scripting.executeScript({
+              target: { tabId: activeTab.id },
+              files: ['content/domZapper.js'],
+            });
+          } catch {
+            // Script may already be active
+          }
+          chrome.tabs.sendMessage(activeTab.id, { action: 'ACTIVATE_ZAPPER' }, () => {
+            if (chrome.runtime.lastError) {
+              // Suppress communication errors
+            }
+          });
           sendResponse({ status: 'ok' });
         }
       });
