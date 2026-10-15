@@ -46,7 +46,6 @@ type SidebarTab = 'overview' | 'matrix' | 'broker' | 'cleaner' | 'network';
 export default function Sidepanel() {
   const { themeMode, isDark, setThemeMode } = useTheme();
   const [activeTab, setActiveTab] = useState<SidebarTab>('overview');
-  const [matrixFilter, setMatrixFilter] = useState<'all' | 'traffic' | 'entropy' | 'rules'>('all');
   const [settings, setSettings] = useState<PrivacySettings | null>(null);
   const [siteZapRules, setSiteZapRules] = useState<ZapRule[]>([]);
   const [stats, setStats] = useState<TabThreatStats | null>(null);
@@ -922,12 +921,6 @@ export default function Sidepanel() {
                     icon: HiShieldCheck,
                   },
                   {
-                    key: 'batteryShield' as const,
-                    label: 'Battery Status Guard',
-                    desc: 'Neutralizes live battery level & charging probes',
-                    icon: HiBolt,
-                  },
-                  {
                     key: 'urlCleaner' as const,
                     label: 'Clean Link Guard',
                     desc: 'Removes tracking tokens from web links',
@@ -948,8 +941,6 @@ export default function Sidepanel() {
                       ? settings.cookieConsent?.enabled ?? true
                       : item.key === 'thirdPartyCookies'
                       ? (settings.uBlock?.blockThirdPartyCookies || settings.uBlock?.matrix?.thirdPartyCookies === 'block') ?? false
-                      : item.key === 'batteryShield'
-                      ? settings.canvasBlocker?.batteryShield !== false
                       : settings[item.key];
                   return (
                     <div
@@ -1241,7 +1232,6 @@ export default function Sidepanel() {
                 <button
                   onClick={() => {
                     setActiveTab('matrix');
-                    setMatrixFilter('rules');
                   }}
                   title="View and manage element zap rules in Matrix tab"
                   className="flex items-center justify-center space-x-1.5 rounded-lg border p-2 px-3 text-xs font-semibold transition cursor-pointer hover:opacity-90 active:scale-98"
@@ -1264,44 +1254,8 @@ export default function Sidepanel() {
         {/* ========================================================= */}
         {activeTab === 'matrix' && (
           <div className="space-y-3.5">
-            {/* View Sub-Filter Pill Control */}
-            <div
-              className="flex items-center rounded-xl p-1 gap-1"
-              style={{
-                backgroundColor: 'var(--bg-surface-subtle)',
-                border: '1px solid var(--border-subtle)',
-              }}
-            >
-              {(['all', 'traffic', 'entropy', 'rules'] as const).map((filter) => {
-                const isSelected = matrixFilter === filter;
-                return (
-                  <button
-                    key={filter}
-                    onClick={() => setMatrixFilter(filter)}
-                    className={`flex-1 py-1 text-[10px] font-semibold rounded-lg capitalize transition cursor-pointer ${
-                      isSelected ? 'shadow-xs' : 'opacity-70 hover:opacity-100'
-                    }`}
-                    style={{
-                      backgroundColor: isSelected ? 'var(--bg-surface)' : 'transparent',
-                      color: isSelected ? 'var(--green-primary)' : 'var(--text-secondary)',
-                      border: isSelected ? '1px solid var(--border-subtle)' : '1px solid transparent',
-                    }}
-                  >
-                    {filter === 'all'
-                      ? 'All Matrix'
-                      : filter === 'traffic'
-                      ? 'Traffic'
-                      : filter === 'entropy'
-                      ? 'Entropy'
-                      : 'Rules'}
-                  </button>
-                );
-              })}
-            </div>
-
             {/* SECTION 1: CANVAS ENTROPY VERIFICATION (At the Top) */}
-            {(matrixFilter === 'all' || matrixFilter === 'entropy') && (
-              <div
+            <div
                 className="sentry-card p-3.5 space-y-2.5"
                 style={{
                   backgroundColor: 'var(--bg-surface)',
@@ -1351,11 +1305,9 @@ export default function Sidepanel() {
                   </div>
                 )}
               </div>
-            )}
 
             {/* SECTION 2: DYNAMIC TRAFFIC FILTERING MATRIX */}
-            {(matrixFilter === 'all' || matrixFilter === 'traffic') && (
-              <div
+            <div
                 className="sentry-card p-3.5 space-y-3"
                 style={{
                   backgroundColor: 'var(--bg-surface)',
@@ -1438,11 +1390,8 @@ export default function Sidepanel() {
                   })}
                 </div>
               </div>
-            )}
 
             {/* SECTION 3: ENTROPY & ANTI-FINGERPRINTING DEFENSE */}
-            {(matrixFilter === 'all' || matrixFilter === 'entropy') && (
-              <>
 
                 {/* GRANULAR ENTROPY CONTROLS */}
                 <div
@@ -1619,13 +1568,8 @@ export default function Sidepanel() {
                     ))}
                   </div>
                 </div>
-              </>
-            )}
-
-            {/* SECTION 3: FILTER LISTS & CUSTOM RULES */}
-            {(matrixFilter === 'all' || matrixFilter === 'rules') && (
-              <>
-                {/* GLOBAL FILTER LISTS */}
+            {/* SECTION 4: FILTER LISTS & CUSTOM RULES */}
+            {/* GLOBAL FILTER LISTS */}
             <div
               className="sentry-card p-3.5 space-y-2.5"
               style={{
@@ -1821,10 +1765,8 @@ export default function Sidepanel() {
                   </div>
                 )}
               </div>
-            </>
-          )}
-        </div>
-      )}
+          </div>
+        )}
 
         {/* ========================================================= */}
         {/* TAB 3: AI GUARD */}

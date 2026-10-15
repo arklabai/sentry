@@ -52,7 +52,7 @@ export const DEFAULT_SETTINGS: PrivacySettings = {
   uBlock: {
     matrix: {
       firstPartyScripts: 'allow',
-      thirdPartyScripts: 'noop',
+      thirdPartyScripts: 'block',
       firstPartyFrames: 'allow',
       thirdPartyFrames: 'noop',
       thirdPartyCookies: 'noop',

@@ -607,29 +607,152 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Context Menu: Setup & Event Handlers (ClearURLs & Element Zapper feature)
+// Context Menu: Setup & Event Handlers (ClearURLs & Element Zapper feature)
 function setupContextMenus() {
   if (!chrome.contextMenus) return;
   chrome.contextMenus.removeAll(() => {
+    // 1. Zap Element (uBlock Origin style - targets clicked element or activates zapper)
     chrome.contextMenus.create({
-      id: 'sentry-copy-clean-link',
-      title: 'Copy Clean Link (Sentry AI)',
+      id: 'sentry-zap-element',
+      title: 'Zap Element (Sentry AI)',
+      contexts: ['all'],
+    });
+
+    // 2. Interactive Element Zapper Mode
+    chrome.contextMenus.create({
+      id: 'sentry-zap-mode',
+      title: 'Enter Element Zapper Mode',
+      contexts: ['page', 'frame'],
+    });
+
+    // 3. Copy Untrackable Link (Scrubbed of UTMs, fbclid, gclid, affiliate tags)
+    chrome.contextMenus.create({
+      id: 'sentry-copy-untrackable-link',
+      title: 'Copy Untrackable Link',
       contexts: ['link'],
     });
+
+    // 4. Copy Untrackable Page Link
+    chrome.contextMenus.create({
+      id: 'sentry-copy-page-untrackable-link',
+      title: 'Copy Untrackable Page Link',
+      contexts: ['page'],
+    });
+
+    // 5. Open Untrackable Link in New Tab
     chrome.contextMenus.create({
       id: 'sentry-open-clean-link',
-      title: 'Open Clean Link in New Tab',
+      title: 'Open Untrackable Link in New Tab',
       contexts: ['link'],
-    });
-    chrome.contextMenus.create({
-      id: 'sentry-zap-page',
-      title: 'Zap Elements on this Page (Sentry AI)',
-      contexts: ['page', 'image', 'video'],
     });
   });
 }
 
+function copyToClipboardWithFeedback(tabId: number, text: string, toastMessage: string) {
+  chrome.scripting
+    .executeScript({
+      target: { tabId },
+      func: (copyText: string, toastMsg: string) => {
+        // Dual clipboard mechanism
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(copyText).catch(() => {
+            try {
+              const ta = document.createElement('textarea');
+              ta.value = copyText;
+              ta.style.position = 'fixed';
+              ta.style.opacity = '0';
+              document.body.appendChild(ta);
+              ta.focus();
+              ta.select();
+              document.execCommand('copy');
+              ta.remove();
+            } catch {}
+          });
+        }
+
+        // Visual confirmation toast
+        const toast = document.createElement('div');
+        toast.style.position = 'fixed';
+        toast.style.bottom = '24px';
+        toast.style.right = '24px';
+        toast.style.backgroundColor = '#181825';
+        toast.style.color = '#a6e3a1';
+        toast.style.border = '1px solid #a6e3a1';
+        toast.style.borderRadius = '8px';
+        toast.style.padding = '10px 16px';
+        toast.style.fontSize = '12px';
+        toast.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+        toast.style.fontWeight = '600';
+        toast.style.zIndex = '2147483647';
+        toast.style.boxShadow = '0 8px 24px rgba(0,0,0,0.5)';
+        toast.style.transition = 'all 0.3s ease';
+        toast.textContent = toastMsg;
+
+        const target = document.body || document.documentElement;
+        if (target) {
+          target.appendChild(toast);
+          setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(10px)';
+            setTimeout(() => toast.remove(), 300);
+          }, 2400);
+        }
+      },
+      args: [text, toastMessage],
+    })
+    .catch(() => {});
+}
+
+function recordCleanUrlStats(cleanRes: ReturnType<typeof cleanUrl>, tab?: chrome.tabs.Tab) {
+  if (cleanRes.hasChanged) {
+    globalStats.totalUrlsCleaned += 1;
+    globalStats.totalParamsStripped += cleanRes.strippedParams.length;
+    saveGlobalStats();
+
+    if (tab?.id) {
+      const stats = getOrCreateTabStats(tab.id, tab.url);
+      stats.urlsCleaned = (stats.urlsCleaned || 0) + 1;
+      stats.paramsStripped = (stats.paramsStripped || 0) + cleanRes.strippedParams.length;
+      let host = 'link';
+      try {
+        host = new URL(cleanRes.originalUrl).hostname;
+      } catch {}
+      stats.threatEvents.unshift({
+        id: Math.random().toString(36).substring(2, 9),
+        timestamp: Date.now(),
+        type: 'url_cleaner',
+        source: host,
+        description: `Link Scrubbed: Removed ${cleanRes.strippedParams.length} tracker parameter(s) [${cleanRes.strippedParams.slice(0, 3).join(', ')}]`,
+      });
+      saveGlobalStats();
+    }
+  }
+}
+
 chrome.contextMenus?.onClicked.addListener(async (info, tab) => {
-  if (info.menuItemId === 'sentry-zap-page') {
+  // 1. ZAP ELEMENT (Instant zap on right-clicked element, fallback to interactive picker)
+  if (info.menuItemId === 'sentry-zap-element') {
+    const targetTab = tab?.id ? tab : await getTargetWebTab();
+    if (targetTab && targetTab.id) {
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId: targetTab.id },
+          files: ['content/domZapper.js'],
+        });
+      } catch {}
+      chrome.tabs.sendMessage(targetTab.id, { action: 'ZAP_TARGET_ELEMENT' }, (res) => {
+        if (chrome.runtime.lastError) {}
+        if (res?.zapped) {
+          globalStats.totalElementsZapped = (globalStats.totalElementsZapped || 0) + 1;
+          saveGlobalStats();
+        }
+      });
+    }
+    return;
+  }
+
+  // 2. ENTER ELEMENT ZAPPER MODE (Interactive point & click)
+  if (info.menuItemId === 'sentry-zap-mode' || info.menuItemId === 'sentry-zap-page') {
     const targetTab = tab?.id ? tab : await getTargetWebTab();
     if (targetTab && targetTab.id) {
       try {
@@ -645,47 +768,44 @@ chrome.contextMenus?.onClicked.addListener(async (info, tab) => {
     return;
   }
 
-  if (!info.linkUrl) return;
-  const cleanRes = cleanUrl(info.linkUrl);
+  // 3. COPY UNTRACKABLE LINK (Link clicked)
+  if (info.menuItemId === 'sentry-copy-untrackable-link' || info.menuItemId === 'sentry-copy-clean-link') {
+    if (!info.linkUrl) return;
+    const cleanRes = cleanUrl(info.linkUrl);
+    const toastMsg = cleanRes.hasChanged
+      ? `Sentry AI: Untrackable link copied! (stripped ${cleanRes.strippedParams.length} tracker parameter${cleanRes.strippedParams.length > 1 ? 's' : ''})`
+      : 'Sentry AI: Untrackable link copied to clipboard!';
 
-  if (info.menuItemId === 'sentry-copy-clean-link') {
     if (tab?.id) {
-      chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: (text: string) => {
-          navigator.clipboard.writeText(text);
-        },
-        args: [cleanRes.cleanedUrl],
-      }).catch(() => {});
+      copyToClipboardWithFeedback(tab.id, cleanRes.cleanedUrl, toastMsg);
     }
-  } else if (info.menuItemId === 'sentry-open-clean-link') {
-    chrome.tabs.create({ url: cleanRes.cleanedUrl, active: false });
+    recordCleanUrlStats(cleanRes, tab);
+    return;
   }
 
-  if (cleanRes.hasChanged) {
-    globalStats.totalUrlsCleaned += 1;
-    globalStats.totalParamsStripped += cleanRes.strippedParams.length;
-    saveGlobalStats();
+  // 4. COPY UNTRACKABLE PAGE LINK (Page clicked)
+  if (info.menuItemId === 'sentry-copy-page-untrackable-link') {
+    const rawUrl = info.pageUrl || tab?.url;
+    if (!rawUrl) return;
+    const cleanRes = cleanUrl(rawUrl);
+    const toastMsg = cleanRes.hasChanged
+      ? `Sentry AI: Clean page link copied! (stripped ${cleanRes.strippedParams.length} tracker parameter${cleanRes.strippedParams.length > 1 ? 's' : ''})`
+      : 'Sentry AI: Clean page link copied to clipboard!';
 
     if (tab?.id) {
-      const stats = getOrCreateTabStats(tab.id, tab.url);
-      stats.urlsCleaned = (stats.urlsCleaned || 0) + 1;
-      stats.paramsStripped = (stats.paramsStripped || 0) + cleanRes.strippedParams.length;
-      let host = 'link';
-      try {
-        host = new URL(cleanRes.originalUrl).hostname;
-      } catch {
-        // fallback
-      }
-      stats.threatEvents.unshift({
-        id: Math.random().toString(36).substring(2, 9),
-        timestamp: Date.now(),
-        type: 'url_cleaner',
-        source: host,
-        description: `Link Scrubbed: Removed ${cleanRes.strippedParams.length} tracker parameter(s) [${cleanRes.strippedParams.slice(0, 3).join(', ')}]`,
-      });
-      saveGlobalStats();
+      copyToClipboardWithFeedback(tab.id, cleanRes.cleanedUrl, toastMsg);
     }
+    recordCleanUrlStats(cleanRes, tab);
+    return;
+  }
+
+  // 5. OPEN UNTRACKABLE LINK IN NEW TAB
+  if (info.menuItemId === 'sentry-open-clean-link') {
+    if (!info.linkUrl) return;
+    const cleanRes = cleanUrl(info.linkUrl);
+    chrome.tabs.create({ url: cleanRes.cleanedUrl, active: false });
+    recordCleanUrlStats(cleanRes, tab);
+    return;
   }
 });
 

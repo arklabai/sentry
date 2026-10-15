@@ -288,18 +288,26 @@ import type { ZapRule, PrivacySettings } from '../types/index.ts';
     }
   }
 
-  async function onClick(e: MouseEvent) {
-    if (!zapperActive) return;
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
+  // Track the most recent element that received a right-click
+  let lastContextTarget: HTMLElement | null = null;
+  document.addEventListener(
+    'contextmenu',
+    (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target &&
+        target !== overlay &&
+        target !== badge &&
+        target !== document.body &&
+        target !== document.documentElement
+      ) {
+        lastContextTarget = target;
+      }
+    },
+    true
+  );
 
-    const targetEl = (hoveredElement || document.elementFromPoint(e.clientX, e.clientY)) as HTMLElement;
-    if (!targetEl || targetEl === document.body || targetEl === document.documentElement) {
-      stopZapper();
-      return;
-    }
-
+  async function zapElement(targetEl: HTMLElement): Promise<string> {
     const selector = generateOptimalSelector(targetEl);
 
     // 1. Hide element immediately
@@ -314,7 +322,7 @@ import type { ZapRule, PrivacySettings } from '../types/index.ts';
       updatePersistentStylesheet(activeZapRules);
       purgeMatchingElements();
 
-      showToast(`Sentry AI: Rule saved! <${selector}> permanently hidden on ${currentHost}`);
+      showToast(`Sentry AI: Element zapped! <${selector}> permanently hidden`);
 
       // 3. Notify background service worker to update stats and threats
       chrome.runtime.sendMessage({
@@ -329,7 +337,22 @@ import type { ZapRule, PrivacySettings } from '../types/index.ts';
     } catch (err) {
       console.warn('Failed to persist zap rule:', err);
     }
+    return selector;
+  }
 
+  async function onClick(e: MouseEvent) {
+    if (!zapperActive) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+
+    const targetEl = (hoveredElement || document.elementFromPoint(e.clientX, e.clientY)) as HTMLElement;
+    if (!targetEl || targetEl === document.body || targetEl === document.documentElement) {
+      stopZapper();
+      return;
+    }
+
+    await zapElement(targetEl);
     stopZapper();
   }
 
@@ -367,8 +390,31 @@ import type { ZapRule, PrivacySettings } from '../types/index.ts';
   // =========================================================================
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message.action === 'ZAP_TARGET_ELEMENT') {
+      if (
+        lastContextTarget &&
+        lastContextTarget.isConnected &&
+        lastContextTarget !== document.body &&
+        lastContextTarget !== document.documentElement
+      ) {
+        zapElement(lastContextTarget).then((selector) => {
+          sendResponse({ status: 'ok', zapped: true, selector });
+        });
+      } else {
+        startZapper();
+        sendResponse({ status: 'ok', zapped: false, mode: 'interactive' });
+      }
+      return true;
+    }
+
     if (message.action === 'ACTIVATE_ZAPPER') {
       startZapper();
+      sendResponse({ status: 'ok' });
+      return true;
+    }
+
+    if (message.action === 'SHOW_TOAST') {
+      showToast(message.message || 'Action completed');
       sendResponse({ status: 'ok' });
       return true;
     }

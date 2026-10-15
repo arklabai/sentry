@@ -71,6 +71,7 @@ assert(fs.existsSync(path.join(distDir, 'dashboard.html')), 'dist/dashboard.html
 assert(manifest.side_panel?.default_path === 'sidepanel.html', 'Side panel configured in manifest');
 assert(manifest.permissions.includes('sidePanel'), 'sidePanel permission declared');
 assert(manifest.permissions.includes('contextMenus'), 'contextMenus permission declared');
+assert(manifest.permissions.includes('clipboardWrite'), 'clipboardWrite permission declared');
 assert(fs.existsSync(path.join(distDir, 'background/serviceWorker.js')), 'dist/background/serviceWorker.js exists');
 assert(fs.existsSync(path.join(distDir, 'content/canvasDefender.js')), 'dist/content/canvasDefender.js exists');
 assert(fs.existsSync(path.join(distDir, 'content/urlCleaner.js')), 'dist/content/urlCleaner.js exists');

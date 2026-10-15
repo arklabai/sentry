@@ -13,7 +13,8 @@
     "alarms",
     "tabs",
     "webNavigation",
-    "contextMenus"
+    "contextMenus",
+    "clipboardWrite"
   ],
   "host_permissions": [
     "<all_urls>"
