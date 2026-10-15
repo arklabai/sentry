@@ -32,6 +32,11 @@ import {
   HiArrowDownTray,
   HiArrowRight,
   HiBolt,
+  HiUser,
+  HiEnvelope,
+  HiPhone,
+  HiMapPin,
+  HiGlobeAmericas,
 } from 'react-icons/hi2';
 import {
   BrokerEntry,
@@ -532,11 +537,11 @@ https://news.ycombinator.com/item?id=123456`
                 <h1 className="text-xl font-black tracking-tight text-stone-900 dark:text-white">
                   SENTRY <span className="text-emerald-700 dark:text-emerald-400">AI</span>
                 </h1>
-                <span className="rounded bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-500/30 px-2 py-0.5 font-mono text-[10px] font-semibold text-emerald-800 dark:text-emerald-300">
+                <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/40 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-emerald-800 dark:text-emerald-300 uppercase">
                   COMMAND CENTER
                 </span>
               </div>
-              <p className="text-xs text-stone-500 dark:text-[#A6ADC8] font-mono tracking-wide">
+              <p className="text-xs text-stone-500 dark:text-[#A6ADC8]">
                 Be Fearless Online
               </p>
             </div>
@@ -547,7 +552,7 @@ https://news.ycombinator.com/item?id=123456`
             <nav className="flex space-x-1 rounded-xl bg-stone-100/90 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] p-1">
               <button
                 onClick={() => setActiveTab('brokers')}
-                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
                   activeTab === 'brokers'
                     ? 'bg-emerald-700 text-white shadow-xs dark:bg-emerald-600 dark:text-white'
                     : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
@@ -559,7 +564,7 @@ https://news.ycombinator.com/item?id=123456`
 
               <button
                 onClick={() => setActiveTab('ai-shield')}
-                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
                   activeTab === 'ai-shield'
                     ? 'bg-emerald-700 text-white shadow-xs dark:bg-emerald-600 dark:text-white'
                     : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
@@ -571,7 +576,7 @@ https://news.ycombinator.com/item?id=123456`
 
               <button
                 onClick={() => setActiveTab('matrix')}
-                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
                   activeTab === 'matrix'
                     ? 'bg-emerald-700 text-white shadow-xs dark:bg-emerald-600 dark:text-white'
                     : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
@@ -583,7 +588,7 @@ https://news.ycombinator.com/item?id=123456`
 
               <button
                 onClick={() => setActiveTab('ledger')}
-                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
                   activeTab === 'ledger'
                     ? 'bg-emerald-700 text-white shadow-xs dark:bg-emerald-600 dark:text-white'
                     : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
@@ -595,7 +600,7 @@ https://news.ycombinator.com/item?id=123456`
 
               <button
                 onClick={() => setActiveTab('cleaner')}
-                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
                   activeTab === 'cleaner'
                     ? 'bg-emerald-700 text-white shadow-xs dark:bg-emerald-600 dark:text-white'
                     : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
@@ -610,7 +615,7 @@ https://news.ycombinator.com/item?id=123456`
             <button
               onClick={cycleTheme}
               title={`Theme: ${themeMode.toUpperCase()} (Click to toggle)`}
-              className="flex items-center space-x-1.5 rounded-xl border border-stone-200 dark:border-[#4E4E70] bg-stone-100/90 dark:bg-[#181825] px-3 py-1.5 text-xs font-medium text-stone-700 dark:text-[#CDD6F4] hover:bg-stone-200 dark:hover:bg-[#2E2E44] transition"
+              className="flex items-center space-x-1.5 rounded-xl border border-stone-200 dark:border-[#4E4E70] bg-stone-100/90 dark:bg-[#181825] px-3 py-1.5 text-xs font-medium text-stone-700 dark:text-[#CDD6F4] hover:bg-stone-200 dark:hover:bg-[#2E2E44] transition cursor-pointer"
             >
               {themeMode === 'system' ? (
                 <HiComputerDesktop className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
@@ -629,74 +634,95 @@ https://news.ycombinator.com/item?id=123456`
       <main className="max-w-7xl mx-auto w-full flex-1 p-6 space-y-6">
         {/* Global Protection Metrics Banner */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div
-            className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors"
-            style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-          >
-            <div className="flex items-center justify-between text-stone-500 dark:text-[#A6ADC8] mb-1">
-              <span className="text-xs font-mono uppercase tracking-wider">Total Trackers Blocked</span>
-              <HiShieldExclamation className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+          <div className="sentry-card p-4 rounded-2xl transition-all">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-bold text-stone-500 dark:text-[#A6ADC8] uppercase tracking-wider">
+                Trackers Blocked
+              </span>
+              <div className="h-7 w-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/40">
+                <HiShieldExclamation className="h-4 w-4" />
+              </div>
             </div>
-            <div className="text-2xl font-bold font-mono text-emerald-800 dark:text-emerald-300">
+            <div className="text-2xl font-extrabold text-stone-900 dark:text-white tabular-nums tracking-tight">
               {globalStats?.totalTrackersBlocked || 0}
             </div>
-            <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">DNR static & dynamic filters</p>
+            <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">
+              DNR static & dynamic filters
+            </p>
           </div>
 
-          <div
-            className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors"
-            style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-          >
-            <div className="flex items-center justify-between text-stone-500 dark:text-[#A6ADC8] mb-1">
-              <span className="text-xs font-mono uppercase tracking-wider">Fingerprints Scrambled</span>
-              <HiShieldCheck className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+          <div className="sentry-card p-4 rounded-2xl transition-all">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-bold text-stone-500 dark:text-[#A6ADC8] uppercase tracking-wider">
+                Fingerprints Scrambled
+              </span>
+              <div className="h-7 w-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/40">
+                <HiShieldCheck className="h-4 w-4" />
+              </div>
             </div>
-            <div className="text-2xl font-bold font-mono text-emerald-800 dark:text-emerald-300">
+            <div className="text-2xl font-extrabold text-stone-900 dark:text-white tabular-nums tracking-tight">
               {globalStats?.totalFingerprintsScrambled || 0}
             </div>
-            <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">Canvas, WebGL & Audio noise</p>
+            <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">
+              Canvas, WebGL & Audio noise
+            </p>
           </div>
 
-          <div
-            className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors"
-            style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-          >
-            <div className="flex items-center justify-between text-stone-500 dark:text-[#A6ADC8] mb-1">
-              <span className="text-xs font-mono uppercase tracking-wider">AI Scrapers Blocked</span>
-              <HiCpuChip className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+          <div className="sentry-card p-4 rounded-2xl transition-all">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-bold text-stone-500 dark:text-[#A6ADC8] uppercase tracking-wider">
+                AI Scrapers Blocked
+              </span>
+              <div className="h-7 w-7 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-200/60 dark:border-rose-800/40">
+                <HiCpuChip className="h-4 w-4" />
+              </div>
             </div>
-            <div className="text-2xl font-bold font-mono text-rose-700 dark:text-rose-400">
+            <div className="text-2xl font-extrabold text-rose-700 dark:text-rose-400 tabular-nums tracking-tight">
               {globalStats?.totalAiScrapersBlocked || 0}
             </div>
-            <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">Meta, ByteDance, TikTok pixels</p>
+            <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">
+              Meta, ByteDance, TikTok pixels
+            </p>
           </div>
 
-          <div
-            className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors"
-            style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-          >
-            <div className="flex items-center justify-between text-stone-500 dark:text-[#A6ADC8] mb-1">
-              <span className="text-xs font-mono uppercase tracking-wider">Cleaned URLs / Params</span>
-              <HiLink className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+          <div className="sentry-card p-4 rounded-2xl transition-all">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-bold text-stone-500 dark:text-[#A6ADC8] uppercase tracking-wider">
+                Sanitized URLs
+              </span>
+              <div className="h-7 w-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/40">
+                <HiLink className="h-4 w-4" />
+              </div>
             </div>
-            <div className="text-2xl font-bold font-mono text-emerald-800 dark:text-emerald-300">
-              {globalStats?.totalUrlsCleaned || 0} / {globalStats?.totalParamsStripped || 0}
+            <div className="text-2xl font-extrabold text-stone-900 dark:text-white tabular-nums tracking-tight">
+              {globalStats?.totalUrlsCleaned || 0}{' '}
+              <span className="text-xs font-normal text-stone-400 dark:text-[#9399B2]">
+                / {globalStats?.totalParamsStripped || 0} purged
+              </span>
             </div>
-            <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">Marketing & click trackers sanitized</p>
+            <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">
+              Click & tracking parameters
+            </p>
           </div>
 
-          <div
-            className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors"
-            style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-          >
-            <div className="flex items-center justify-between text-stone-500 dark:text-[#A6ADC8] mb-1">
-              <span className="text-xs font-mono uppercase tracking-wider">Brokers Cleared / Audited</span>
-              <HiCircleStack className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+          <div className="sentry-card p-4 rounded-2xl transition-all">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-bold text-stone-500 dark:text-[#A6ADC8] uppercase tracking-wider">
+                Brokers Audited
+              </span>
+              <div className="h-7 w-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/40">
+                <HiCircleStack className="h-4 w-4" />
+              </div>
             </div>
-            <div className="text-2xl font-bold font-mono text-emerald-800 dark:text-emerald-300">
-              {removedCount} / {totalBrokersCount}
+            <div className="text-2xl font-extrabold text-stone-900 dark:text-white tabular-nums tracking-tight">
+              {removedCount}{' '}
+              <span className="text-xs font-normal text-stone-400 dark:text-[#9399B2]">
+                / {totalBrokersCount} total
+              </span>
             </div>
-            <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">CCPA / GDPR Art 17 opt-outs</p>
+            <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">
+              CCPA / GDPR Art 17 opt-outs
+            </p>
           </div>
         </div>
 
@@ -704,36 +730,43 @@ https://news.ycombinator.com/item?id=123456`
         {activeTab === 'brokers' && (
           <div className="space-y-6">
             {/* Identity Profile & Local AES-256 Vault */}
-            <div
-              className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors"
-              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-            >
+            <div className="sentry-card p-6 rounded-2xl transition-all">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-100 dark:border-[#383852] pb-4">
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <HiLockClosed className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
-                    <h2 className="text-base font-bold text-stone-900 dark:text-white">
-                      Encrypted Personal Identity Vault (AES-256-GCM)
-                    </h2>
+                <div className="flex items-start space-x-3">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/40 shrink-0 mt-0.5">
+                    <HiLockClosed className="h-5 w-5" />
                   </div>
-                  <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-1">
-                    Your details are encrypted with your local passphrase. Zero unencrypted personal data leaves your browser.
-                  </p>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <h2 className="text-base font-bold text-stone-900 dark:text-white">
+                        Encrypted Personal Identity Vault
+                      </h2>
+                      <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/40 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                        AES-256-GCM
+                      </span>
+                    </div>
+                    <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-1">
+                      Your details are encrypted with your local passphrase. Zero unencrypted personal data leaves your browser.
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex items-center space-x-2">
                   {isVaultLocked ? (
                     <div className="flex items-center space-x-2">
-                      <input
-                        type="password"
-                        placeholder="Enter master passphrase"
-                        value={vaultPassphrase}
-                        onChange={(e) => setVaultPassphrase(e.target.value)}
-                        className="rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] px-3 py-1.5 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
-                      />
+                      <div className="relative">
+                        <HiKey className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-stone-400" />
+                        <input
+                          type="password"
+                          placeholder="Master passphrase"
+                          value={vaultPassphrase}
+                          onChange={(e) => setVaultPassphrase(e.target.value)}
+                          className="pl-8 pr-3 py-1.5 rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
+                        />
+                      </div>
                       <button
                         onClick={handleUnlockVault}
-                        className="flex items-center space-x-1.5 rounded-lg bg-emerald-700 dark:bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800 transition"
+                        className="flex items-center space-x-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition cursor-pointer"
                       >
                         <HiLockOpen className="h-3.5 w-3.5" />
                         <span>Unlock</span>
@@ -742,7 +775,7 @@ https://news.ycombinator.com/item?id=123456`
                   ) : (
                     <button
                       onClick={() => setIsVaultLocked(true)}
-                      className="flex items-center space-x-1.5 rounded-lg bg-stone-100 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] px-3 py-1.5 text-xs font-semibold text-stone-700 dark:text-[#CDD6F4] hover:border-stone-400"
+                      className="flex items-center space-x-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 dark:bg-[#181825] dark:hover:bg-[#252538] border border-stone-200 dark:border-[#383852] px-3.5 py-1.5 text-xs font-semibold text-stone-700 dark:text-[#CDD6F4] transition cursor-pointer"
                     >
                       <HiLockClosed className="h-3.5 w-3.5" />
                       <span>Lock Vault</span>
@@ -765,91 +798,110 @@ https://news.ycombinator.com/item?id=123456`
 
               {/* Unlocked Form Fields */}
               {!isVaultLocked && (
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-[11px] font-mono text-stone-500 dark:text-[#A6ADC8] mb-1">
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
                       Full Legal Name
                     </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Jane Doe"
-                      value={profile.fullName}
-                      onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
-                      className="w-full rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] p-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
-                    />
+                    <div className="relative">
+                      <HiUser className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
+                      <input
+                        type="text"
+                        placeholder="e.g. Jane Doe"
+                        value={profile.fullName}
+                        onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
+                        className="w-full rounded-xl bg-white dark:bg-[#181825] border border-stone-200 dark:border-[#383852] pl-9 pr-3 py-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
+                      />
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-mono text-stone-500 dark:text-[#A6ADC8] mb-1">
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
                       Primary Contact Email
                     </label>
-                    <input
-                      type="email"
-                      placeholder="e.g. jane@example.com"
-                      value={profile.primaryEmail}
-                      onChange={(e) => setProfile({ ...profile, primaryEmail: e.target.value })}
-                      className="w-full rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] p-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
-                    />
+                    <div className="relative">
+                      <HiEnvelope className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
+                      <input
+                        type="email"
+                        placeholder="e.g. jane@example.com"
+                        value={profile.primaryEmail}
+                        onChange={(e) => setProfile({ ...profile, primaryEmail: e.target.value })}
+                        className="w-full rounded-xl bg-white dark:bg-[#181825] border border-stone-200 dark:border-[#383852] pl-9 pr-3 py-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
+                      />
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-mono text-stone-500 dark:text-[#A6ADC8] mb-1">
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
                       Phone Number
                     </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. +1 (555) 019-2834"
-                      value={profile.phone}
-                      onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                      className="w-full rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] p-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
-                    />
+                    <div className="relative">
+                      <HiPhone className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
+                      <input
+                        type="text"
+                        placeholder="e.g. +1 (555) 019-2834"
+                        value={profile.phone}
+                        onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                        className="w-full rounded-xl bg-white dark:bg-[#181825] border border-stone-200 dark:border-[#383852] pl-9 pr-3 py-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
+                      />
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-mono text-stone-500 dark:text-[#A6ADC8] mb-1">
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
                       City, State / Region
                     </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. San Francisco, CA"
-                      value={profile.cityState}
-                      onChange={(e) => setProfile({ ...profile, cityState: e.target.value })}
-                      className="w-full rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] p-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
-                    />
+                    <div className="relative">
+                      <HiMapPin className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
+                      <input
+                        type="text"
+                        placeholder="e.g. San Francisco, CA"
+                        value={profile.cityState}
+                        onChange={(e) => setProfile({ ...profile, cityState: e.target.value })}
+                        className="w-full rounded-xl bg-white dark:bg-[#181825] border border-stone-200 dark:border-[#383852] pl-9 pr-3 py-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
+                      />
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-mono text-stone-500 dark:text-[#A6ADC8] mb-1">
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
                       Country
                     </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. United States"
-                      value={profile.country}
-                      onChange={(e) => setProfile({ ...profile, country: e.target.value })}
-                      className="w-full rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] p-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
-                    />
+                    <div className="relative">
+                      <HiGlobeAmericas className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
+                      <input
+                        type="text"
+                        placeholder="e.g. United States"
+                        value={profile.country}
+                        onChange={(e) => setProfile({ ...profile, country: e.target.value })}
+                        className="w-full rounded-xl bg-white dark:bg-[#181825] border border-stone-200 dark:border-[#383852] pl-9 pr-3 py-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
+                      />
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-mono text-stone-500 dark:text-[#A6ADC8] mb-1">
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
                       Passphrase (for AES-256)
                     </label>
-                    <input
-                      type="password"
-                      placeholder="Min 6 characters"
-                      value={vaultPassphrase}
-                      onChange={(e) => setVaultPassphrase(e.target.value)}
-                      className="w-full rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] p-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
-                    />
+                    <div className="relative">
+                      <HiKey className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
+                      <input
+                        type="password"
+                        placeholder="Min 6 characters"
+                        value={vaultPassphrase}
+                        onChange={(e) => setVaultPassphrase(e.target.value)}
+                        className="w-full rounded-xl bg-white dark:bg-[#181825] border border-stone-200 dark:border-[#383852] pl-9 pr-3 py-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
+                      />
+                    </div>
                   </div>
 
-                  <div className="md:col-span-3 flex justify-end">
+                  <div className="md:col-span-3 flex justify-end pt-2">
                     <button
                       onClick={handleSaveVault}
-                      className="rounded-lg bg-emerald-700 dark:bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition"
+                      className="flex items-center space-x-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition cursor-pointer"
                     >
-                      Save & Re-Encrypt Identity Vault
+                      <HiShieldCheck className="h-4 w-4" />
+                      <span>Save & Re-Encrypt Identity Vault</span>
                     </button>
                   </div>
                 </div>
@@ -857,37 +909,34 @@ https://news.ycombinator.com/item?id=123456`
             </div>
 
             {/* Broker Registry & Workflow Table */}
-            <div
-              className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors"
-              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-            >
+            <div className="sentry-card p-6 rounded-2xl space-y-4 transition-all">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <h3 className="text-base font-bold text-stone-900 dark:text-white">
                     Data Broker Remediation Registry ({filteredBrokers.length} of {totalBrokersCount})
                   </h3>
                   <p className="text-xs text-stone-500 dark:text-[#A6ADC8]">
-                    Direct automated CCPA/CPRA & GDPR Article 17 erasure requests.
+                    Direct automated CCPA/CPRA &amp; GDPR Article 17 erasure requests.
                   </p>
                 </div>
 
                 {/* Filter and Search Bar */}
                 <div className="flex items-center space-x-2">
                   <div className="relative">
-                    <HiMagnifyingGlass className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-stone-400" />
+                    <HiMagnifyingGlass className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
                     <input
                       type="text"
                       placeholder="Search broker name..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] pl-8 pr-3 py-1.5 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
+                      className="rounded-xl bg-white dark:bg-[#181825] border border-stone-200 dark:border-[#383852] pl-9 pr-3 py-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
                     />
                   </div>
 
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] px-3 py-1.5 text-xs text-stone-900 dark:text-white focus:outline-none focus:border-emerald-600"
+                    className="rounded-xl bg-white dark:bg-[#181825] border border-stone-200 dark:border-[#383852] px-3 py-2 text-xs text-stone-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
                   >
                     <option value="All">All Categories</option>
                     <option value="People Search">People Search</option>
@@ -899,60 +948,60 @@ https://news.ycombinator.com/item?id=123456`
               </div>
 
               {/* Broker Table */}
-              <div className="overflow-x-auto rounded-lg border border-stone-200 dark:border-[#383852]">
+              <div className="overflow-x-auto rounded-xl border border-stone-200 dark:border-[#383852]">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-stone-50 dark:bg-[#181825] text-stone-500 dark:text-[#A6ADC8] uppercase font-mono text-[10px]">
+                  <thead className="bg-stone-50/90 dark:bg-[#181825] text-stone-500 dark:text-[#A6ADC8] uppercase text-[11px] font-bold tracking-wider border-b border-stone-200 dark:border-[#383852]">
                     <tr>
-                      <th className="p-3">Data Broker</th>
-                      <th className="p-3">Category</th>
-                      <th className="p-3">Legal Endpoint</th>
-                      <th className="p-3">Opt-Out Status</th>
-                      <th className="p-3 text-right">Actions</th>
+                      <th className="py-3 px-4">Data Broker</th>
+                      <th className="py-3 px-4">Category</th>
+                      <th className="py-3 px-4">Legal Endpoint</th>
+                      <th className="py-3 px-4">Opt-Out Status</th>
+                      <th className="py-3 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-stone-200/80 dark:divide-[#383852] font-mono">
+                  <tbody className="divide-y divide-stone-100 dark:divide-[#383852]">
                     {filteredBrokers.map((broker) => {
                       const statusStyles: Record<OptOutStatus, string> = {
-                        Pending: 'bg-stone-100 text-stone-700 border-stone-300 dark:bg-[#181825] dark:text-[#9399B2] dark:border-[#383852]',
+                        Pending: 'bg-stone-100 text-stone-700 border-stone-200 dark:bg-[#181825] dark:text-[#9399B2] dark:border-[#383852]',
                         Dispatched: 'bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-500/40',
                         'In Review': 'bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-500/40',
                         Removed: 'bg-emerald-100 text-emerald-900 border-emerald-400 dark:bg-emerald-900/60 dark:text-emerald-200 dark:border-emerald-500',
                       };
 
                       return (
-                        <tr key={broker.id} className="hover:bg-stone-50/80 dark:hover:bg-[#2E2E44] transition">
-                          <td className="p-3">
-                            <div className="font-sans font-semibold text-stone-900 dark:text-white">
+                        <tr key={broker.id} className="hover:bg-stone-50/70 dark:hover:bg-[#252538]/70 transition">
+                          <td className="py-3.5 px-4">
+                            <div className="font-semibold text-stone-900 dark:text-white text-xs">
                               {broker.name}
                             </div>
-                            <span className="text-[10px] text-stone-400 dark:text-[#9399B2]">
+                            <span className="text-[11px] text-stone-400 dark:text-[#9399B2]">
                               Jurisdiction: {broker.jurisdiction}
                             </span>
                           </td>
-                          <td className="p-3">
-                            <span className="rounded bg-stone-100 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] px-2 py-0.5 text-[10px] text-stone-600 dark:text-[#CDD6F4]">
+                          <td className="py-3.5 px-4">
+                            <span className="rounded-full bg-stone-100 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] px-2.5 py-0.5 text-[11px] font-medium text-stone-700 dark:text-[#CDD6F4]">
                               {broker.category}
                             </span>
                           </td>
-                          <td className="p-3 text-stone-500 dark:text-[#A6ADC8]">
+                          <td className="py-3.5 px-4 text-stone-500 dark:text-[#A6ADC8]">
                             <a
                               href={broker.optOutUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-emerald-700 dark:text-emerald-400 hover:underline flex items-center space-x-1"
+                              className="text-emerald-700 dark:text-emerald-400 hover:underline flex items-center space-x-1 font-medium"
                             >
                               <span>Opt-Out Portal</span>
                               <HiArrowTopRightOnSquare className="h-3 w-3" />
                             </a>
-                            <div className="text-[10px] text-stone-400 dark:text-[#9399B2]">{broker.contactEmail}</div>
+                            <div className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-0.5">{broker.contactEmail}</div>
                           </td>
-                          <td className="p-3">
+                          <td className="py-3.5 px-4">
                             <select
                               value={broker.status}
                               onChange={(e) =>
                                 handleStatusChange(broker.id, e.target.value as OptOutStatus)
                               }
-                              className={`rounded border px-2 py-1 text-[11px] font-sans font-semibold focus:outline-none ${
+                              className={`rounded-lg border px-2.5 py-1 text-xs font-semibold focus:outline-none transition cursor-pointer ${
                                 statusStyles[broker.status]
                               }`}
                             >
@@ -962,12 +1011,13 @@ https://news.ycombinator.com/item?id=123456`
                               <option value="Removed">Removed</option>
                             </select>
                           </td>
-                          <td className="p-3 text-right">
+                          <td className="py-3.5 px-4 text-right">
                             <button
                               onClick={() => setSelectedBroker(broker)}
-                              className="rounded border border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 text-[11px] font-sans text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 transition"
+                              className="inline-flex items-center space-x-1.5 rounded-lg border border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-950/70 transition cursor-pointer"
                             >
-                              Generate Notice
+                              <HiDocumentText className="h-3.5 w-3.5" />
+                              <span>Generate Notice</span>
                             </button>
                           </td>
                         </tr>
@@ -983,192 +1033,183 @@ https://news.ycombinator.com/item?id=123456`
         {/* TAB 2: AI TRAINING OPT-OUT HUB */}
         {activeTab === 'ai-shield' && (
           <div className="space-y-6">
-            <div
-              className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors"
-              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-            >
-              <div className="flex items-center space-x-2 border-b border-stone-100 dark:border-[#383852] pb-3">
-                <HiCpuChip className="h-6 w-6 text-emerald-700 dark:text-emerald-400" />
+            <div className="sentry-card p-6 rounded-2xl space-y-5 transition-all">
+              <div className="flex items-center space-x-3 border-b border-stone-100 dark:border-[#383852] pb-4">
+                <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/40 shrink-0">
+                  <HiCpuChip className="h-5 w-5" />
+                </div>
                 <div>
                   <h2 className="text-base font-bold text-stone-900 dark:text-white">
                     Commercial AI Model Training Defenses
                   </h2>
-                  <p className="text-xs text-stone-500 dark:text-[#A6ADC8]">
+                  <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-0.5">
                     Sentry AI injects automated signals and blocks surveillance telemetry feeding LLM datasets.
                   </p>
                 </div>
               </div>
 
               {/* Protocol Defense Status */}
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div
-                  className="p-4 border rounded-xl"
-                  style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-                >
-                  <div className="flex items-center space-x-2 text-emerald-700 dark:text-emerald-400 mb-2">
-                    <HiCheckCircle className="h-4 w-4" />
-                    <h3 className="text-xs font-bold font-mono uppercase tracking-wider">
-                      Global Privacy Control (Sec-GPC: 1)
-                    </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="sentry-inset p-4.5 rounded-xl border border-stone-200 dark:border-[#383852] flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="flex items-center space-x-2 text-emerald-700 dark:text-emerald-400 mb-2">
+                      <HiCheckCircle className="h-4 w-4" />
+                      <h3 className="text-xs font-bold text-stone-900 dark:text-white tracking-wide">
+                        Global Privacy Control (Sec-GPC: 1)
+                      </h3>
+                    </div>
+                    <p className="text-xs text-stone-600 dark:text-[#CDD6F4] leading-relaxed">
+                      Sentry automatically injects the <code className="text-emerald-800 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded">Sec-GPC: 1</code> and{' '}
+                      <code className="text-emerald-800 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded">DNT: 1</code> headers onto 100% of outgoing requests via DeclarativeNetRequest.
+                    </p>
                   </div>
-                  <p className="text-xs text-stone-600 dark:text-[#CDD6F4]">
-                    Sentry automatically injects the <code className="text-emerald-800 dark:text-emerald-300 font-bold">Sec-GPC: 1</code> and{' '}
-                    <code className="text-emerald-800 dark:text-emerald-300 font-bold">DNT: 1</code> headers onto 100% of outgoing requests via DeclarativeNetRequest.
-                  </p>
-                  <span className="inline-block mt-2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40 px-2 py-0.5 text-[10px] font-mono">
-                    STATUS: ACTIVE ON ALL BROWSING
-                  </span>
+                  <div className="pt-2">
+                    <span className="inline-flex items-center space-x-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-500/40 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                      STATUS: ACTIVE ON ALL BROWSING
+                    </span>
+                  </div>
                 </div>
 
-                <div
-                  className="p-4 border rounded-xl"
-                  style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-                >
-                  <div className="flex items-center space-x-2 text-emerald-700 dark:text-emerald-400 mb-2">
-                    <HiCheckCircle className="h-4 w-4" />
-                    <h3 className="text-xs font-bold font-mono uppercase tracking-wider">
-                      Anti AI Scraping Crawler Nullifier
-                    </h3>
+                <div className="sentry-inset p-4.5 rounded-xl border border-stone-200 dark:border-[#383852] flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="flex items-center space-x-2 text-emerald-700 dark:text-emerald-400 mb-2">
+                      <HiCheckCircle className="h-4 w-4" />
+                      <h3 className="text-xs font-bold text-stone-900 dark:text-white tracking-wide">
+                        Anti AI Scraping Crawler Nullifier
+                      </h3>
+                    </div>
+                    <p className="text-xs text-stone-600 dark:text-[#CDD6F4] leading-relaxed">
+                      Declares <code className="text-emerald-800 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded">X-Robots-Tag: noai, noimageai</code> and blocks commercial web harvesters from indexing your private page sessions.
+                    </p>
                   </div>
-                  <p className="text-xs text-stone-600 dark:text-[#CDD6F4]">
-                    Declares <code className="text-emerald-800 dark:text-emerald-300 font-bold">X-Robots-Tag: noai, noimageai</code> and blocks commercial web harvesters from indexing your private page sessions.
-                  </p>
-                  <span className="inline-block mt-2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40 px-2 py-0.5 text-[10px] font-mono">
-                    STATUS: ARMED
-                  </span>
+                  <div className="pt-2">
+                    <span className="inline-flex items-center space-x-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-500/40 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                      STATUS: ARMED
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Major Platform Direct Opt-Out Portals */}
-              <h3 className="text-sm font-bold text-stone-900 dark:text-white mt-6 mb-3">
-                Platform-Specific AI Model Training Locks
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Meta AI */}
-                <div
-                  className="p-4 flex flex-col justify-between border rounded-xl"
-                  style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-bold text-stone-900 dark:text-white">Meta / Facebook AI Training</h4>
-                      <span className="rounded bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30 text-[10px] px-2 py-0.5">
-                        High Exploitation Risk
-                      </span>
+              <div className="pt-2">
+                <h3 className="text-sm font-bold text-stone-900 dark:text-white mb-3">
+                  Platform-Specific AI Model Training Locks
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Meta AI */}
+                  <div className="sentry-inset p-4.5 flex flex-col justify-between border border-stone-200 dark:border-[#383852] rounded-xl space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <h4 className="text-xs font-bold text-stone-900 dark:text-white">Meta / Facebook AI Training</h4>
+                        <span className="rounded-full bg-rose-50 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 text-[10px] font-semibold px-2 py-0.5">
+                          High Exploitation Risk
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
+                        Meta uses user posts, comments, photos, and captions to train Llama generative models by default.
+                      </p>
                     </div>
-                    <p className="text-xs text-stone-500 dark:text-[#A6ADC8]">
-                      Meta uses all user posts, comments, photos, and captions to train Llama generative models by default.
-                    </p>
+                    <div className="pt-3 flex items-center justify-between border-t border-stone-200/70 dark:border-[#383852]">
+                      <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                        Telemetry &amp; Pixels: Blocked
+                      </span>
+                      <a
+                        href="https://www.facebook.com/privacy/genai"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center space-x-1.5 rounded-lg border border-stone-200 dark:border-[#383852] bg-white hover:bg-stone-50 dark:bg-[#252538] dark:hover:bg-[#2E2E44] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 transition cursor-pointer"
+                      >
+                        <span>Opt-Out Form</span>
+                        <HiArrowTopRightOnSquare className="h-3 w-3" />
+                      </a>
+                    </div>
                   </div>
-                  <div className="mt-4 flex items-center justify-between pt-3 border-t border-stone-200 dark:border-[#383852]">
-                    <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-medium">
-                      Telemetry & Pixels: Blocked
-                    </span>
-                    <a
-                      href="https://www.facebook.com/privacy/genai"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center space-x-1 rounded bg-stone-200/80 dark:bg-[#2E2E44] px-3 py-1 text-xs text-stone-800 dark:text-stone-200 hover:bg-emerald-700 hover:text-white transition"
-                    >
-                      <span>Opt-Out Form</span>
-                      <HiArrowTopRightOnSquare className="h-3 w-3" />
-                    </a>
-                  </div>
-                </div>
 
-                {/* X Grok AI */}
-                <div
-                  className="p-4 flex flex-col justify-between border rounded-xl"
-                  style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-bold text-stone-900 dark:text-white">X (Twitter) Grok Model Training</h4>
-                      <span className="rounded bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30 text-[10px] px-2 py-0.5">
-                        Opt-in by Default
-                      </span>
+                  {/* X Grok AI */}
+                  <div className="sentry-inset p-4.5 flex flex-col justify-between border border-stone-200 dark:border-[#383852] rounded-xl space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <h4 className="text-xs font-bold text-stone-900 dark:text-white">X (Twitter) Grok Model Training</h4>
+                        <span className="rounded-full bg-rose-50 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 text-[10px] font-semibold px-2 py-0.5">
+                          Opt-in by Default
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
+                        X automatically opts all users into sharing interactions, posts, and search inputs with xAI Grok.
+                      </p>
                     </div>
-                    <p className="text-xs text-stone-500 dark:text-[#A6ADC8]">
-                      X automatically opts all users into sharing interactions, posts, and search inputs with xAI Grok.
-                    </p>
+                    <div className="pt-3 flex items-center justify-between border-t border-stone-200/70 dark:border-[#383852]">
+                      <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                        Beacon Telemetry: Blocked
+                      </span>
+                      <a
+                        href="https://x.com/settings/grok_settings"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center space-x-1.5 rounded-lg border border-stone-200 dark:border-[#383852] bg-white hover:bg-stone-50 dark:bg-[#252538] dark:hover:bg-[#2E2E44] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 transition cursor-pointer"
+                      >
+                        <span>Grok Settings</span>
+                        <HiArrowTopRightOnSquare className="h-3 w-3" />
+                      </a>
+                    </div>
                   </div>
-                  <div className="mt-4 flex items-center justify-between pt-3 border-t border-stone-200 dark:border-[#383852]">
-                    <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-medium">
-                      Beacon Telemetry: Blocked
-                    </span>
-                    <a
-                      href="https://x.com/settings/grok_settings"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center space-x-1 rounded bg-stone-200/80 dark:bg-[#2E2E44] px-3 py-1 text-xs text-stone-800 dark:text-stone-200 hover:bg-emerald-700 hover:text-white transition"
-                    >
-                      <span>Grok Settings</span>
-                      <HiArrowTopRightOnSquare className="h-3 w-3" />
-                    </a>
-                  </div>
-                </div>
 
-                {/* Google Gemini */}
-                <div
-                  className="p-4 flex flex-col justify-between border rounded-xl"
-                  style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-bold text-stone-900 dark:text-white">Google Gemini Activity Lock</h4>
-                      <span className="rounded bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30 text-[10px] px-2 py-0.5">
-                        Continuous Ingestion
-                      </span>
+                  {/* Google Gemini */}
+                  <div className="sentry-inset p-4.5 flex flex-col justify-between border border-stone-200 dark:border-[#383852] rounded-xl space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <h4 className="text-xs font-bold text-stone-900 dark:text-white">Google Gemini Activity Lock</h4>
+                        <span className="rounded-full bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 text-[10px] font-semibold px-2 py-0.5">
+                          Continuous Ingestion
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
+                        Google associates web activity, Chrome sync, and search history with Gemini assistant model fine-tuning.
+                      </p>
                     </div>
-                    <p className="text-xs text-stone-500 dark:text-[#A6ADC8]">
-                      Google associates web activity, Chrome sync, and search history with Gemini assistant model fine-tuning.
-                    </p>
+                    <div className="pt-3 flex items-center justify-between border-t border-stone-200/70 dark:border-[#383852]">
+                      <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                        Google Analytics: Intercepted
+                      </span>
+                      <a
+                        href="https://myactivity.google.com/product/gemini"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center space-x-1.5 rounded-lg border border-stone-200 dark:border-[#383852] bg-white hover:bg-stone-50 dark:bg-[#252538] dark:hover:bg-[#2E2E44] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 transition cursor-pointer"
+                      >
+                        <span>Gemini Privacy</span>
+                        <HiArrowTopRightOnSquare className="h-3 w-3" />
+                      </a>
+                    </div>
                   </div>
-                  <div className="mt-4 flex items-center justify-between pt-3 border-t border-stone-200 dark:border-[#383852]">
-                    <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-medium">
-                      Google Analytics: Intercepted
-                    </span>
-                    <a
-                      href="https://myactivity.google.com/product/gemini"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center space-x-1 rounded bg-stone-200/80 dark:bg-[#2E2E44] px-3 py-1 text-xs text-stone-800 dark:text-stone-200 hover:bg-emerald-700 hover:text-white transition"
-                    >
-                      <span>Gemini Privacy</span>
-                      <HiArrowTopRightOnSquare className="h-3 w-3" />
-                    </a>
-                  </div>
-                </div>
 
-                {/* LinkedIn AI */}
-                <div
-                  className="p-4 flex flex-col justify-between border rounded-xl"
-                  style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-bold text-stone-900 dark:text-white">LinkedIn Model Training Shield</h4>
-                      <span className="rounded bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30 text-[10px] px-2 py-0.5">
-                        Professional Dossiers
-                      </span>
+                  {/* LinkedIn AI */}
+                  <div className="sentry-inset p-4.5 flex flex-col justify-between border border-stone-200 dark:border-[#383852] rounded-xl space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <h4 className="text-xs font-bold text-stone-900 dark:text-white">LinkedIn Model Training Shield</h4>
+                        <span className="rounded-full bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 text-[10px] font-semibold px-2 py-0.5">
+                          Professional Dossiers
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
+                        LinkedIn trains generative writing and matching models on user profiles, resumes, and articles.
+                      </p>
                     </div>
-                    <p className="text-xs text-stone-500 dark:text-[#A6ADC8]">
-                      LinkedIn trains generative writing and matching models on user resumes, articles, and recommendations.
-                    </p>
-                  </div>
-                  <div className="mt-4 flex items-center justify-between pt-3 border-t border-stone-200 dark:border-[#383852]">
-                    <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-medium">
-                      Insight Pixel: Blocked
-                    </span>
-                    <a
-                      href="https://www.linkedin.com/mypreferences/d/data-for-ai-improvement"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center space-x-1 rounded bg-stone-200/80 dark:bg-[#2E2E44] px-3 py-1 text-xs text-stone-800 dark:text-stone-200 hover:bg-emerald-700 hover:text-white transition"
-                    >
-                      <span>LinkedIn AI Toggle</span>
-                      <HiArrowTopRightOnSquare className="h-3 w-3" />
-                    </a>
+                    <div className="pt-3 flex items-center justify-between border-t border-stone-200/70 dark:border-[#383852]">
+                      <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                        Insight Pixel: Blocked
+                      </span>
+                      <a
+                        href="https://www.linkedin.com/mypreferences/d/data-for-ai-improvement"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center space-x-1.5 rounded-lg border border-stone-200 dark:border-[#383852] bg-white hover:bg-stone-50 dark:bg-[#252538] dark:hover:bg-[#2E2E44] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 transition cursor-pointer"
+                      >
+                        <span>LinkedIn AI Toggle</span>
+                        <HiArrowTopRightOnSquare className="h-3 w-3" />
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1179,15 +1220,12 @@ https://news.ycombinator.com/item?id=123456`
         {/* TAB 3: DOMAIN MATRIX & CUSTOM RULES */}
         {activeTab === 'matrix' && (
           <div className="space-y-6">
-            <div
-              className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors"
-              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-            >
+            <div className="sentry-card p-6 rounded-2xl space-y-4 transition-all">
               <div>
                 <h2 className="text-base font-bold text-stone-900 dark:text-white">
-                  Domain Whitelist & Exception Matrix
+                  Domain Whitelist &amp; Exception Matrix
                 </h2>
-                <p className="text-xs text-stone-500 dark:text-[#A6ADC8]">
+                <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-0.5">
                   Whitelisted domains bypass network filtering and noise scrambling to ensure maximum compatibility when needed.
                 </p>
               </div>
@@ -1199,20 +1237,20 @@ https://news.ycombinator.com/item?id=123456`
                   placeholder="e.g. internal.company.com"
                   value={newWhitelistDomain}
                   onChange={(e) => setNewWhitelistDomain(e.target.value)}
-                  className="rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] px-3 py-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 w-80 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
+                  className="rounded-xl bg-white dark:bg-[#181825] border border-stone-200 dark:border-[#383852] px-3.5 py-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 w-80 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
                 />
                 <button
                   onClick={handleAddWhitelist}
-                  className="flex items-center space-x-1 rounded-lg bg-emerald-700 dark:bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition"
+                  className="flex items-center space-x-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-xs transition cursor-pointer"
                 >
-                  <HiPlus className="h-3.5 w-3.5" />
+                  <HiPlus className="h-4 w-4" />
                   <span>Add Whitelist</span>
                 </button>
               </div>
 
               {/* Whitelisted Domains Tags */}
               <div className="pt-2">
-                <h4 className="text-xs font-mono text-stone-500 dark:text-[#A6ADC8] uppercase mb-2">
+                <h4 className="text-[11px] font-bold text-stone-500 dark:text-[#A6ADC8] uppercase tracking-wider mb-2.5">
                   Currently Whitelisted Domains ({settings?.whitelistedDomains.length || 0})
                 </h4>
                 {settings?.whitelistedDomains && settings.whitelistedDomains.length > 0 ? (
@@ -1220,14 +1258,15 @@ https://news.ycombinator.com/item?id=123456`
                     {settings.whitelistedDomains.map((d) => (
                       <span
                         key={d}
-                        className="flex items-center space-x-1.5 rounded-lg border border-stone-300 dark:border-[#383852] bg-stone-100 dark:bg-[#181825] px-2.5 py-1 text-xs text-stone-800 dark:text-[#CDD6F4]"
+                        className="inline-flex items-center space-x-2 rounded-xl border border-stone-200 dark:border-[#383852] bg-white dark:bg-[#181825] px-3 py-1.5 text-xs text-stone-800 dark:text-[#CDD6F4] shadow-2xs"
                       >
-                        <span className="font-mono">{d}</span>
+                        <span className="font-medium">{d}</span>
                         <button
                           onClick={() => handleRemoveWhitelist(d)}
-                          className="text-stone-400 hover:text-rose-600"
+                          className="text-stone-400 hover:text-rose-600 transition cursor-pointer"
+                          title="Remove domain"
                         >
-                          <HiTrash className="h-3 w-3" />
+                          <HiTrash className="h-3.5 w-3.5" />
                         </button>
                       </span>
                     ))}
@@ -1241,38 +1280,35 @@ https://news.ycombinator.com/item?id=123456`
             </div>
 
             {/* DeclarativeNetRequest Active Filters Status */}
-            <div
-              className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-3 transition-colors"
-              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-            >
+            <div className="sentry-card p-6 rounded-2xl space-y-3.5 transition-all">
               <h3 className="text-sm font-bold text-stone-900 dark:text-white">
                 DeclarativeNetRequest Static Engine Rulesets
               </h3>
-              <div className="space-y-2 text-xs font-mono">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852]">
+              <div className="space-y-2.5 text-xs">
+                <div className="flex items-center justify-between p-3.5 rounded-xl sentry-inset border border-stone-200 dark:border-[#383852]">
                   <div>
-                    <span className="text-emerald-800 dark:text-emerald-300 font-semibold">
+                    <span className="text-emerald-800 dark:text-emerald-300 font-semibold font-mono text-xs">
                       rules_ai_trackers.json
                     </span>
-                    <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] font-sans mt-0.5">
+                    <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-0.5">
                       Meta Pixel, TikTok Insight, LinkedIn Analytics, Google Analytics v4, ByteDance, FPJS fingerprinting bots.
                     </p>
                   </div>
-                  <span className="rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 px-2 py-0.5 text-[10px]">
+                  <span className="rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold tracking-wider">
                     ENABLED (25 Rules)
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852]">
+                <div className="flex items-center justify-between p-3.5 rounded-xl sentry-inset border border-stone-200 dark:border-[#383852]">
                   <div>
-                    <span className="text-emerald-800 dark:text-emerald-300 font-semibold">
+                    <span className="text-emerald-800 dark:text-emerald-300 font-semibold font-mono text-xs">
                       rules_privacy_headers.json
                     </span>
-                    <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] font-sans mt-0.5">
-                      Sec-GPC: 1 (Global Privacy Control) & DNT: 1 header injection across all web requests.
+                    <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-0.5">
+                      Sec-GPC: 1 (Global Privacy Control) &amp; DNT: 1 header injection across all web requests.
                     </p>
                   </div>
-                  <span className="rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 px-2 py-0.5 text-[10px]">
+                  <span className="rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold tracking-wider">
                     ENABLED (GLOBAL)
                   </span>
                 </div>
@@ -1280,13 +1316,10 @@ https://news.ycombinator.com/item?id=123456`
             </div>
 
             {/* UNIVERSAL COOKIE CONSENT GUARD (ALL SITES) */}
-            <div
-              className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors"
-              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-            >
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-stone-100 dark:border-[#383852] pb-3">
+            <div className="sentry-card p-6 rounded-2xl space-y-4 transition-all">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-stone-100 dark:border-[#383852] pb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 shrink-0">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400 shrink-0">
                     <HiShieldCheck className="h-5 w-5" />
                   </div>
                   <div>
@@ -1294,7 +1327,7 @@ https://news.ycombinator.com/item?id=123456`
                       <h2 className="text-base font-bold text-stone-900 dark:text-white">
                         Universal Cookie Consent Guard
                       </h2>
-                      <span className="rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 px-2 py-0.5 text-[10px] font-mono font-bold">
+                      <span className="rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
                         GLOBAL (ALL SITES)
                       </span>
                     </div>
@@ -1305,7 +1338,7 @@ https://news.ycombinator.com/item?id=123456`
                 </div>
 
                 <div className="flex items-center space-x-3">
-                  <span className="text-xs font-mono text-stone-500 dark:text-[#A6ADC8]">Enforce on all sites:</span>
+                  <span className="text-xs font-medium text-stone-500 dark:text-[#A6ADC8]">Enforce on all sites:</span>
                   <button
                     onClick={() => {
                       if (!settings) return;
@@ -1341,15 +1374,12 @@ https://news.ycombinator.com/item?id=123456`
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div
-                  className="p-3.5 rounded-xl border"
-                  style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)' }}
-                >
+                <div className="sentry-inset p-4 rounded-xl border border-stone-200 dark:border-[#383852]">
                   <div className="text-xs font-semibold text-stone-900 dark:text-white mb-1">Consent Strategy Mode</div>
-                  <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] mb-2.5">
+                  <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] mb-3 leading-relaxed">
                     Behavior applied when a Consent Management Platform (OneTrust, Cookiebot, Didomi) is encountered.
                   </p>
-                  <div className="space-y-1.5 text-xs font-medium">
+                  <div className="space-y-2 text-xs font-medium">
                     <button
                       onClick={() => {
                         if (!settings) return;
@@ -1369,10 +1399,10 @@ https://news.ycombinator.com/item?id=123456`
                         setSettings(updated);
                         chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
                       }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-lg border text-xs transition ${
+                      className={`w-full text-left px-3 py-2 rounded-lg border text-xs transition cursor-pointer ${
                         (settings?.cookieConsent?.autoMode ?? 'auto_reject') === 'auto_reject'
                           ? 'border-emerald-600 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-500/50 font-bold'
-                          : 'border-stone-200 dark:border-[#383852] text-stone-600 dark:text-[#A6ADC8]'
+                          : 'border-stone-200 dark:border-[#383852] text-stone-600 dark:text-[#A6ADC8] hover:bg-stone-50 dark:hover:bg-[#252538]'
                       }`}
                     >
                       Auto-Reject Non-Essential (Recommended)
@@ -1396,10 +1426,10 @@ https://news.ycombinator.com/item?id=123456`
                         setSettings(updated);
                         chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
                       }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-lg border text-xs transition ${
+                      className={`w-full text-left px-3 py-2 rounded-lg border text-xs transition cursor-pointer ${
                         settings?.cookieConsent?.autoMode === 'dismiss_hide'
                           ? 'border-emerald-600 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-500/50 font-bold'
-                          : 'border-stone-200 dark:border-[#383852] text-stone-600 dark:text-[#A6ADC8]'
+                          : 'border-stone-200 dark:border-[#383852] text-stone-600 dark:text-[#A6ADC8] hover:bg-stone-50 dark:hover:bg-[#252538]'
                       }`}
                     >
                       Dismiss &amp; Cosmestically Hide Banners
@@ -1407,41 +1437,35 @@ https://news.ycombinator.com/item?id=123456`
                   </div>
                 </div>
 
-                <div
-                  className="p-3.5 rounded-xl border flex flex-col justify-between"
-                  style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)' }}
-                >
+                <div className="sentry-inset p-4 rounded-xl border border-stone-200 dark:border-[#383852] flex flex-col justify-between space-y-3">
                   <div>
                     <div className="text-xs font-semibold text-stone-900 dark:text-white mb-1">Scroll Lock Neutralizer</div>
-                    <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8]">
-                      Automatically removes <code className="text-emerald-700 dark:text-emerald-400 font-mono">overflow: hidden</code> on the document body when cookie modals lock the page.
+                    <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
+                      Automatically removes <code className="text-emerald-700 dark:text-emerald-400 font-mono bg-emerald-50 dark:bg-emerald-950/50 px-1 py-0.5 rounded">overflow: hidden</code> on the document body when cookie modals lock the page.
                     </p>
                   </div>
-                  <div className="pt-3 flex items-center justify-between border-t border-stone-200 dark:border-[#383852]">
-                    <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-semibold">
+                  <div className="pt-3 flex items-center justify-between border-t border-stone-200/70 dark:border-[#383852]">
+                    <span className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold">
                       STATUS: ACTIVE (GLOBAL)
                     </span>
-                    <span className="rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 px-2 py-0.5 text-[10px] font-mono">
+                    <span className="rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold">
                       UNLOCKED
                     </span>
                   </div>
                 </div>
 
-                <div
-                  className="p-3.5 rounded-xl border flex flex-col justify-between"
-                  style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)' }}
-                >
+                <div className="sentry-inset p-4 rounded-xl border border-stone-200 dark:border-[#383852] flex flex-col justify-between space-y-3">
                   <div>
                     <div className="text-xs font-semibold text-stone-900 dark:text-white mb-1">Simulated Consent Tokens</div>
-                    <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8]">
+                    <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
                       Injects minimal consent cookie tokens (OneTrust, Cookiebot) so backends do not re-render the dialog on page transitions.
                     </p>
                   </div>
-                  <div className="pt-3 flex items-center justify-between border-t border-stone-200 dark:border-[#383852]">
-                    <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-semibold">
+                  <div className="pt-3 flex items-center justify-between border-t border-stone-200/70 dark:border-[#383852]">
+                    <span className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold">
                       LIFESPAN: 1 YEAR (PERSISTENT)
                     </span>
-                    <span className="rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 px-2 py-0.5 text-[10px] font-mono">
+                    <span className="rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold">
                       SYNCED
                     </span>
                   </div>
@@ -1450,13 +1474,10 @@ https://news.ycombinator.com/item?id=123456`
             </div>
 
             {/* PERSISTENT SITE ZAP RULES MANAGER (uBlock Style) */}
-            <div
-              className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors"
-              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-            >
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-stone-100 dark:border-[#383852] pb-3">
+            <div className="sentry-card p-6 rounded-2xl space-y-4 transition-all">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-stone-100 dark:border-[#383852] pb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-500/30 text-rose-800 dark:text-rose-300 shrink-0">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200/60 dark:border-rose-800/40 text-rose-700 dark:text-rose-400 shrink-0">
                     <HiBolt className="h-5 w-5" />
                   </div>
                   <div>
@@ -1464,7 +1485,7 @@ https://news.ycombinator.com/item?id=123456`
                       <h2 className="text-base font-bold text-stone-900 dark:text-white">
                         Persistent Site Zap Rules Manager
                       </h2>
-                      <span className="rounded bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30 px-2 py-0.5 text-[10px] font-mono font-bold">
+                      <span className="rounded-full bg-rose-50 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
                         uBlock Origin Parity
                       </span>
                     </div>
@@ -1475,31 +1496,31 @@ https://news.ycombinator.com/item?id=123456`
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  <span className="rounded bg-stone-100 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] px-2.5 py-1 text-xs font-mono font-semibold text-stone-700 dark:text-[#CDD6F4]">
+                  <span className="rounded-full bg-stone-100 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] px-3 py-1 text-xs font-semibold text-stone-700 dark:text-[#CDD6F4]">
                     {Object.keys(allZapRules).length} Domains • {Object.values(allZapRules).flat().length} Active Rules
                   </span>
                 </div>
               </div>
 
               {/* Add Custom Zap Rule Manually */}
-              <div className="flex flex-col sm:flex-row items-center gap-2 p-3 rounded-xl bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852]">
+              <div className="flex flex-col sm:flex-row items-center gap-2.5 p-3 rounded-xl sentry-inset border border-stone-200 dark:border-[#383852]">
                 <input
                   type="text"
                   placeholder="Target domain (e.g. news.ycombinator.com)"
                   value={newZapDomain}
                   onChange={(e) => setNewZapDomain(e.target.value)}
-                  className="rounded-lg bg-white dark:bg-[#252538] border border-stone-300 dark:border-[#383852] px-3 py-1.5 text-xs text-stone-900 dark:text-white placeholder-stone-400 w-full sm:w-64 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400 font-mono"
+                  className="rounded-xl bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] px-3.5 py-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
                 />
                 <input
                   type="text"
                   placeholder="CSS Selector (e.g. div.ad-banner or #sponsored-feed)"
                   value={newZapSelector}
                   onChange={(e) => setNewZapSelector(e.target.value)}
-                  className="rounded-lg bg-white dark:bg-[#252538] border border-stone-300 dark:border-[#383852] px-3 py-1.5 text-xs text-stone-900 dark:text-white placeholder-stone-400 flex-1 w-full focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400 font-mono"
+                  className="rounded-xl bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] px-3.5 py-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 flex-1 w-full focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition font-mono"
                 />
                 <button
                   onClick={handleAddManualZapRule}
-                  className="rounded-lg bg-rose-700 dark:bg-rose-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-rose-800 transition shrink-0 cursor-pointer"
+                  className="rounded-xl bg-rose-700 hover:bg-rose-800 dark:bg-rose-600 dark:hover:bg-rose-700 px-4 py-2 text-xs font-bold text-white shadow-xs transition shrink-0 cursor-pointer"
                 >
                   Save Zap Rule
                 </button>
@@ -1511,15 +1532,14 @@ https://news.ycombinator.com/item?id=123456`
                   {Object.entries(allZapRules).map(([domain, rules]) => (
                     <div
                       key={domain}
-                      className="p-3 rounded-xl border"
-                      style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)' }}
+                      className="sentry-inset p-3.5 rounded-xl border border-stone-200 dark:border-[#383852]"
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
-                          <span className="font-mono text-xs font-bold text-stone-900 dark:text-white">
+                          <span className="text-xs font-bold text-stone-900 dark:text-white">
                             {domain}
                           </span>
-                          <span className="rounded bg-stone-200 dark:bg-[#383852] px-1.5 py-0.5 text-[10px] font-mono text-stone-600 dark:text-[#A6ADC8]">
+                          <span className="rounded-full bg-stone-200 dark:bg-[#383852] px-2 py-0.5 text-[10px] font-medium text-stone-600 dark:text-[#A6ADC8]">
                             {rules.length} {rules.length === 1 ? 'rule' : 'rules'}
                           </span>
                         </div>
@@ -1529,9 +1549,9 @@ https://news.ycombinator.com/item?id=123456`
                         {rules.map((r) => (
                           <div
                             key={r.id}
-                            className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] text-xs font-mono"
+                            className="flex items-center justify-between p-2.5 rounded-lg bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] text-xs"
                           >
-                            <span className="text-stone-800 dark:text-stone-200 truncate pr-2 font-semibold">
+                            <span className="text-stone-800 dark:text-stone-200 truncate pr-2 font-mono font-medium text-[11px]">
                               {r.selector}
                             </span>
                             <div className="flex items-center space-x-2 shrink-0">
@@ -1541,7 +1561,7 @@ https://news.ycombinator.com/item?id=123456`
                               <button
                                 onClick={() => handleDeleteZapRule(domain, r.id)}
                                 title="Delete Rule (Unzap)"
-                                className="p-1 rounded text-stone-400 hover:text-rose-600 transition cursor-pointer"
+                                className="p-1 rounded-md text-stone-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
                               >
                                 <HiTrash className="h-3.5 w-3.5" />
                               </button>
@@ -1563,61 +1583,58 @@ https://news.ycombinator.com/item?id=123456`
 
         {/* TAB 4: LIVE THREAT LEDGER */}
         {activeTab === 'ledger' && (
-          <div
-            className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors"
-            style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-          >
-            <div className="flex items-center justify-between border-b border-stone-100 dark:border-[#383852] pb-3">
+          <div className="sentry-card p-6 rounded-2xl space-y-4 transition-all">
+            <div className="flex items-center justify-between border-b border-stone-100 dark:border-[#383852] pb-4">
               <div>
                 <h2 className="text-base font-bold text-stone-900 dark:text-white">
                   Live Interception Telemetry Ledger
                 </h2>
-                <p className="text-xs text-stone-500 dark:text-[#A6ADC8]">
+                <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-0.5">
                   Real-time chronological audit trail of all blocked trackers, scrambled canvas probes, and modified headers.
                 </p>
               </div>
-              <span className="rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 px-2 py-1 text-xs font-mono">
+              <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 px-3 py-1 text-xs font-semibold">
                 {threatEvents.length} Events Logged
               </span>
             </div>
 
             {threatEvents.length > 0 ? (
-              <div className="space-y-2 overflow-y-auto max-h-[500px] font-mono text-xs">
+              <div className="space-y-2 overflow-y-auto max-h-[500px] text-xs">
                 {threatEvents.map((ev) => {
                   const typeColors: Record<string, string> = {
-                    canvas: 'text-emerald-800 border-emerald-300 bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-950/20',
-                    audio: 'text-emerald-800 border-emerald-300 bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-950/20',
-                    webgl: 'text-emerald-800 border-emerald-300 bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-950/20',
-                    tracker: 'text-rose-800 border-rose-300 bg-rose-50 dark:text-rose-400 dark:border-rose-500/30 dark:bg-rose-950/20',
-                    zapper: 'text-amber-800 border-amber-300 bg-amber-50 dark:text-amber-400 dark:border-amber-500/30 dark:bg-amber-950/20',
-                    cookie_consent: 'text-emerald-800 border-emerald-300 bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-950/20',
-                    url_cleaner: 'text-teal-800 border-teal-300 bg-teal-50 dark:text-teal-300 dark:border-teal-500/30 dark:bg-teal-950/20',
-                    ping: 'text-rose-800 border-rose-300 bg-rose-50 dark:text-rose-400 dark:border-rose-500/30 dark:bg-rose-950/20',
+                    canvas: 'text-emerald-800 border-emerald-300 bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-950/40',
+                    audio: 'text-emerald-800 border-emerald-300 bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-950/40',
+                    webgl: 'text-emerald-800 border-emerald-300 bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-950/40',
+                    tracker: 'text-rose-800 border-rose-300 bg-rose-50 dark:text-rose-400 dark:border-rose-500/30 dark:bg-rose-950/40',
+                    zapper: 'text-amber-800 border-amber-300 bg-amber-50 dark:text-amber-400 dark:border-amber-500/30 dark:bg-amber-950/40',
+                    cookie_consent: 'text-emerald-800 border-emerald-300 bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-950/40',
+                    url_cleaner: 'text-teal-800 border-teal-300 bg-teal-50 dark:text-teal-300 dark:border-teal-500/30 dark:bg-teal-950/40',
+                    ping: 'text-rose-800 border-rose-300 bg-rose-50 dark:text-rose-400 dark:border-rose-500/30 dark:bg-rose-950/40',
                   };
 
                   return (
                     <div
                       key={ev.id}
-                      className="flex items-start justify-between p-3 rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-200/80 dark:border-[#383852] hover:bg-stone-100 dark:hover:bg-[#2E2E44] transition"
+                      className="flex items-start justify-between p-3.5 rounded-xl sentry-inset border border-stone-200/80 dark:border-[#383852] hover:border-emerald-500/40 transition"
                     >
                       <div className="flex items-start space-x-3">
                         <span
-                          className={`rounded border px-2 py-0.5 text-[10px] uppercase font-bold shrink-0 ${
+                          className={`rounded-full border px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-wider shrink-0 ${
                             typeColors[ev.type] || 'text-stone-600'
                           }`}
                         >
                           {ev.type}
                         </span>
                         <div>
-                          <div className="text-stone-800 dark:text-[#CDD6F4] font-sans font-medium">
+                          <div className="text-stone-900 dark:text-[#CDD6F4] font-medium text-xs">
                             {ev.description}
                           </div>
-                          <div className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-0.5 truncate max-w-lg">
+                          <div className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-0.5 truncate max-w-lg font-mono">
                             Source: {ev.source}
                           </div>
                         </div>
                       </div>
-                      <div className="text-[10px] text-stone-400 dark:text-[#9399B2] shrink-0">
+                      <div className="text-[11px] text-stone-400 dark:text-[#9399B2] shrink-0 font-medium">
                         {new Date(ev.timestamp).toLocaleTimeString()}
                       </div>
                     </div>
@@ -1625,7 +1642,7 @@ https://news.ycombinator.com/item?id=123456`
                 })}
               </div>
             ) : (
-              <div className="text-center py-12 text-stone-400 font-mono text-xs">
+              <div className="text-center py-12 text-stone-400 text-xs">
                 Active monitoring in progress. Threat events will stream here live as pages load.
               </div>
             )}
@@ -1636,21 +1653,18 @@ https://news.ycombinator.com/item?id=123456`
         {activeTab === 'cleaner' && (
           <div className="space-y-6">
             {/* HERO MODULE HEADER */}
-            <div
-              className="sentry-card p-6 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors"
-              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-            >
+            <div className="sentry-card p-6 rounded-2xl transition-all">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center space-x-3.5">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 shrink-0">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400 shrink-0">
                     <HiLink className="h-6 w-6" />
                   </div>
                   <div>
                     <div className="flex items-center space-x-2">
                       <h2 className="text-lg font-black tracking-tight text-stone-900 dark:text-white">
-                        Sentry URL Sanitizer & Link Guard
+                        Sentry URL Sanitizer &amp; Link Guard
                       </h2>
-                      <span className="rounded bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/30 px-2 py-0.5 font-mono text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
+                      <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
                         MV3 ZERO-LATENCY
                       </span>
                     </div>
@@ -1661,7 +1675,7 @@ https://news.ycombinator.com/item?id=123456`
                 </div>
 
                 <div className="flex items-center space-x-3">
-                  <span className="text-xs font-mono text-stone-500 dark:text-[#A6ADC8]">
+                  <span className="text-xs font-medium text-stone-500 dark:text-[#A6ADC8]">
                     Master Link Guard:
                   </span>
                   <button
@@ -1684,15 +1698,12 @@ https://news.ycombinator.com/item?id=123456`
             </div>
 
             {/* SECTION 1: SINGLE URL PURIFIER & LIVE INSPECTOR */}
-            <div
-              className="sentry-card p-6 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors"
-              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-            >
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-stone-100 dark:border-[#383852] pb-3">
+            <div className="sentry-card p-6 rounded-2xl space-y-4 transition-all">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-stone-100 dark:border-[#383852] pb-4">
                 <div>
                   <h3 className="text-base font-bold text-stone-900 dark:text-white flex items-center space-x-2">
                     <HiSparkles className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
-                    <span>Single URL Purifier & Inspector</span>
+                    <span>Single URL Purifier &amp; Inspector</span>
                   </h3>
                   <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-0.5">
                     Test how Sentry AI scrubs tracking parameters, referral tokens, and unwraps redirects in real time.
@@ -1701,7 +1712,7 @@ https://news.ycombinator.com/item?id=123456`
 
                 {/* Sample Test Link Buttons */}
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[11px] font-mono text-stone-400 dark:text-[#9399B2] mr-1">
+                  <span className="text-[11px] font-medium text-stone-400 dark:text-[#9399B2] mr-1">
                     Try Sample:
                   </span>
                   {[
@@ -1725,7 +1736,7 @@ https://news.ycombinator.com/item?id=123456`
                     <button
                       key={s.label}
                       onClick={() => handleCleanSingleUrl(s.url)}
-                      className="rounded-lg bg-stone-100 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] px-2.5 py-1 text-[11px] font-mono font-medium text-emerald-800 dark:text-emerald-300 hover:border-emerald-500 transition cursor-pointer"
+                      className="rounded-lg bg-stone-100 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] px-2.5 py-1 text-[11px] font-medium text-emerald-800 dark:text-emerald-300 hover:border-emerald-500 transition cursor-pointer"
                     >
                       {s.label}
                     </button>
@@ -1741,12 +1752,12 @@ https://news.ycombinator.com/item?id=123456`
                     value={cleanerInput}
                     onChange={(e) => handleCleanSingleUrl(e.target.value)}
                     placeholder="Enter or paste any URL with tracking parameters..."
-                    className="w-full rounded-xl bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] p-3 text-xs font-mono text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
+                    className="w-full rounded-xl bg-white dark:bg-[#181825] border border-stone-200 dark:border-[#383852] p-3 text-xs font-mono text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
                   />
                   {cleanerInput && (
                     <button
                       onClick={() => handleCleanSingleUrl('')}
-                      className="absolute right-3 top-3 text-xs font-mono text-stone-400 hover:text-stone-700 dark:hover:text-white"
+                      className="absolute right-3 top-3 text-xs font-semibold text-stone-400 hover:text-stone-700 dark:hover:text-white cursor-pointer"
                     >
                       Clear
                     </button>
@@ -1759,10 +1770,10 @@ https://news.ycombinator.com/item?id=123456`
                 <div className="space-y-3 pt-1">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {/* Original URL Box */}
-                    <div className="rounded-xl border border-stone-200 dark:border-[#383852] bg-stone-50/70 dark:bg-[#181825]/70 p-3.5 space-y-1.5">
-                      <div className="flex items-center justify-between text-[11px] font-mono text-stone-500 dark:text-[#A6ADC8]">
+                    <div className="rounded-xl border border-stone-200 dark:border-[#383852] sentry-inset p-4 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs font-medium text-stone-500 dark:text-[#A6ADC8]">
                         <span>Original Input URL:</span>
-                        <span className="text-[10px] uppercase font-bold text-stone-400">RAW</span>
+                        <span className="rounded-full bg-stone-200 dark:bg-[#383852] px-2 py-0.5 text-[9px] uppercase font-bold text-stone-600 dark:text-[#A6ADC8]">RAW</span>
                       </div>
                       <div className="text-xs font-mono text-stone-700 dark:text-[#CDD6F4] break-all leading-relaxed">
                         {cleanerResult.originalUrl}
@@ -1770,10 +1781,10 @@ https://news.ycombinator.com/item?id=123456`
                     </div>
 
                     {/* Sanitized URL Box */}
-                    <div className="rounded-xl border border-emerald-300 dark:border-emerald-500/40 bg-emerald-50/40 dark:bg-emerald-950/20 p-3.5 space-y-1.5">
-                      <div className="flex items-center justify-between text-[11px] font-mono text-emerald-800 dark:text-emerald-300">
+                    <div className="rounded-xl border border-emerald-300 dark:border-emerald-500/40 bg-emerald-50/40 dark:bg-emerald-950/20 p-4 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs font-medium text-emerald-800 dark:text-emerald-300">
                         <span>Sanitized Privacy-Clean URL:</span>
-                        <span className="rounded bg-emerald-100 dark:bg-emerald-950/80 px-1.5 py-0.5 text-[9px] uppercase font-bold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
+                        <span className="rounded-full bg-emerald-100 dark:bg-emerald-950/80 px-2 py-0.5 text-[9px] uppercase font-bold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
                           {cleanerResult.hasChanged ? 'PURIFIED' : 'ALREADY CLEAN'}
                         </span>
                       </div>
@@ -1784,21 +1795,21 @@ https://news.ycombinator.com/item?id=123456`
                   </div>
 
                   {/* Stripped Tokens Badges */}
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-xl border border-stone-200 dark:border-[#383852] bg-stone-50 dark:bg-[#181825] p-3">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-xl border border-stone-200 dark:border-[#383852] sentry-inset p-3.5">
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs font-mono font-bold text-stone-600 dark:text-[#A6ADC8]">
+                      <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">
                         Tracking Tokens Removed ({cleanerResult.strippedParams.length}):
                       </span>
                       {cleanerResult.strippedParams.length === 0 ? (
-                        <span className="text-xs font-mono text-stone-400 dark:text-[#9399B2]">
+                        <span className="text-xs text-stone-400 dark:text-[#9399B2]">
                           Zero tracking parameters detected. URL is safe.
                         </span>
                       ) : (
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-1.5">
                           {cleanerResult.strippedParams.map((p) => (
                             <span
                               key={p}
-                              className="rounded bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 px-2 py-0.5 font-mono text-[10px] font-semibold text-rose-700 dark:text-rose-400 line-through"
+                              className="rounded-md bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 px-2 py-0.5 font-mono text-[10px] font-semibold text-rose-700 dark:text-rose-400 line-through"
                             >
                               {p}
                             </span>
@@ -1809,7 +1820,7 @@ https://news.ycombinator.com/item?id=123456`
 
                     <button
                       onClick={handleCopySingleCleanUrl}
-                      className="flex items-center justify-center space-x-1.5 rounded-lg bg-emerald-700 dark:bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition cursor-pointer shrink-0"
+                      className="flex items-center justify-center space-x-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-xs transition cursor-pointer shrink-0"
                     >
                       {copiedCleanLink ? (
                         <HiCheck className="h-4 w-4" />
@@ -1824,11 +1835,8 @@ https://news.ycombinator.com/item?id=123456`
             </div>
 
             {/* SECTION 2: BATCH MULTI-URL SCRUBBER STUDIO */}
-            <div
-              className="sentry-card p-6 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors"
-              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-            >
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-stone-100 dark:border-[#383852] pb-3">
+            <div className="sentry-card p-6 rounded-2xl space-y-4 transition-all">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-stone-100 dark:border-[#383852] pb-4">
                 <div>
                   <h3 className="text-base font-bold text-stone-900 dark:text-white flex items-center space-x-2">
                     <HiBolt className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
@@ -1842,7 +1850,7 @@ https://news.ycombinator.com/item?id=123456`
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={handleProcessBatch}
-                    className="flex items-center space-x-1.5 rounded-lg bg-emerald-700 dark:bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-emerald-800 transition cursor-pointer"
+                    className="flex items-center space-x-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition cursor-pointer"
                   >
                     <HiBolt className="h-4 w-4" />
                     <span>Scrub Batch</span>
@@ -1852,7 +1860,7 @@ https://news.ycombinator.com/item?id=123456`
                     <>
                       <button
                         onClick={handleCopyAllBatch}
-                        className="flex items-center space-x-1.5 rounded-lg bg-stone-100 dark:bg-[#181825] border border-stone-300 dark:border-[#4E4E70] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 hover:border-emerald-600 transition cursor-pointer"
+                        className="flex items-center space-x-1.5 rounded-xl bg-white dark:bg-[#181825] border border-stone-200 dark:border-[#4E4E70] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 hover:border-emerald-600 transition cursor-pointer"
                       >
                         {batchCopied ? <HiCheck className="h-3.5 w-3.5 text-emerald-600" /> : <HiClipboardDocument className="h-3.5 w-3.5" />}
                         <span>{batchCopied ? 'All Copied!' : 'Copy All Clean'}</span>
@@ -1860,7 +1868,7 @@ https://news.ycombinator.com/item?id=123456`
 
                       <button
                         onClick={handleDownloadBatch}
-                        className="flex items-center space-x-1.5 rounded-lg bg-stone-100 dark:bg-[#181825] border border-stone-300 dark:border-[#4E4E70] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 hover:border-emerald-600 transition cursor-pointer"
+                        className="flex items-center space-x-1.5 rounded-xl bg-white dark:bg-[#181825] border border-stone-200 dark:border-[#4E4E70] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 hover:border-emerald-600 transition cursor-pointer"
                       >
                         <HiArrowDownTray className="h-3.5 w-3.5" />
                         <span>Export (.txt)</span>
@@ -1873,7 +1881,7 @@ https://news.ycombinator.com/item?id=123456`
                       setBatchInput('');
                       setBatchResults(null);
                     }}
-                    className="p-1.5 text-stone-400 hover:text-rose-600 rounded-lg transition"
+                    className="p-1.5 text-stone-400 hover:text-rose-600 rounded-lg transition cursor-pointer"
                     title="Clear input"
                   >
                     <HiTrash className="h-4 w-4" />
@@ -1888,7 +1896,7 @@ https://news.ycombinator.com/item?id=123456`
                   value={batchInput}
                   onChange={(e) => setBatchInput(e.target.value)}
                   placeholder="Paste multiple URLs here, one per line..."
-                  className="w-full rounded-xl bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] p-3 text-xs font-mono text-stone-900 dark:text-white placeholder-stone-400 leading-relaxed focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
+                  className="w-full rounded-xl bg-white dark:bg-[#181825] border border-stone-200 dark:border-[#383852] p-3 text-xs font-mono text-stone-900 dark:text-white placeholder-stone-400 leading-relaxed focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
                 />
               </div>
 
@@ -1901,29 +1909,29 @@ https://news.ycombinator.com/item?id=123456`
                     const totalParams = batchResults.reduce((acc, r) => acc + r.strippedParams.length, 0);
                     return (
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="rounded-xl border border-stone-200 dark:border-[#383852] bg-stone-50 dark:bg-[#181825] p-3 text-center">
-                          <div className="text-[10px] font-mono uppercase tracking-wider text-stone-400 dark:text-[#9399B2]">
+                        <div className="rounded-xl border border-stone-200 dark:border-[#383852] sentry-inset p-3.5 text-center">
+                          <div className="text-[10px] uppercase font-bold tracking-wider text-stone-400 dark:text-[#9399B2]">
                             Total Links Analyzed
                           </div>
-                          <div className="text-xl font-bold font-mono text-stone-800 dark:text-stone-200 mt-0.5">
+                          <div className="text-xl font-extrabold text-stone-800 dark:text-stone-200 mt-1 tabular-nums">
                             {batchResults.length}
                           </div>
                         </div>
 
-                        <div className="rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/30 p-3 text-center">
-                          <div className="text-[10px] font-mono uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
+                        <div className="rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/30 p-3.5 text-center">
+                          <div className="text-[10px] uppercase font-bold tracking-wider text-emerald-800 dark:text-emerald-400">
                             Sanitized Links
                           </div>
-                          <div className="text-xl font-bold font-mono text-emerald-800 dark:text-emerald-300 mt-0.5">
+                          <div className="text-xl font-extrabold text-emerald-800 dark:text-emerald-300 mt-1 tabular-nums">
                             {cleanedCount}
                           </div>
                         </div>
 
-                        <div className="rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/30 p-3 text-center">
-                          <div className="text-[10px] font-mono uppercase tracking-wider text-rose-700 dark:text-rose-400">
+                        <div className="rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/30 p-3.5 text-center">
+                          <div className="text-[10px] uppercase font-bold tracking-wider text-rose-700 dark:text-rose-400">
                             Parameters Stripped
                           </div>
-                          <div className="text-xl font-bold font-mono text-rose-700 dark:text-rose-400 mt-0.5">
+                          <div className="text-xl font-extrabold text-rose-700 dark:text-rose-400 mt-1 tabular-nums">
                             {totalParams}
                           </div>
                         </div>
@@ -1933,16 +1941,16 @@ https://news.ycombinator.com/item?id=123456`
 
                   {/* Results List */}
                   <div className="rounded-xl border border-stone-200 dark:border-[#383852] overflow-hidden">
-                    <div className="max-h-72 overflow-y-auto divide-y divide-stone-200 dark:divide-[#383852]">
+                    <div className="max-h-72 overflow-y-auto divide-y divide-stone-100 dark:divide-[#383852]">
                       {batchResults.map((res, i) => (
                         <div
                           key={i}
-                          className="flex items-center justify-between p-3 text-xs font-mono hover:bg-stone-50 dark:hover:bg-[#181825] transition"
+                          className="flex items-center justify-between p-3 text-xs hover:bg-stone-50 dark:hover:bg-[#181825] transition"
                         >
                           <div className="min-w-0 pr-3 space-y-1">
                             <div className="flex items-center space-x-2">
                               <span
-                                className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${
+                                className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
                                   res.hasChanged
                                     ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300'
                                     : 'bg-stone-200 text-stone-700 dark:bg-stone-800 dark:text-stone-300'
@@ -1950,7 +1958,7 @@ https://news.ycombinator.com/item?id=123456`
                               >
                                 {res.hasChanged ? 'CLEANED' : 'SAFE'}
                               </span>
-                              <span className="font-semibold text-stone-900 dark:text-white truncate max-w-xl">
+                              <span className="font-mono text-xs font-semibold text-stone-900 dark:text-white truncate max-w-xl">
                                 {res.cleanedUrl}
                               </span>
                             </div>
@@ -1960,7 +1968,7 @@ https://news.ycombinator.com/item?id=123456`
                                 {res.strippedParams.map((p) => (
                                   <span
                                     key={p}
-                                    className="rounded bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 px-1 py-0.2 text-[9px] line-through"
+                                    className="rounded bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 px-1.5 py-0.5 text-[9px] font-mono line-through"
                                   >
                                     {p}
                                   </span>
@@ -1973,7 +1981,7 @@ https://news.ycombinator.com/item?id=123456`
                             onClick={() => {
                               navigator.clipboard.writeText(res.cleanedUrl);
                             }}
-                            className="rounded p-1 text-stone-400 hover:text-emerald-700 dark:hover:text-emerald-400 transition"
+                            className="rounded-lg p-1.5 text-stone-400 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition cursor-pointer"
                             title="Copy link"
                           >
                             <HiClipboardDocument className="h-4 w-4" />
@@ -1987,10 +1995,7 @@ https://news.ycombinator.com/item?id=123456`
             </div>
 
             {/* SECTION 3: SUBSYSTEM DEFENSE MODULES */}
-            <div
-              className="sentry-card p-6 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors"
-              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-            >
+            <div className="sentry-card p-6 rounded-2xl space-y-4 transition-all">
               <div>
                 <h3 className="text-base font-bold text-stone-900 dark:text-white">
                   Link Guard Subsystem Protection Modules
@@ -2037,7 +2042,7 @@ https://news.ycombinator.com/item?id=123456`
                   return (
                     <div
                       key={item.key}
-                      className="rounded-xl border border-stone-200 dark:border-[#383852] bg-stone-50/70 dark:bg-[#181825]/70 p-4 flex flex-col justify-between space-y-3"
+                      className="rounded-xl border border-stone-200 dark:border-[#383852] sentry-inset p-4 flex flex-col justify-between space-y-3"
                     >
                       <div>
                         <div className="font-semibold text-xs text-stone-900 dark:text-white">
@@ -2049,7 +2054,7 @@ https://news.ycombinator.com/item?id=123456`
                       </div>
 
                       <div className="flex items-center justify-between pt-1">
-                        <span className="text-[10px] font-mono text-stone-400">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">
                           {isEnabled ? 'ENABLED' : 'PAUSED'}
                         </span>
                         <button
@@ -2073,14 +2078,11 @@ https://news.ycombinator.com/item?id=123456`
             </div>
 
             {/* SECTION 4: SURVEILLANCE PARAMETER DIRECTORY */}
-            <div
-              className="sentry-card p-6 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors"
-              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-            >
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-stone-100 dark:border-[#383852] pb-3">
+            <div className="sentry-card p-6 rounded-2xl space-y-4 transition-all">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-stone-100 dark:border-[#383852] pb-4">
                 <div>
                   <h3 className="text-base font-bold text-stone-900 dark:text-white">
-                    Surveillance Parameter Dictionary & Intelligence
+                    Surveillance Parameter Dictionary &amp; Intelligence
                   </h3>
                   <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-0.5">
                     Catalog of prominent surveillance tokens, click identifiers, and session linkers purged by Sentry AI.
@@ -2090,24 +2092,24 @@ https://news.ycombinator.com/item?id=123456`
                 {/* Search & Category Pills */}
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="relative">
-                    <HiMagnifyingGlass className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-stone-400" />
+                    <HiMagnifyingGlass className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
                     <input
                       type="text"
                       placeholder="Search parameters..."
                       value={paramSearch}
                       onChange={(e) => setParamSearch(e.target.value)}
-                      className="rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] pl-8 pr-3 py-1.5 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600"
+                      className="rounded-xl bg-white dark:bg-[#181825] border border-stone-200 dark:border-[#383852] pl-9 pr-3 py-1.5 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
                     />
                   </div>
 
-                  <div className="flex space-x-1 rounded-lg bg-stone-100 dark:bg-[#181825] p-1 border border-stone-200 dark:border-[#383852]">
+                  <div className="flex space-x-1 rounded-xl bg-stone-100 dark:bg-[#181825] p-1 border border-stone-200 dark:border-[#383852]">
                     {(['all', 'analytics', 'clicks', 'platforms', 'redirects'] as const).map((cat) => (
                       <button
                         key={cat}
                         onClick={() => setSelectedParamCategory(cat)}
-                        className={`rounded px-2.5 py-0.5 text-[10px] font-mono capitalize transition ${
+                        className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold capitalize transition cursor-pointer ${
                           selectedParamCategory === cat
-                            ? 'bg-emerald-700 text-white dark:bg-emerald-600 font-bold'
+                            ? 'bg-emerald-700 text-white dark:bg-emerald-600 shadow-2xs'
                             : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-white'
                         }`}
                       >
@@ -2136,17 +2138,17 @@ https://news.ycombinator.com/item?id=123456`
                     {filteredParams.map((p) => (
                       <div
                         key={p.name}
-                        className="rounded-xl border border-stone-200 dark:border-[#383852] bg-stone-50/50 dark:bg-[#181825]/50 p-3.5 space-y-2 hover:border-emerald-400 transition"
+                        className="rounded-xl border border-stone-200 dark:border-[#383852] sentry-inset p-4 space-y-2 hover:border-emerald-400 transition"
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-mono text-xs font-bold text-stone-900 dark:text-white truncate max-w-[200px]">
                             {p.name}
                           </span>
-                          <span className="rounded bg-stone-200 dark:bg-[#2E2E44] px-1.5 py-0.5 text-[9px] font-mono font-bold text-stone-700 dark:text-[#CDD6F4]">
+                          <span className="rounded-full bg-stone-200/80 dark:bg-[#2E2E44] px-2 py-0.5 text-[9px] font-bold text-stone-700 dark:text-[#CDD6F4]">
                             {p.badge}
                           </span>
                         </div>
-                        <div className="text-[11px] font-mono font-semibold text-emerald-800 dark:text-emerald-400">
+                        <div className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-400">
                           {p.company}
                         </div>
                         <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
@@ -2164,22 +2166,19 @@ https://news.ycombinator.com/item?id=123456`
         {/* Modal: Formal Deletion Demand Notice */}
         {selectedBroker && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-            <div
-              className="sentry-card max-w-2xl w-full p-6 space-y-4 border border-stone-300 dark:border-[#383852] rounded-2xl shadow-xl"
-              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-            >
+            <div className="sentry-card max-w-2xl w-full p-6 space-y-4 rounded-2xl shadow-2xl">
               <div className="flex items-center justify-between border-b border-stone-200 dark:border-[#383852] pb-3">
                 <div>
                   <h3 className="text-base font-bold text-stone-900 dark:text-white">
                     Formal Deletion Demand: {selectedBroker.name}
                   </h3>
-                  <span className="text-xs text-stone-500 dark:text-[#A6ADC8] font-mono">
+                  <span className="text-xs text-stone-500 dark:text-[#A6ADC8]">
                     Recipient: {selectedBroker.contactEmail}
                   </span>
                 </div>
                 <button
                   onClick={() => setSelectedBroker(null)}
-                  className="text-stone-400 hover:text-stone-700 dark:hover:text-white p-1 rounded-md"
+                  className="text-stone-400 hover:text-stone-700 dark:hover:text-white p-1 rounded-lg transition cursor-pointer"
                 >
                   <HiXMark className="h-5 w-5" />
                 </button>
@@ -2189,20 +2188,20 @@ https://news.ycombinator.com/item?id=123456`
               <div className="flex space-x-2">
                 <button
                   onClick={() => setDispatchType('ccpa')}
-                  className={`px-3 py-1 rounded text-xs font-semibold border ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
                     dispatchType === 'ccpa'
-                      ? 'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300'
-                      : 'bg-stone-100 text-stone-600 border-stone-200 dark:bg-[#181825] dark:text-[#A6ADC8] dark:border-[#383852]'
+                      ? 'bg-emerald-50 text-emerald-900 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-500/50'
+                      : 'bg-white text-stone-600 border-stone-200 dark:bg-[#181825] dark:text-[#A6ADC8] dark:border-[#383852]'
                   }`}
                 >
                   CCPA / CPRA Notice (US)
                 </button>
                 <button
                   onClick={() => setDispatchType('gdpr')}
-                  className={`px-3 py-1 rounded text-xs font-semibold border ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
                     dispatchType === 'gdpr'
-                      ? 'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300'
-                      : 'bg-stone-100 text-stone-600 border-stone-200 dark:bg-[#181825] dark:text-[#A6ADC8] dark:border-[#383852]'
+                      ? 'bg-emerald-50 text-emerald-900 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-500/50'
+                      : 'bg-white text-stone-600 border-stone-200 dark:bg-[#181825] dark:text-[#A6ADC8] dark:border-[#383852]'
                   }`}
                 >
                   GDPR Article 17 Erasure (EU/Global)
@@ -2211,14 +2210,14 @@ https://news.ycombinator.com/item?id=123456`
 
               {/* Rendered Email Preview */}
               <div className="space-y-2">
-                <div className="rounded bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] p-2 text-xs font-mono text-emerald-800 dark:text-emerald-300">
+                <div className="rounded-xl bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] p-2.5 text-xs font-medium text-emerald-800 dark:text-emerald-300">
                   Subject: {getPreparedEmail().subject}
                 </div>
                 <textarea
                   readOnly
                   rows={10}
                   value={getPreparedEmail().body}
-                  className="w-full rounded bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] p-3 font-mono text-xs text-stone-700 dark:text-[#CDD6F4] leading-relaxed focus:outline-none"
+                  className="w-full rounded-xl bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] p-3 text-xs text-stone-700 dark:text-[#CDD6F4] leading-relaxed focus:outline-none"
                 />
               </div>
 
@@ -2226,12 +2225,12 @@ https://news.ycombinator.com/item?id=123456`
               <div className="flex items-center justify-between pt-2">
                 <button
                   onClick={handleCopyNotice}
-                  className="flex items-center space-x-1.5 rounded-lg border border-stone-300 dark:border-[#4E4E70] bg-stone-100 dark:bg-[#181825] px-3 py-2 text-xs font-semibold text-stone-800 dark:text-stone-200 hover:border-emerald-600 transition"
+                  className="flex items-center space-x-1.5 rounded-xl border border-stone-200 dark:border-[#4E4E70] bg-white dark:bg-[#181825] px-3.5 py-2 text-xs font-semibold text-stone-800 dark:text-stone-200 hover:border-emerald-600 transition cursor-pointer"
                 >
                   {copiedTemplate ? (
-                    <HiCheck className="h-3.5 w-3.5 text-emerald-600" />
+                    <HiCheck className="h-4 w-4 text-emerald-600" />
                   ) : (
-                    <HiClipboardDocument className="h-3.5 w-3.5" />
+                    <HiClipboardDocument className="h-4 w-4" />
                   )}
                   <span>{copiedTemplate ? 'Copied to Clipboard!' : 'Copy Demand Text'}</span>
                 </button>
@@ -2242,9 +2241,9 @@ https://news.ycombinator.com/item?id=123456`
                       getPreparedEmail().subject
                     )}&body=${encodeURIComponent(getPreparedEmail().body)}`}
                     onClick={() => handleStatusChange(selectedBroker.id, 'Dispatched')}
-                    className="flex items-center space-x-1.5 rounded-lg bg-emerald-700 dark:bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition"
+                    className="flex items-center space-x-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-xs transition cursor-pointer"
                   >
-                    <HiPaperAirplane className="h-3.5 w-3.5" />
+                    <HiPaperAirplane className="h-4 w-4" />
                     <span>Send via Email Client</span>
                   </a>
                 </div>

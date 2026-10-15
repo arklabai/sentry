@@ -86,8 +86,8 @@
     return imageData;
   }
 
-  HTMLCanvasElement.prototype.toDataURL = function (...args: unknown[]) {
-    if (this.width > 0 && this.height > 0) {
+  HTMLCanvasElement.prototype.toDataURL = function () {
+    if (this && this.width > 0 && this.height > 0) {
       try {
         const ctx = this.getContext('2d');
         if (ctx) {
@@ -101,11 +101,11 @@
       }
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (origToDataURL as any).apply(this, args);
+    return (origToDataURL as any).apply(this, arguments);
   };
 
-  HTMLCanvasElement.prototype.toBlob = function (callback: BlobCallback, ...args: unknown[]) {
-    if (this.width > 0 && this.height > 0) {
+  HTMLCanvasElement.prototype.toBlob = function () {
+    if (this && this.width > 0 && this.height > 0) {
       try {
         const ctx = this.getContext('2d');
         if (ctx) {
@@ -119,25 +119,26 @@
       }
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (origToBlob as any).apply(this, [callback, ...args]);
+    return (origToBlob as any).apply(this, arguments);
   };
 
   CanvasRenderingContext2D.prototype.getImageData = function (
     sx: number,
     sy: number,
     sw: number,
-    sh: number,
-    settings?: ImageDataSettings
+    sh: number
   ) {
-    const imgData = origGetImageData.call(this, sx, sy, sw, sh, settings);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const imgData = (origGetImageData as any).apply(this, arguments);
     reportThreat('canvas', `CanvasRenderingContext2D.getImageData intercepted (${sw}x${sh})`);
     return scrambleImageData(imgData);
   };
 
   // Text metrics font probe defense (modifiedTextMetricsAPI)
   const origMeasureText = CanvasRenderingContext2D.prototype.measureText;
-  CanvasRenderingContext2D.prototype.measureText = function (text: string) {
-    const metrics = origMeasureText.call(this, text);
+  CanvasRenderingContext2D.prototype.measureText = function () {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const metrics = (origMeasureText as any).apply(this, arguments);
     try {
       const delta = (domainRng() - 0.5) * 0.0001;
       const proxy = new Proxy(metrics, {
@@ -171,36 +172,34 @@
     const origReadPixels = proto.readPixels;
 
     proto.getParameter = function (param: number) {
-      if (param === UNMASKED_VENDOR_WEBGL) {
-        reportThreat('webgl', 'UNMASKED_VENDOR_WEBGL probe normalized');
-        return 'Apple Inc.';
-      }
-      if (param === UNMASKED_RENDERER_WEBGL) {
-        reportThreat('webgl', 'UNMASKED_RENDERER_WEBGL probe normalized');
-        return 'Apple GPU (Metal)';
-      }
-      return origGetParameter.call(this, param);
+      try {
+        if (param === UNMASKED_VENDOR_WEBGL) {
+          reportThreat('webgl', 'UNMASKED_VENDOR_WEBGL probe normalized');
+          return 'Apple Inc.';
+        }
+        if (param === UNMASKED_RENDERER_WEBGL) {
+          reportThreat('webgl', 'UNMASKED_RENDERER_WEBGL probe normalized');
+          return 'Apple GPU (Metal)';
+        }
+      } catch {}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (origGetParameter as any).apply(this, arguments);
     };
 
-    proto.readPixels = function (
-      x: number,
-      y: number,
-      width: number,
-      height: number,
-      format: number,
-      type: number,
-      pixels: ArrayBufferView | null
-    ) {
+    proto.readPixels = function () {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const res = (origReadPixels as any).apply(this, arguments);
-      if (pixels && pixels instanceof Uint8Array) {
-        reportThreat('webgl', 'WebGL readPixels buffer perturbed');
-        for (let i = 0; i < pixels.length; i += 4) {
-          if (domainRng() < 0.1) {
-            pixels[i] = (pixels[i] ^ 1) & 0xff;
+      try {
+        const pixels = arguments[6];
+        if (pixels && pixels instanceof Uint8Array) {
+          reportThreat('webgl', 'WebGL readPixels buffer perturbed');
+          for (let i = 0; i < pixels.length; i += 4) {
+            if (domainRng() < 0.1) {
+              pixels[i] = (pixels[i] ^ 1) & 0xff;
+            }
           }
         }
-      }
+      } catch {}
       return res;
     };
   }
@@ -221,37 +220,44 @@
 
     AnalyserNode.prototype.getFloatFrequencyData = function (array: Float32Array) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (origGetFloatFreq as any).call(this, array);
-      reportThreat('audio', 'AnalyserNode.getFloatFrequencyData perturbed');
-      for (let i = 0; i < array.length; i += 2) {
-        if (array[i] !== 0) {
-          array[i] += (domainRng() - 0.5) * 0.0001;
+      (origGetFloatFreq as any).apply(this, arguments);
+      try {
+        reportThreat('audio', 'AnalyserNode.getFloatFrequencyData perturbed');
+        for (let i = 0; i < array.length; i += 2) {
+          if (array[i] !== 0) {
+            array[i] += (domainRng() - 0.5) * 0.0001;
+          }
         }
-      }
+      } catch {}
     };
 
     AnalyserNode.prototype.getByteFrequencyData = function (array: Uint8Array) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (origGetByteFreq as any).call(this, array);
-      reportThreat('audio', 'AnalyserNode.getByteFrequencyData perturbed');
-      for (let i = 0; i < array.length; i += 4) {
-        if (array[i] > 0) {
-          array[i] = (array[i] ^ (domainRng() > 0.5 ? 1 : 0)) & 0xff;
+      (origGetByteFreq as any).apply(this, arguments);
+      try {
+        reportThreat('audio', 'AnalyserNode.getByteFrequencyData perturbed');
+        for (let i = 0; i < array.length; i += 4) {
+          if (array[i] > 0) {
+            array[i] = (array[i] ^ (domainRng() > 0.5 ? 1 : 0)) & 0xff;
+          }
         }
-      }
+      } catch {}
     };
   }
 
   if (typeof AudioBuffer !== 'undefined') {
     const origGetChannelData = AudioBuffer.prototype.getChannelData;
     AudioBuffer.prototype.getChannelData = function (channel: number) {
-      const data = origGetChannelData.call(this, channel);
-      reportThreat('audio', `AudioBuffer.getChannelData perturbed (channel ${channel})`);
-      for (let i = 0; i < data.length; i += 8) {
-        if (data[i] !== 0) {
-          data[i] += (domainRng() - 0.5) * 0.00005;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data = (origGetChannelData as any).apply(this, arguments);
+      try {
+        reportThreat('audio', `AudioBuffer.getChannelData perturbed (channel ${channel})`);
+        for (let i = 0; i < data.length; i += 8) {
+          if (data[i] !== 0) {
+            data[i] += (domainRng() - 0.5) * 0.00005;
+          }
         }
-      }
+      } catch {}
       return data;
     };
   }
@@ -261,7 +267,8 @@
   // ==========================================
   const origGetBoundingClientRect = Element.prototype.getBoundingClientRect;
   Element.prototype.getBoundingClientRect = function () {
-    const rect = origGetBoundingClientRect.call(this);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rect = (origGetBoundingClientRect as any).apply(this, arguments);
     // Microscopic fractional shift to block font rendering analysis while preserving visual positioning
     const delta = (domainRng() - 0.5) * 0.00005;
     try {

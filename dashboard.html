@@ -5,21 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sentry AI - Be Fearless Online | Privacy Command Center</title>
     <link rel="stylesheet" href="/src/index.css" />
-    <script>
-      (function() {
-        try {
-          var saved = localStorage.getItem('sentry_theme_preference');
-          var isDark = saved === 'dark' || ((!saved || saved === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-          if (isDark) {
-            document.documentElement.classList.add('dark');
-            document.documentElement.setAttribute('data-theme', 'dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-            document.documentElement.setAttribute('data-theme', 'light');
-          }
-        } catch(e) {}
-      })();
-    </script>
     <style>
       html, body {
         width: 100%;
