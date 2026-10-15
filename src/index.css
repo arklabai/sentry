@@ -2,20 +2,22 @@
 
 @layer base {
   :root {
-    --bg-primary: #060913;
-    --bg-secondary: #0d1527;
-    --bg-card: rgba(13, 21, 39, 0.7);
-    --border-glow: rgba(0, 240, 255, 0.2);
-    --cyan-glow: #00f0ff;
-    --violet-glow: #a855f7;
+    --bg-primary: #070b14;
+    --bg-secondary: #0c1222;
+    --bg-card: rgba(13, 20, 36, 0.75);
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-glow: rgba(56, 189, 248, 0.25);
+    --cyan-accent: #00d2ff;
+    --blue-accent: #3b82f6;
     --emerald-safe: #10b981;
-    --ruby-danger: #ef4444;
+    --ruby-danger: #f43f5e;
+    --amber-warning: #f59e0b;
   }
 
   body {
     background-color: var(--bg-primary);
     color: #e2e8f0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     margin: 0;
     padding: 0;
@@ -23,75 +25,89 @@
   }
 }
 
-/* Glassmorphism card */
+/* Glassmorphism tactical card */
 .cyber-card {
-  background: rgba(13, 21, 39, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 240, 255, 0.15);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  transition: all 0.2s ease-in-out;
+  background: rgba(12, 18, 33, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.45);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .cyber-card:hover {
-  border-color: rgba(0, 240, 255, 0.35);
-  box-shadow: 0 8px 32px 0 rgba(0, 240, 255, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.6), 0 0 16px -2px rgba(59, 130, 246, 0.15);
 }
 
-/* Glowing text */
-.glow-cyan {
-  text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
-}
-
-.glow-violet {
-  text-shadow: 0 0 10px rgba(168, 85, 247, 0.6);
-}
-
-.glow-emerald {
-  text-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
-}
-
-/* Radar pulse animation */
-@keyframes radar-pulse {
+/* Radar pulse animation for armed shield */
+@keyframes shield-pulse {
   0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.6);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
   }
   70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 18px rgba(0, 240, 255, 0);
+    box-shadow: 0 0 0 14px rgba(16, 185, 129, 0);
   }
   100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(0, 240, 255, 0);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
   }
 }
 
-.radar-active {
-  animation: radar-pulse 2.2s infinite;
+.shield-armed-pulse {
+  animation: shield-pulse 2.4s infinite;
 }
 
-/* Cyber scanline overlay */
+@keyframes shield-disarmed-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(244, 63, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0);
+  }
+}
+
+.shield-disarmed-pulse {
+  animation: shield-disarmed-pulse 2.8s infinite;
+}
+
+/* Subtle background grid */
 .cyber-grid {
-  background-size: 24px 24px;
+  background-size: 28px 28px;
   background-image: 
-    linear-gradient(to right, rgba(0, 240, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
 }
 
-/* Custom cyber scrollbars */
+/* Custom sleek scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #060913;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: #1e293b;
-  border-radius: 3px;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #00f0ff;
+  background: #3b82f6;
+}
+
+/* Monospace font styling */
+.font-mono-num {
+  font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Toggle Switch Switcher */
+.switch-input:checked + .switch-track {
+  background-color: #2563eb;
+}
+.switch-input:checked + .switch-track .switch-thumb {
+  transform: translateX(16px);
 }

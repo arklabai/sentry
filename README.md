@@ -32,18 +32,21 @@
 
 ---
 
-## Interface Modalities: Full Sidebar, Popup, and Dashboard
+## Interface Modality: Native Browser Side Panel & Command Center
 
-Sentry AI provides three complementary interfaces:
+Sentry AI is designed around a zero-compromise, persistent **Browser Side Panel**:
 1. **Full-Height Browser Side Panel (`sidepanel.html`)**:
-   - Opens alongside any active webpage as a persistent, professional sidebar.
-   - Shortcut: `Command+Shift+S` (macOS) / `Ctrl+Shift+S` (Windows/Linux).
-   - Also openable via the **SIDEBAR** dock button in the toolbar popup.
-   - Features 5 full tabs: **Overview**, **Request Matrix**, **Fingerprint Shield**, **Network Log**, and **Broker Hub**.
-2. **Toolbar Popup (`popup.html`)**:
-   - Quick one-click master toggle, live safety grade, threat counters, and fast Element Zapper.
-3. **Full-Page Command Center (`dashboard.html`)**:
-   - Comprehensive broker registry (50+ databases), AES-256 identity vault management, and exportable audit trail.
+   - Opens alongside any active webpage as a persistent, high-craft cyber defense sidebar.
+   - **One-Click Launch**: Clicking the Sentry AI toolbar icon immediately docks and opens the Side Panel (no popup interruptions).
+   - **Keyboard Shortcut**: `Command+Shift+S` (macOS) / `Ctrl+Shift+S` (Windows/Linux).
+   - Features 5 comprehensive tabs:
+     - **Overview**: Hero defense toggle, safety grade, real-time threat feed, core shield switches.
+     - **Request Matrix**: Sub-request origin filtering (scripts, frames, WebSockets) & filter lists.
+     - **Fingerprint Shield**: Real-time Canvas, WebGL, AudioContext entropy & live hash tester.
+     - **Traffic Log**: Real-time network request inspector with type filtering and search.
+     - **Broker Hub**: Personal data broker monitoring and AI training locks.
+2. **Full-Page Command Center (`dashboard.html`)**:
+   - Comprehensive broker registry (50+ databases), AES-256 local encrypted identity vault, and automated CCPA/GDPR legal erasure demands.
 
 ---
 

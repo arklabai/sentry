@@ -196,6 +196,21 @@ if (chrome.declarativeNetRequest && chrome.declarativeNetRequest.onRuleMatchedDe
   });
 }
 
+// Configure Side Panel behavior so clicking the extension action icon opens the side panel directly
+if (chrome.sidePanel && (chrome.sidePanel as any).setPanelBehavior) {
+  (chrome.sidePanel as any)
+    .setPanelBehavior({ openPanelOnActionClick: true })
+    .catch(() => {});
+}
+
+// Fallback action click handler: opens the side panel on toolbar icon click
+chrome.action?.onClicked?.addListener(async (tab) => {
+  if (tab?.windowId) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (chrome as any).sidePanel?.open?.({ windowId: tab.windowId });
+  }
+});
+
 // Side panel keyboard shortcut handler
 chrome.commands.onCommand.addListener(async (command) => {
   if (command === 'open_side_panel') {
@@ -370,6 +385,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Extension install / update lifecycle
 chrome.runtime.onInstalled.addListener(async () => {
   console.log('[Sentry AI] Extension initialized.');
+  if (chrome.sidePanel && (chrome.sidePanel as any).setPanelBehavior) {
+    (chrome.sidePanel as any)
+      .setPanelBehavior({ openPanelOnActionClick: true })
+      .catch(() => {});
+  }
   const settings = await getSettings();
   await applySettings(settings);
   await initializeBrokers();
