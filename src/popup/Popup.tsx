@@ -345,7 +345,7 @@ export default function Popup() {
 
           <div className="space-y-2 text-xs">
             <div className="flex items-center justify-between py-1 border-b border-stone-100 dark:border-[#383852]/60">
-              <span className="text-stone-700 dark:text-[#CDD6F4] font-medium">Canvas & WebGL Defense</span>
+              <span className="text-stone-700 dark:text-[#CDD6F4] font-medium">Device Identity Mask</span>
               <button
                 onClick={() => handleToggleFeature('canvasShield')}
                 className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${
@@ -363,7 +363,7 @@ export default function Popup() {
             </div>
 
             <div className="flex items-center justify-between py-1 border-b border-stone-100 dark:border-[#383852]/60">
-              <span className="text-stone-700 dark:text-[#CDD6F4] font-medium">AudioContext Perturbation</span>
+              <span className="text-stone-700 dark:text-[#CDD6F4] font-medium">Audio Signature Guard</span>
               <button
                 onClick={() => handleToggleFeature('audioShield')}
                 className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${
@@ -381,7 +381,7 @@ export default function Popup() {
             </div>
 
             <div className="flex items-center justify-between py-1">
-              <span className="text-stone-700 dark:text-[#CDD6F4] font-medium">AI Scrapers & Training Pixels</span>
+              <span className="text-stone-700 dark:text-[#CDD6F4] font-medium">AI Training Defense</span>
               <button
                 onClick={() => handleToggleFeature('aiScraperShield')}
                 className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${
@@ -403,8 +403,8 @@ export default function Popup() {
               <div className="flex items-center space-x-2">
                 <HiShieldCheck className="h-4 w-4 text-emerald-700 dark:text-[#A6E3A1]" />
                 <div>
-                  <div className="text-xs font-semibold text-stone-800 dark:text-white">Cookie Consent Guard</div>
-                  <div className="text-[10px] text-stone-400 dark:text-[#A6ADC8]">Auto-reject & hide popups (All Sites)</div>
+                  <div className="text-xs font-semibold text-stone-800 dark:text-white">Cookie Banner Auto-Reject</div>
+                  <div className="text-[10px] text-stone-400 dark:text-[#A6ADC8]">Auto-declines tracking & dismisses popups</div>
                 </div>
               </div>
               <button

@@ -857,32 +857,32 @@ export default function Sidepanel() {
                 {[
                   {
                     key: 'canvasShield' as const,
-                    label: 'Canvas & WebGL Defense',
-                    desc: 'Mathematical noise injection',
+                    label: 'Device Identity Mask',
+                    desc: 'Blocks sites from profiling your hardware',
                     icon: HiCpuChip,
                   },
                   {
                     key: 'audioShield' as const,
-                    label: 'AudioContext Buffer Defender',
-                    desc: 'Acoustic frequency shifting',
+                    label: 'Audio Signature Guard',
+                    desc: 'Neutralizes hidden acoustic sound tracking',
                     icon: HiSpeakerWave,
                   },
                   {
                     key: 'aiScraperShield' as const,
-                    label: 'AI Scrapers & Training Pixels',
-                    desc: 'X-Robots-Tag & crawler blocks',
+                    label: 'AI Training Defense',
+                    desc: 'Blocks bots scraping data for AI models',
                     icon: HiSignal,
                   },
                   {
                     key: 'urlCleaner' as const,
-                    label: 'URL Sanitizer & Link Guard',
-                    desc: 'Strip surveillance parameters & redirects',
+                    label: 'Clean Link Guard',
+                    desc: 'Removes tracking tokens from web links',
                     icon: HiLink,
                   },
                   {
                     key: 'cookieConsent' as const,
-                    label: 'Cookie Consent Guard',
-                    desc: 'Auto-reject cookies & hide popups on all sites',
+                    label: 'Cookie Banner Auto-Reject',
+                    desc: 'Auto-declines tracking & dismisses popups',
                     icon: HiCheckCircle,
                   },
                 ].map((item) => {
