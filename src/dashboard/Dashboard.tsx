@@ -57,6 +57,7 @@ import { encryptProfile, decryptProfile } from '../lib/crypto';
 import brokerListJson from '../lib/brokerList.json';
 import SentryShieldLogo from '../components/SentryShieldLogo';
 import { useTheme } from '../hooks/useTheme';
+import { formatFullNumber } from '../lib/formatUtils';
 
 type ActiveTab = 'brokers' | 'ai-shield' | 'matrix' | 'ledger' | 'cleaner';
 
@@ -625,11 +626,11 @@ https://news.ycombinator.com/item?id=123456`
                 <HiShieldExclamation className="h-4 w-4" />
               </div>
             </div>
-            <div className="text-2xl font-extrabold text-stone-900 dark:text-white tabular-nums tracking-tight">
-              {globalStats?.totalTrackersBlocked || 0}
+            <div className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums tracking-tight">
+              {formatFullNumber(globalStats?.totalTrackersBlocked)}
             </div>
             <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">
-              DNR static & dynamic filters
+              DNR Static & Dynamic Filters
             </p>
           </div>
 
@@ -638,15 +639,15 @@ https://news.ycombinator.com/item?id=123456`
               <span className="text-[11px] font-bold text-stone-500 dark:text-[#A6ADC8] uppercase tracking-wider">
                 Fingerprints Scrambled
               </span>
-              <div className="h-7 w-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/40">
+              <div className="h-7 w-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-400 flex items-center justify-center border border-indigo-200/60 dark:border-indigo-800/40">
                 <HiShieldCheck className="h-4 w-4" />
               </div>
             </div>
-            <div className="text-2xl font-extrabold text-stone-900 dark:text-white tabular-nums tracking-tight">
-              {globalStats?.totalFingerprintsScrambled || 0}
+            <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 tabular-nums tracking-tight">
+              {formatFullNumber(globalStats?.totalFingerprintsScrambled)}
             </div>
             <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">
-              Canvas, WebGL & Audio noise
+              Canvas, WebGL & Audio Noise
             </p>
           </div>
 
@@ -659,11 +660,11 @@ https://news.ycombinator.com/item?id=123456`
                 <HiCpuChip className="h-4 w-4" />
               </div>
             </div>
-            <div className="text-2xl font-extrabold text-rose-700 dark:text-rose-400 tabular-nums tracking-tight">
-              {globalStats?.totalAiScrapersBlocked || 0}
+            <div className="text-2xl font-extrabold text-rose-600 dark:text-rose-400 tabular-nums tracking-tight">
+              {formatFullNumber(globalStats?.totalAiScrapersBlocked)}
             </div>
             <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">
-              Meta, ByteDance, TikTok pixels
+              Tracking & Data Guard
             </p>
           </div>
 
@@ -672,18 +673,18 @@ https://news.ycombinator.com/item?id=123456`
               <span className="text-[11px] font-bold text-stone-500 dark:text-[#A6ADC8] uppercase tracking-wider">
                 Sanitized URLs
               </span>
-              <div className="h-7 w-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/40">
+              <div className="h-7 w-7 rounded-lg bg-cyan-50 dark:bg-cyan-950/50 text-cyan-700 dark:text-cyan-400 flex items-center justify-center border border-cyan-200/60 dark:border-cyan-800/40">
                 <HiLink className="h-4 w-4" />
               </div>
             </div>
-            <div className="text-2xl font-extrabold text-stone-900 dark:text-white tabular-nums tracking-tight">
-              {globalStats?.totalUrlsCleaned || 0}{' '}
+            <div className="text-2xl font-extrabold text-cyan-600 dark:text-cyan-400 tabular-nums tracking-tight">
+              {formatFullNumber(globalStats?.totalUrlsCleaned)}{' '}
               <span className="text-xs font-normal text-stone-400 dark:text-[#9399B2]">
-                / {globalStats?.totalParamsStripped || 0} purged
+                / {formatFullNumber(globalStats?.totalParamsStripped)} Purged
               </span>
             </div>
             <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">
-              Click & tracking parameters
+              Click & Tracking Parameters
             </p>
           </div>
 
@@ -692,18 +693,18 @@ https://news.ycombinator.com/item?id=123456`
               <span className="text-[11px] font-bold text-stone-500 dark:text-[#A6ADC8] uppercase tracking-wider">
                 Brokers Audited
               </span>
-              <div className="h-7 w-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/40">
+              <div className="h-7 w-7 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 flex items-center justify-center border border-amber-200/60 dark:border-amber-800/40">
                 <HiCircleStack className="h-4 w-4" />
               </div>
             </div>
-            <div className="text-2xl font-extrabold text-stone-900 dark:text-white tabular-nums tracking-tight">
-              {removedCount}{' '}
+            <div className="text-2xl font-extrabold text-amber-600 dark:text-amber-400 tabular-nums tracking-tight">
+              {formatFullNumber(removedCount)}{' '}
               <span className="text-xs font-normal text-stone-400 dark:text-[#9399B2]">
-                / {totalBrokersCount} total
+                / {formatFullNumber(totalBrokersCount)} Total
               </span>
             </div>
             <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">
-              CCPA / GDPR Art 17 opt-outs
+              CCPA & GDPR Art 17 Opt-Outs
             </p>
           </div>
         </div>

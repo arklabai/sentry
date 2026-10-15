@@ -16,6 +16,7 @@ import {
 import { PrivacySettings, TabThreatStats, GlobalPrivacyStats } from '../types';
 import SentryShieldLogo from '../components/SentryShieldLogo';
 import { useTheme } from '../hooks/useTheme';
+import { formatMetricNumber } from '../lib/formatUtils';
 
 export default function Popup() {
   const { themeMode, isDark, setThemeMode } = useTheme();
@@ -287,8 +288,8 @@ export default function Popup() {
               <span className="text-[10px] font-mono uppercase font-medium">Trackers Intercepted</span>
               <HiShieldCheck className="h-4 w-4 text-emerald-700 dark:text-[#A6E3A1]" />
             </div>
-            <div className="text-xl font-bold font-mono text-emerald-800 dark:text-[#A6E3A1]">
-              {stats?.trackersBlocked || 0}
+            <div className="text-xl font-bold font-mono text-emerald-800 dark:text-[#A6E3A1]" title={(stats?.trackersBlocked || 0).toLocaleString()}>
+              {formatMetricNumber(stats?.trackersBlocked)}
             </div>
             <span className="text-[9px] text-stone-400 dark:text-[#9399B2] font-mono">DNR Static & Dynamic</span>
           </div>
@@ -298,8 +299,8 @@ export default function Popup() {
               <span className="text-[10px] font-mono uppercase font-medium">Canvas Scrambled</span>
               <HiCpuChip className="h-4 w-4 text-stone-700 dark:text-[#CBA6F7]" />
             </div>
-            <div className="text-xl font-bold font-mono text-stone-900 dark:text-[#CBA6F7]">
-              {stats?.canvasFaked || 0}
+            <div className="text-xl font-bold font-mono text-stone-900 dark:text-[#CBA6F7]" title={(stats?.canvasFaked || 0).toLocaleString()}>
+              {formatMetricNumber(stats?.canvasFaked)}
             </div>
             <span className="text-[9px] text-stone-400 dark:text-[#9399B2] font-mono">Math Noise Perturbation</span>
           </div>
@@ -309,8 +310,8 @@ export default function Popup() {
               <span className="text-[10px] font-mono uppercase font-medium">Audio Freq Masked</span>
               <HiSpeakerWave className="h-4 w-4 text-teal-700 dark:text-[#94E2D5]" />
             </div>
-            <div className="text-xl font-bold font-mono text-teal-800 dark:text-[#94E2D5]">
-              {stats?.audioFaked || 0}
+            <div className="text-xl font-bold font-mono text-teal-800 dark:text-[#94E2D5]" title={(stats?.audioFaked || 0).toLocaleString()}>
+              {formatMetricNumber(stats?.audioFaked)}
             </div>
             <span className="text-[9px] text-stone-400 dark:text-[#9399B2] font-mono">Acoustic Shifting</span>
           </div>
@@ -320,10 +321,10 @@ export default function Popup() {
               <span className="text-[10px] font-mono uppercase font-medium">AI Pixels Blocked</span>
               <HiSignal className="h-4 w-4 text-rose-700 dark:text-[#F38BA8]" />
             </div>
-            <div className="text-xl font-bold font-mono text-rose-800 dark:text-[#F38BA8]">
-              {stats?.aiBeaconsBlocked || 0}
+            <div className="text-xl font-bold font-mono text-rose-800 dark:text-[#F38BA8]" title={(stats?.aiBeaconsBlocked || 0).toLocaleString()}>
+              {formatMetricNumber(stats?.aiBeaconsBlocked)}
             </div>
-            <span className="text-[9px] text-stone-400 dark:text-[#9399B2] font-mono">Meta / Google Telemetry</span>
+            <span className="text-[9px] text-stone-400 dark:text-[#9399B2] font-mono">Tracking & Data Guard</span>
           </div>
         </div>
 

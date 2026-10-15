@@ -41,6 +41,7 @@ import {
 import { cleanUrl } from '../lib/urlCleaner';
 import SentryShieldLogo from '../components/SentryShieldLogo';
 import { useTheme } from '../hooks/useTheme';
+import { formatMetricNumber } from '../lib/formatUtils';
 
 type SidebarTab = 'overview' | 'matrix' | 'broker' | 'cleaner' | 'network';
 
@@ -729,7 +730,7 @@ export default function Sidepanel() {
                     </div>
                     <p className="text-xs mt-1 font-medium leading-none" style={{ color: 'var(--text-secondary)' }}>
                       {isShieldOn
-                        ? `${totalBlockedThisPage} threats intercepted`
+                        ? `${formatMetricNumber(totalBlockedThisPage)} threats intercepted`
                         : 'Protection suspended for current page'}
                     </p>
                   </div>
@@ -815,11 +816,11 @@ export default function Sidepanel() {
                   </span>
                   <HiShieldCheck className="h-4 w-4" style={{ color: 'var(--green-primary)' }} />
                 </div>
-                <div className="text-xl font-bold font-mono" style={{ color: 'var(--green-primary)' }}>
-                  {stats?.trackersBlocked || 0}
+                <div className="text-xl font-bold font-mono" style={{ color: 'var(--green-primary)' }} title={(stats?.trackersBlocked || 0).toLocaleString()}>
+                  {formatMetricNumber(stats?.trackersBlocked)}
                 </div>
                 <p className="text-[10px] mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
-                  DNR static & dynamic
+                  DNR Static & Dynamic
                 </p>
               </div>
 
@@ -837,11 +838,15 @@ export default function Sidepanel() {
                   </span>
                   <HiFingerPrint className="h-4 w-4" style={{ color: 'var(--green-primary)' }} />
                 </div>
-                <div className="text-xl font-bold font-mono" style={{ color: 'var(--text-primary)' }}>
-                  {(stats?.canvasFaked || 0) + (stats?.audioFaked || 0) + (stats?.webglFaked || 0)}
+                <div
+                  className="text-xl font-bold font-mono"
+                  style={{ color: 'var(--text-primary)' }}
+                  title={((stats?.canvasFaked || 0) + (stats?.audioFaked || 0) + (stats?.webglFaked || 0)).toLocaleString()}
+                >
+                  {formatMetricNumber((stats?.canvasFaked || 0) + (stats?.audioFaked || 0) + (stats?.webglFaked || 0))}
                 </div>
                 <p className="text-[10px] mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
-                  Canvas & audio noise
+                  Canvas & Audio Noise
                 </p>
               </div>
 
@@ -859,11 +864,11 @@ export default function Sidepanel() {
                   </span>
                   <HiSignal className="h-4 w-4" style={{ color: 'var(--danger-primary)' }} />
                 </div>
-                <div className="text-xl font-bold font-mono" style={{ color: 'var(--danger-primary)' }}>
-                  {stats?.aiBeaconsBlocked || 0}
+                <div className="text-xl font-bold font-mono" style={{ color: 'var(--danger-primary)' }} title={(stats?.aiBeaconsBlocked || 0).toLocaleString()}>
+                  {formatMetricNumber(stats?.aiBeaconsBlocked)}
                 </div>
                 <p className="text-[10px] mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
-                  Meta, TikTok pixels
+                  Tracking & Data Guard
                 </p>
               </div>
 
@@ -881,13 +886,23 @@ export default function Sidepanel() {
                   </span>
                   <HiCircleStack className="h-4 w-4" style={{ color: 'var(--text-secondary)' }} />
                 </div>
-                <div className="text-xl font-bold font-mono" style={{ color: 'var(--text-primary)' }}>
-                  {(globalStats?.totalTrackersBlocked || 0) +
+                <div
+                  className="text-xl font-bold font-mono"
+                  style={{ color: 'var(--text-primary)' }}
+                  title={(
+                    (globalStats?.totalTrackersBlocked || 0) +
                     (globalStats?.totalFingerprintsScrambled || 0) +
-                    (globalStats?.totalAiScrapersBlocked || 0)}
+                    (globalStats?.totalAiScrapersBlocked || 0)
+                  ).toLocaleString()}
+                >
+                  {formatMetricNumber(
+                    (globalStats?.totalTrackersBlocked || 0) +
+                    (globalStats?.totalFingerprintsScrambled || 0) +
+                    (globalStats?.totalAiScrapersBlocked || 0)
+                  )}
                 </div>
                 <p className="text-[10px] mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
-                  Lifetime defense
+                  Lifetime Defense
                 </p>
               </div>
             </div>
@@ -1626,7 +1641,7 @@ export default function Sidepanel() {
                         {fl.name}
                       </div>
                       <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                        {(fl.count || 0).toLocaleString()} pre-compiled rules
+                        {formatMetricNumber(fl.count)} pre-compiled rules
                       </div>
                     </div>
                     <button
@@ -2057,7 +2072,7 @@ export default function Sidepanel() {
                     Cleaned URLs
                   </div>
                   <div className="text-base font-bold font-mono mt-0.5" style={{ color: 'var(--green-primary)' }}>
-                    {globalStats?.totalUrlsCleaned || 0}
+                    {formatMetricNumber(globalStats?.totalUrlsCleaned)}
                   </div>
                 </div>
                 <div
@@ -2068,7 +2083,7 @@ export default function Sidepanel() {
                     Tokens Stripped
                   </div>
                   <div className="text-base font-bold font-mono mt-0.5" style={{ color: 'var(--green-primary)' }}>
-                    {globalStats?.totalParamsStripped || 0}
+                    {formatMetricNumber(globalStats?.totalParamsStripped)}
                   </div>
                 </div>
               </div>
