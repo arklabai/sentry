@@ -87,6 +87,10 @@ export const UNIVERSAL_TRACKING_PARAMS: readonly string[] = [
   'ref',
   'referrer',
   'affiliate_id',
+  'aff_id',
+  'aff',
+  'aff_sub',
+  'affiliate',
   'source',
 
   // Email / CRM Tracking

@@ -13,7 +13,12 @@ export const ZAP_STORAGE_KEY = 'sentry_zap_rules';
  * Prioritizes stable IDs, unique attributes, and semantic class names.
  */
 export function generateOptimalSelector(el: HTMLElement): string {
-  if (!el || el === document.body || el === document.documentElement) {
+  const hasDoc = typeof document !== 'undefined';
+  const escapeCss = (str: string) => (typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(str) : str);
+  const isSingleMatch = (sel: string) =>
+    hasDoc && document.querySelectorAll ? document.querySelectorAll(sel).length === 1 : true;
+
+  if (!el || (hasDoc && (el === document.body || el === document.documentElement))) {
     return 'body';
   }
 
@@ -31,8 +36,8 @@ export function generateOptimalSelector(el: HTMLElement): string {
 
     if (!isDynamic) {
       try {
-        const escaped = CSS.escape(trimmedId);
-        if (document.querySelectorAll(`#${escaped}`).length === 1) {
+        const escaped = escapeCss(trimmedId);
+        if (isSingleMatch(`#${escaped}`)) {
           return `#${escaped}`;
         }
       } catch {
@@ -60,7 +65,7 @@ export function generateOptimalSelector(el: HTMLElement): string {
     if (val && val.length < 50 && !val.includes('"')) {
       const selector = `${tagName}[${attr}="${val}"]`;
       try {
-        if (document.querySelectorAll(selector).length === 1) {
+        if (isSingleMatch(selector)) {
           return selector;
         }
       } catch {
@@ -88,9 +93,9 @@ export function generateOptimalSelector(el: HTMLElement): string {
       // Try single most specific class
       for (const cls of semanticClasses) {
         try {
-          const escaped = CSS.escape(cls);
+          const escaped = escapeCss(cls);
           const sel = `${tagName}.${escaped}`;
-          if (document.querySelectorAll(sel).length === 1) {
+          if (isSingleMatch(sel)) {
             return sel;
           }
         } catch {
@@ -100,8 +105,8 @@ export function generateOptimalSelector(el: HTMLElement): string {
 
       // Try combination of first two semantic classes
       try {
-        const classSelector = `${tagName}.${semanticClasses.slice(0, 2).map((c) => CSS.escape(c)).join('.')}`;
-        if (document.querySelectorAll(classSelector).length === 1) {
+        const classSelector = `${tagName}.${semanticClasses.slice(0, 2).map((c) => escapeCss(c)).join('.')}`;
+        if (isSingleMatch(classSelector)) {
           return classSelector;
         }
       } catch {
@@ -114,12 +119,12 @@ export function generateOptimalSelector(el: HTMLElement): string {
   let current: HTMLElement | null = el;
   const path: string[] = [];
 
-  while (current && current !== document.body && current !== document.documentElement && path.length < 3) {
+  while (current && (!hasDoc || (current !== document.body && current !== document.documentElement)) && path.length < 3) {
     let segment = current.tagName.toLowerCase();
 
     if (current.id && !/^[0-9a-f-]{10,}$/i.test(current.id)) {
       try {
-        segment += `#${CSS.escape(current.id)}`;
+        segment += `#${escapeCss(current.id)}`;
         path.unshift(segment);
         break; // ID anchors the path
       } catch {
