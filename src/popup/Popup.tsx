@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import {
-  ShieldAlert,
-  Zap,
-  Cpu,
-  Volume2,
-  ExternalLink,
-  Power,
-  Sliders,
-  Layers,
-  Eye,
-  Sun,
-  Moon,
-  Monitor,
-} from 'lucide-react';
+  HiShieldCheck,
+  HiBolt,
+  HiCpuChip,
+  HiSpeakerWave,
+  HiArrowTopRightOnSquare,
+  HiPower,
+  HiAdjustmentsHorizontal,
+  HiSquares2X2,
+  HiSignal,
+  HiSun,
+  HiMoon,
+  HiComputerDesktop,
+} from 'react-icons/hi2';
 import { PrivacySettings, TabThreatStats, GlobalPrivacyStats } from '../types';
 import SentryShieldLogo from '../components/SentryShieldLogo';
 import { useTheme } from '../hooks/useTheme';
@@ -145,9 +145,9 @@ export default function Popup() {
             title={`Current Theme: ${themeMode} (Click to toggle)`}
             className="flex items-center justify-center h-7 w-7 rounded-lg border border-stone-200 dark:border-[#383852] bg-stone-100/80 dark:bg-[#181825] text-stone-600 dark:text-[#CDD6F4] hover:border-emerald-500 transition"
           >
-            {themeMode === 'system' && <Monitor className="h-3.5 w-3.5" />}
-            {themeMode === 'light' && <Sun className="h-3.5 w-3.5 text-amber-600" />}
-            {themeMode === 'dark' && <Moon className="h-3.5 w-3.5 text-emerald-400" />}
+            {themeMode === 'system' && <HiComputerDesktop className="h-4 w-4" />}
+            {themeMode === 'light' && <HiSun className="h-4 w-4 text-amber-600" />}
+            {themeMode === 'dark' && <HiMoon className="h-4 w-4 text-emerald-400" />}
           </button>
 
           {/* Dock to Side Panel */}
@@ -159,7 +159,7 @@ export default function Popup() {
             title="Dock Sentry AI to Browser Side Panel"
             className="flex items-center space-x-1 rounded-lg border border-stone-200 dark:border-[#383852] bg-stone-100 dark:bg-[#181825] px-2 py-1 text-xs text-stone-700 dark:text-[#CDD6F4] transition hover:border-emerald-600 dark:hover:border-[#A6E3A1]"
           >
-            <Layers className="h-3.5 w-3.5 text-emerald-700 dark:text-[#A6E3A1]" />
+            <HiSquares2X2 className="h-4 w-4 text-emerald-700 dark:text-[#A6E3A1]" />
             <span className="font-mono text-[10px] font-medium">SIDEBAR</span>
           </button>
 
@@ -169,7 +169,7 @@ export default function Popup() {
             title="Open Privacy Command Center & Data Broker Hub"
             className="flex items-center space-x-1 rounded-lg border border-stone-200 dark:border-[#383852] bg-stone-100 dark:bg-[#181825] px-2 py-1 text-xs text-stone-700 dark:text-[#CDD6F4] transition hover:border-emerald-600 dark:hover:border-[#A6E3A1]"
           >
-            <Sliders className="h-3.5 w-3.5" />
+            <HiAdjustmentsHorizontal className="h-4 w-4" />
             <span className="font-mono text-[10px] font-medium">VAULT</span>
           </button>
         </div>
@@ -190,7 +190,7 @@ export default function Popup() {
                     : 'border-stone-300 dark:border-stone-700 bg-stone-100 dark:bg-stone-800 text-stone-400 dark:text-stone-500'
                 }`}
               >
-                <Power className="h-6 w-6" />
+                <HiPower className="h-6 w-6" />
               </button>
               <div>
                 <div className="flex items-center space-x-2">
@@ -246,10 +246,10 @@ export default function Popup() {
 
         {/* Real-time Threat Ticker (Tactile Cards) */}
         <div className="grid grid-cols-2 gap-2.5">
-          <div className="sentry-card p-3">
+          <div className="sentry-card p-3" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}>
             <div className="flex items-center justify-between text-stone-500 dark:text-[#9399B2] mb-1">
               <span className="text-[10px] font-mono uppercase font-medium">Trackers Intercepted</span>
-              <ShieldAlert className="h-3.5 w-3.5 text-emerald-700 dark:text-[#A6E3A1]" />
+              <HiShieldCheck className="h-4 w-4 text-emerald-700 dark:text-[#A6E3A1]" />
             </div>
             <div className="text-xl font-bold font-mono text-emerald-800 dark:text-[#A6E3A1]">
               {stats?.trackersBlocked || 0}
@@ -257,10 +257,10 @@ export default function Popup() {
             <span className="text-[9px] text-stone-400 dark:text-[#9399B2] font-mono">DNR Static & Dynamic</span>
           </div>
 
-          <div className="sentry-card p-3">
+          <div className="sentry-card p-3" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}>
             <div className="flex items-center justify-between text-stone-500 dark:text-[#9399B2] mb-1">
               <span className="text-[10px] font-mono uppercase font-medium">Canvas Scrambled</span>
-              <Cpu className="h-3.5 w-3.5 text-stone-700 dark:text-[#CBA6F7]" />
+              <HiCpuChip className="h-4 w-4 text-stone-700 dark:text-[#CBA6F7]" />
             </div>
             <div className="text-xl font-bold font-mono text-stone-900 dark:text-[#CBA6F7]">
               {stats?.canvasFaked || 0}
@@ -268,10 +268,10 @@ export default function Popup() {
             <span className="text-[9px] text-stone-400 dark:text-[#9399B2] font-mono">Math Noise Perturbation</span>
           </div>
 
-          <div className="sentry-card p-3">
+          <div className="sentry-card p-3" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}>
             <div className="flex items-center justify-between text-stone-500 dark:text-[#9399B2] mb-1">
               <span className="text-[10px] font-mono uppercase font-medium">Audio Freq Masked</span>
-              <Volume2 className="h-3.5 w-3.5 text-teal-700 dark:text-[#94E2D5]" />
+              <HiSpeakerWave className="h-4 w-4 text-teal-700 dark:text-[#94E2D5]" />
             </div>
             <div className="text-xl font-bold font-mono text-teal-800 dark:text-[#94E2D5]">
               {stats?.audioFaked || 0}
@@ -279,10 +279,10 @@ export default function Popup() {
             <span className="text-[9px] text-stone-400 dark:text-[#9399B2] font-mono">Acoustic Shifting</span>
           </div>
 
-          <div className="sentry-card p-3">
+          <div className="sentry-card p-3" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}>
             <div className="flex items-center justify-between text-stone-500 dark:text-[#9399B2] mb-1">
               <span className="text-[10px] font-mono uppercase font-medium">AI Pixels Blocked</span>
-              <Eye className="h-3.5 w-3.5 text-rose-700 dark:text-[#F38BA8]" />
+              <HiSignal className="h-4 w-4 text-rose-700 dark:text-[#F38BA8]" />
             </div>
             <div className="text-xl font-bold font-mono text-rose-800 dark:text-[#F38BA8]">
               {stats?.aiBeaconsBlocked || 0}
@@ -388,7 +388,7 @@ export default function Popup() {
             onClick={handleActivateZapper}
             className="flex items-center justify-center space-x-1.5 rounded-xl border border-rose-200 dark:border-[#F38BA8]/30 bg-rose-50 dark:bg-[#F38BA8]/10 px-3 py-2 text-xs font-semibold text-rose-800 dark:text-[#F38BA8] transition hover:bg-rose-100 dark:hover:bg-[#F38BA8]/20"
           >
-            <Zap className="h-3.5 w-3.5 text-rose-600 dark:text-[#F38BA8]" />
+            <HiBolt className="h-4 w-4 text-rose-600 dark:text-[#F38BA8]" />
             <span>Element Zapper</span>
           </button>
 
@@ -397,7 +397,7 @@ export default function Popup() {
             className="flex items-center justify-center space-x-1.5 rounded-xl border border-stone-200 dark:border-[#383852] bg-stone-100 dark:bg-[#181825] px-3 py-2 text-xs font-semibold text-stone-700 dark:text-[#CDD6F4] transition hover:border-emerald-600 dark:hover:border-[#A6E3A1]"
           >
             <span>Broker Hub</span>
-            <ExternalLink className="h-3.5 w-3.5" />
+            <HiArrowTopRightOnSquare className="h-4 w-4" />
           </button>
         </div>
       </div>

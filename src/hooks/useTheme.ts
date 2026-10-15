@@ -34,25 +34,21 @@ export function useTheme() {
   const applyThemeClasses = useCallback((dark: boolean) => {
     setIsDark(dark);
     if (typeof document !== 'undefined') {
-      if (dark) {
-        document.documentElement.classList.add('dark');
-        document.documentElement.classList.remove('light');
-        document.documentElement.setAttribute('data-theme', 'dark');
-        document.body?.classList.add('dark');
-        document.body?.classList.remove('light');
-        document.body?.setAttribute('data-theme', 'dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-        document.documentElement.classList.add('light');
-        document.documentElement.setAttribute('data-theme', 'light');
-        document.body?.classList.remove('dark');
-        document.body?.classList.add('light');
-        document.body?.setAttribute('data-theme', 'light');
+      const themeName = dark ? 'dark' : 'light';
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(themeName);
+      document.documentElement.setAttribute('data-theme', themeName);
+      document.documentElement.style.colorScheme = themeName;
+      if (document.body) {
+        document.body.classList.remove('light', 'dark');
+        document.body.classList.add(themeName);
+        document.body.setAttribute('data-theme', themeName);
+        document.body.style.colorScheme = themeName;
       }
     }
   }, []);
 
-  // Sync initial setting from chrome.storage.local
+  // Sync initial setting from chrome.storage.local and listen for real-time broadcasts
   useEffect(() => {
     if (typeof chrome !== 'undefined' && chrome.storage?.local) {
       chrome.storage.local.get(['sentry_theme_preference'], (result) => {
@@ -66,7 +62,8 @@ export function useTheme() {
 
       const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
         if (changes.sentry_theme_preference?.newValue) {
-          setThemeModeState(changes.sentry_theme_preference.newValue as ThemeMode);
+          const newMode = changes.sentry_theme_preference.newValue as ThemeMode;
+          setThemeModeState(newMode);
         }
       };
 
@@ -114,34 +111,27 @@ export function useTheme() {
       mediaQuery.addEventListener('change', mediaListener);
     }
 
-    // 2. Listen to browser history / tab navigation events to adapt if in system mode
-    let tabListener: ((activeInfo: chrome.tabs.TabActiveInfo) => void) | null = null;
-    if (typeof chrome !== 'undefined' && chrome.tabs?.onActivated && themeMode === 'system') {
-      tabListener = () => {
-        evaluateTheme();
-      };
-      chrome.tabs.onActivated.addListener(tabListener);
-    }
-
     return () => {
       if (mediaQuery?.removeEventListener) {
         mediaQuery.removeEventListener('change', mediaListener);
-      }
-      if (tabListener && typeof chrome !== 'undefined' && chrome.tabs?.onActivated) {
-        chrome.tabs.onActivated.removeListener(tabListener);
       }
     };
   }, [themeMode, applyThemeClasses]);
 
   const setThemeMode = (mode: ThemeMode) => {
     setThemeModeState(mode);
+    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+      chrome.storage.local.set({ sentry_theme_preference: mode });
+    }
   };
 
   const cycleTheme = () => {
     setThemeModeState((prev) => {
-      if (prev === 'system') return 'light';
-      if (prev === 'light') return 'dark';
-      return 'system';
+      const next: ThemeMode = prev === 'light' ? 'dark' : prev === 'dark' ? 'system' : 'light';
+      if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+        chrome.storage.local.set({ sentry_theme_preference: next });
+      }
+      return next;
     });
   };
 

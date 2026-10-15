@@ -1,27 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Shield,
-  ShieldCheck,
-  Zap,
-  Layers,
-  Database,
-  Activity,
-  Globe,
-  RefreshCw,
-  ExternalLink,
-  Cpu,
-  Volume2,
-  Search,
-  Plus,
-  Trash2,
-  Maximize2,
-  Radio,
-  Fingerprint,
-  Sun,
-  Moon,
-  Monitor,
-  CheckCircle2,
-} from 'lucide-react';
+  HiShieldCheck,
+  HiOutlineShieldCheck,
+  HiBolt,
+  HiSquares2X2,
+  HiCircleStack,
+  HiChartBar,
+  HiGlobeAlt,
+  HiArrowPath,
+  HiArrowTopRightOnSquare,
+  HiCpuChip,
+  HiSpeakerWave,
+  HiMagnifyingGlass,
+  HiPlus,
+  HiTrash,
+  HiArrowsPointingOut,
+  HiSignal,
+  HiFingerPrint,
+  HiSun,
+  HiMoon,
+  HiComputerDesktop,
+  HiCheckCircle,
+} from 'react-icons/hi2';
 import {
   PrivacySettings,
   TabThreatStats,
@@ -239,7 +239,7 @@ export default function Sidepanel() {
           ctx.fillStyle = '#f60';
           ctx.fillRect(10, 5, 60, 20);
           ctx.fillStyle = '#069';
-          ctx.fillText('Sentry🛡️Test', 15, 8);
+          ctx.fillText('Sentry AI Test', 15, 8);
           const dataUrl = testCanvas.toDataURL();
           let hash = 0;
           for (let i = 0; i < dataUrl.length; i++) {
@@ -346,11 +346,11 @@ export default function Sidepanel() {
               }}
             >
               {themeMode === 'system' ? (
-                <Monitor className="h-3.5 w-3.5" style={{ color: 'var(--green-primary)' }} />
+                <HiComputerDesktop className="h-4 w-4" style={{ color: 'var(--green-primary)' }} />
               ) : themeMode === 'light' ? (
-                <Sun className="h-3.5 w-3.5 text-amber-600" />
+                <HiSun className="h-4 w-4 text-amber-600" />
               ) : (
-                <Moon className="h-3.5 w-3.5" style={{ color: 'var(--green-primary)' }} />
+                <HiMoon className="h-4 w-4" style={{ color: 'var(--green-primary)' }} />
               )}
             </button>
 
@@ -365,7 +365,7 @@ export default function Sidepanel() {
                 color: 'var(--danger-primary)',
               }}
             >
-              <Zap className="h-3.5 w-3.5" />
+              <HiBolt className="h-4 w-4" />
             </button>
 
             {/* Refresh Tab */}
@@ -379,7 +379,7 @@ export default function Sidepanel() {
                 color: 'var(--text-secondary)',
               }}
             >
-              <RefreshCw className="h-3.5 w-3.5" />
+              <HiArrowPath className="h-4 w-4" />
             </button>
 
             {/* Fullscreen Command Center */}
@@ -393,7 +393,7 @@ export default function Sidepanel() {
                 color: 'var(--text-secondary)',
               }}
             >
-              <Maximize2 className="h-3.5 w-3.5" />
+              <HiArrowsPointingOut className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -407,8 +407,8 @@ export default function Sidepanel() {
           }}
         >
           <div className="flex items-center space-x-1.5 truncate max-w-[210px]">
-            <Globe
-              className="h-3.5 w-3.5 shrink-0"
+            <HiGlobeAlt
+              className="h-4 w-4 shrink-0"
               style={{ color: isWhitelisted ? 'var(--amber-primary)' : 'var(--green-primary)' }}
             />
             <span className="font-mono text-[11px] truncate" style={{ color: 'var(--text-primary)' }}>
@@ -441,11 +441,11 @@ export default function Sidepanel() {
         }}
       >
         {[
-          { id: 'overview' as const, label: 'Overview', icon: Shield },
-          { id: 'matrix' as const, label: 'Matrix', icon: Layers },
-          { id: 'fingerprint' as const, label: 'Entropy', icon: Fingerprint },
-          { id: 'network' as const, label: 'Traffic', icon: Activity },
-          { id: 'broker' as const, label: 'Brokers', icon: Database },
+          { id: 'overview' as const, label: 'Overview', icon: HiOutlineShieldCheck },
+          { id: 'matrix' as const, label: 'Matrix', icon: HiSquares2X2 },
+          { id: 'fingerprint' as const, label: 'Entropy', icon: HiFingerPrint },
+          { id: 'network' as const, label: 'Traffic', icon: HiChartBar },
+          { id: 'broker' as const, label: 'Brokers', icon: HiCircleStack },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -479,7 +479,14 @@ export default function Sidepanel() {
         {activeTab === 'overview' && (
           <div className="space-y-3.5">
             {/* HERO DEFENSE CARD */}
-            <div className="sentry-card p-4 relative overflow-hidden">
+            <div
+              className="sentry-card p-4 relative overflow-hidden"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-primary)',
+              }}
+            >
               <div className="flex items-center justify-between">
                 {/* Shield Toggle & Status */}
                 <div className="flex items-center space-x-3.5">
@@ -588,12 +595,19 @@ export default function Sidepanel() {
 
             {/* 2x2 TELEMETRY METRIC TILES */}
             <div className="grid grid-cols-2 gap-2.5">
-              <div className="sentry-card p-3">
+              <div
+                className="sentry-card p-3"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: 'var(--border-subtle)',
+                  color: 'var(--text-primary)',
+                }}
+              >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                     Trackers
                   </span>
-                  <ShieldCheck className="h-3.5 w-3.5" style={{ color: 'var(--green-primary)' }} />
+                  <HiShieldCheck className="h-4 w-4" style={{ color: 'var(--green-primary)' }} />
                 </div>
                 <div className="text-xl font-bold font-mono" style={{ color: 'var(--green-primary)' }}>
                   {stats?.trackersBlocked || 0}
@@ -603,12 +617,19 @@ export default function Sidepanel() {
                 </p>
               </div>
 
-              <div className="sentry-card p-3">
+              <div
+                className="sentry-card p-3"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: 'var(--border-subtle)',
+                  color: 'var(--text-primary)',
+                }}
+              >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                     Fingerprints
                   </span>
-                  <Fingerprint className="h-3.5 w-3.5" style={{ color: 'var(--green-primary)' }} />
+                  <HiFingerPrint className="h-4 w-4" style={{ color: 'var(--green-primary)' }} />
                 </div>
                 <div className="text-xl font-bold font-mono" style={{ color: 'var(--text-primary)' }}>
                   {(stats?.canvasFaked || 0) + (stats?.audioFaked || 0) + (stats?.webglFaked || 0)}
@@ -618,12 +639,19 @@ export default function Sidepanel() {
                 </p>
               </div>
 
-              <div className="sentry-card p-3">
+              <div
+                className="sentry-card p-3"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: 'var(--border-subtle)',
+                  color: 'var(--text-primary)',
+                }}
+              >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                     AI Scrapers
                   </span>
-                  <Radio className="h-3.5 w-3.5" style={{ color: 'var(--danger-primary)' }} />
+                  <HiSignal className="h-4 w-4" style={{ color: 'var(--danger-primary)' }} />
                 </div>
                 <div className="text-xl font-bold font-mono" style={{ color: 'var(--danger-primary)' }}>
                   {stats?.aiBeaconsBlocked || 0}
@@ -633,12 +661,19 @@ export default function Sidepanel() {
                 </p>
               </div>
 
-              <div className="sentry-card p-3">
+              <div
+                className="sentry-card p-3"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: 'var(--border-subtle)',
+                  color: 'var(--text-primary)',
+                }}
+              >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                     All-Time
                   </span>
-                  <Database className="h-3.5 w-3.5" style={{ color: 'var(--text-secondary)' }} />
+                  <HiCircleStack className="h-4 w-4" style={{ color: 'var(--text-secondary)' }} />
                 </div>
                 <div className="text-xl font-bold font-mono" style={{ color: 'var(--text-primary)' }}>
                   {(globalStats?.totalTrackersBlocked || 0) +
@@ -652,7 +687,14 @@ export default function Sidepanel() {
             </div>
 
             {/* CORE DEFENSE TOGGLES */}
-            <div className="sentry-card p-3.5 space-y-2.5">
+            <div
+              className="sentry-card p-3.5 space-y-2.5"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-primary)',
+              }}
+            >
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono uppercase tracking-wider font-semibold" style={{ color: 'var(--text-muted)' }}>
                   Shield Sub-Systems
@@ -668,19 +710,19 @@ export default function Sidepanel() {
                     key: 'canvasShield' as const,
                     label: 'Canvas & WebGL Defense',
                     desc: 'Mathematical noise injection',
-                    icon: Cpu,
+                    icon: HiCpuChip,
                   },
                   {
                     key: 'audioShield' as const,
                     label: 'AudioContext Buffer Defender',
                     desc: 'Acoustic frequency shifting',
-                    icon: Volume2,
+                    icon: HiSpeakerWave,
                   },
                   {
                     key: 'aiScraperShield' as const,
                     label: 'AI Scrapers & Training Pixels',
                     desc: 'X-Robots-Tag & crawler blocks',
-                    icon: Radio,
+                    icon: HiSignal,
                   },
                 ].map((item) => {
                   const Icon = item.icon;
@@ -745,7 +787,7 @@ export default function Sidepanel() {
                   color: 'var(--danger-primary)',
                 }}
               >
-                <Zap className="h-3.5 w-3.5" />
+                <HiBolt className="h-4 w-4" />
                 <span>Element Zapper</span>
               </button>
 
@@ -758,7 +800,7 @@ export default function Sidepanel() {
                   color: 'var(--text-primary)',
                 }}
               >
-                <Layers className="h-3.5 w-3.5" style={{ color: 'var(--green-primary)' }} />
+                <HiSquares2X2 className="h-4 w-4" style={{ color: 'var(--green-primary)' }} />
                 <span>Matrix Rules</span>
               </button>
             </div>
@@ -771,7 +813,14 @@ export default function Sidepanel() {
         {activeTab === 'matrix' && (
           <div className="space-y-3.5">
             {/* DYNAMIC TRAFFIC MATRIX */}
-            <div className="sentry-card p-3.5 space-y-3">
+            <div
+              className="sentry-card p-3.5 space-y-3"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-primary)',
+              }}
+            >
               <div>
                 <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                   Dynamic Traffic Filtering Matrix
@@ -848,7 +897,14 @@ export default function Sidepanel() {
             </div>
 
             {/* GLOBAL FILTER LISTS */}
-            <div className="sentry-card p-3.5 space-y-2.5">
+            <div
+              className="sentry-card p-3.5 space-y-2.5"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-primary)',
+              }}
+            >
               <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                 Global Declarative Filter Lists
               </h3>
@@ -888,7 +944,14 @@ export default function Sidepanel() {
             </div>
 
             {/* CUSTOM FILTER RULES */}
-            <div className="sentry-card p-3.5 space-y-2.5">
+            <div
+              className="sentry-card p-3.5 space-y-2.5"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-primary)',
+              }}
+            >
               <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                 Custom Blocking Rules
               </h3>
@@ -915,7 +978,7 @@ export default function Sidepanel() {
                     color: 'var(--text-inverse)',
                   }}
                 >
-                  <Plus className="h-3.5 w-3.5" />
+                  <HiPlus className="h-4 w-4" />
                 </button>
               </div>
 
@@ -938,7 +1001,7 @@ export default function Sidepanel() {
                         className="cursor-pointer hover:opacity-75"
                         style={{ color: 'var(--danger-primary)' }}
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <HiTrash className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   ))}
@@ -954,7 +1017,14 @@ export default function Sidepanel() {
         {activeTab === 'fingerprint' && (
           <div className="space-y-3.5">
             {/* LIVE SIMULATOR TEST */}
-            <div className="sentry-card p-3.5 space-y-2.5">
+            <div
+              className="sentry-card p-3.5 space-y-2.5"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-primary)',
+              }}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
@@ -993,13 +1063,20 @@ export default function Sidepanel() {
                       {testCanvasHash}
                     </div>
                   </div>
-                  <CheckCircle2 className="h-4 w-4" style={{ color: 'var(--green-primary)' }} />
+                  <HiCheckCircle className="h-4 w-4" style={{ color: 'var(--green-primary)' }} />
                 </div>
               )}
             </div>
 
             {/* GRANULAR ENTROPY CONTROLS */}
-            <div className="sentry-card p-3.5 space-y-2.5">
+            <div
+              className="sentry-card p-3.5 space-y-2.5"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-primary)',
+              }}
+            >
               <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                 Granular Anti-Fingerprinting Matrix
               </h3>
@@ -1091,7 +1168,14 @@ export default function Sidepanel() {
         {/* ========================================================= */}
         {activeTab === 'network' && (
           <div className="space-y-3.5">
-            <div className="sentry-card p-3.5 space-y-2.5">
+            <div
+              className="sentry-card p-3.5 space-y-2.5"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-primary)',
+              }}
+            >
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                   Real-Time Traffic Log
@@ -1110,7 +1194,7 @@ export default function Sidepanel() {
                     border: '1px solid var(--border-subtle)',
                   }}
                 >
-                  <Search className="h-3.5 w-3.5" style={{ color: 'var(--text-muted)' }} />
+                  <HiMagnifyingGlass className="h-4 w-4" style={{ color: 'var(--text-muted)' }} />
                   <input
                     type="text"
                     placeholder="Filter request URL..."
@@ -1179,7 +1263,14 @@ export default function Sidepanel() {
         {/* ========================================================= */}
         {activeTab === 'broker' && (
           <div className="space-y-3.5">
-            <div className="sentry-card p-3.5 space-y-3">
+            <div
+              className="sentry-card p-3.5 space-y-3"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-primary)',
+              }}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
@@ -1198,7 +1289,7 @@ export default function Sidepanel() {
                   }}
                 >
                   <span>Vault</span>
-                  <ExternalLink className="h-3 w-3" />
+                  <HiArrowTopRightOnSquare className="h-3.5 w-3.5" />
                 </button>
               </div>
 
@@ -1210,7 +1301,7 @@ export default function Sidepanel() {
                   border: '1px solid var(--border-subtle)',
                 }}
               >
-                <Search className="h-3.5 w-3.5" style={{ color: 'var(--text-muted)' }} />
+                <HiMagnifyingGlass className="h-4 w-4" style={{ color: 'var(--text-muted)' }} />
                 <input
                   type="text"
                   placeholder="Search broker registry..."

@@ -1,33 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Shield,
-  ShieldCheck,
-  ShieldAlert,
-  Sliders,
-  Database,
-  Bot,
-  ListFilter,
-  Activity,
-  Lock,
-  Unlock,
-  Key,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  Send,
-  ExternalLink,
-  Search,
-  Filter,
-  FileText,
-  Trash2,
-  Plus,
-  RefreshCw,
-  Copy,
-  Check,
-  Sun,
-  Moon,
-  Monitor,
-} from 'lucide-react';
+  HiOutlineShieldCheck,
+  HiShieldCheck,
+  HiShieldExclamation,
+  HiAdjustmentsHorizontal,
+  HiCircleStack,
+  HiCpuChip,
+  HiFunnel,
+  HiChartBar,
+  HiLockClosed,
+  HiLockOpen,
+  HiKey,
+  HiCheckCircle,
+  HiClock,
+  HiExclamationTriangle,
+  HiPaperAirplane,
+  HiArrowTopRightOnSquare,
+  HiMagnifyingGlass,
+  HiDocumentText,
+  HiTrash,
+  HiPlus,
+  HiArrowPath,
+  HiClipboardDocument,
+  HiCheck,
+  HiSun,
+  HiMoon,
+  HiComputerDesktop,
+  HiXMark,
+} from 'react-icons/hi2';
 import {
   BrokerEntry,
   BrokerCategory,
@@ -102,19 +102,32 @@ export default function Dashboard() {
     });
 
     // 3. Check for existing encrypted vault
-    chrome.storage.local.get(['sentry_profile_vault'], (res) => {
-      if (!res.sentry_profile_vault) {
-        setIsVaultLocked(false); // First time setup: allow entering profile
+    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+      chrome.storage.local.get(['sentry_profile_vault'], (res) => {
+        if (!res?.sentry_profile_vault) {
+          setIsVaultLocked(false); // First time setup: allow entering profile
+        }
+      });
+    } else {
+      const stored = localStorage.getItem('sentry_profile_vault');
+      if (!stored) {
+        setIsVaultLocked(false);
       }
-    });
+    }
   }, []);
 
   // Vault unlock handler
   const handleUnlockVault = async () => {
     setVaultError('');
     try {
-      const res = await chrome.storage.local.get(['sentry_profile_vault']);
-      const vault: EncryptedVault = res.sentry_profile_vault;
+      let vault: EncryptedVault | null = null;
+      if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+        const res = await chrome.storage.local.get(['sentry_profile_vault']);
+        vault = res?.sentry_profile_vault;
+      } else {
+        const raw = localStorage.getItem('sentry_profile_vault');
+        vault = raw ? JSON.parse(raw) : null;
+      }
       if (!vault) {
         setIsVaultLocked(false);
         return;
@@ -139,7 +152,11 @@ export default function Dashboard() {
     try {
       const updatedProfile = { ...profile, updatedAt: Date.now() };
       const vault = await encryptProfile(updatedProfile, vaultPassphrase);
-      await chrome.storage.local.set({ sentry_profile_vault: vault });
+      if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+        await chrome.storage.local.set({ sentry_profile_vault: vault });
+      } else {
+        localStorage.setItem('sentry_profile_vault', JSON.stringify(vault));
+      }
       setProfile(updatedProfile);
       setVaultSavedNotice(true);
       setTimeout(() => setVaultSavedNotice(false), 3000);
@@ -257,7 +274,7 @@ export default function Dashboard() {
                     : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
                 }`}
               >
-                <Database className="h-4 w-4" />
+                <HiCircleStack className="h-4 w-4" />
                 <span>Data Broker Hub</span>
               </button>
 
@@ -269,7 +286,7 @@ export default function Dashboard() {
                     : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
                 }`}
               >
-                <Bot className="h-4 w-4" />
+                <HiCpuChip className="h-4 w-4" />
                 <span>AI Opt-Out Center</span>
               </button>
 
@@ -281,7 +298,7 @@ export default function Dashboard() {
                     : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
                 }`}
               >
-                <Sliders className="h-4 w-4" />
+                <HiAdjustmentsHorizontal className="h-4 w-4" />
                 <span>Domain Matrix</span>
               </button>
 
@@ -293,7 +310,7 @@ export default function Dashboard() {
                     : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
                 }`}
               >
-                <Activity className="h-4 w-4" />
+                <HiChartBar className="h-4 w-4" />
                 <span>Live Threat Ledger</span>
               </button>
             </nav>
@@ -305,11 +322,11 @@ export default function Dashboard() {
               className="flex items-center space-x-1.5 rounded-xl border border-stone-200 dark:border-[#4E4E70] bg-stone-100/90 dark:bg-[#181825] px-3 py-1.5 text-xs font-medium text-stone-700 dark:text-[#CDD6F4] hover:bg-stone-200 dark:hover:bg-[#2E2E44] transition"
             >
               {themeMode === 'system' ? (
-                <Monitor className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+                <HiComputerDesktop className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
               ) : themeMode === 'light' ? (
-                <Sun className="h-4 w-4 text-amber-600" />
+                <HiSun className="h-4 w-4 text-amber-600" />
               ) : (
-                <Moon className="h-4 w-4 text-indigo-400" />
+                <HiMoon className="h-4 w-4 text-indigo-400" />
               )}
               <span className="capitalize">{themeMode}</span>
             </button>
@@ -321,10 +338,13 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto w-full flex-1 p-6 space-y-6">
         {/* Global Protection Metrics Banner */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="sentry-card border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
+          <div
+            className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors"
+            style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+          >
             <div className="flex items-center justify-between text-stone-500 dark:text-[#A6ADC8] mb-1">
               <span className="text-xs font-mono uppercase tracking-wider">Total Trackers Blocked</span>
-              <ShieldAlert className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+              <HiShieldExclamation className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
             </div>
             <div className="text-2xl font-bold font-mono text-emerald-800 dark:text-emerald-300">
               {globalStats?.totalTrackersBlocked || 0}
@@ -332,10 +352,13 @@ export default function Dashboard() {
             <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">DNR static & dynamic filters</p>
           </div>
 
-          <div className="sentry-card border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
+          <div
+            className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors"
+            style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+          >
             <div className="flex items-center justify-between text-stone-500 dark:text-[#A6ADC8] mb-1">
               <span className="text-xs font-mono uppercase tracking-wider">Fingerprints Scrambled</span>
-              <ShieldCheck className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+              <HiShieldCheck className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
             </div>
             <div className="text-2xl font-bold font-mono text-emerald-800 dark:text-emerald-300">
               {globalStats?.totalFingerprintsScrambled || 0}
@@ -343,10 +366,13 @@ export default function Dashboard() {
             <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">Canvas, WebGL & Audio noise</p>
           </div>
 
-          <div className="sentry-card border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
+          <div
+            className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors"
+            style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+          >
             <div className="flex items-center justify-between text-stone-500 dark:text-[#A6ADC8] mb-1">
               <span className="text-xs font-mono uppercase tracking-wider">AI Scrapers Blocked</span>
-              <Bot className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+              <HiCpuChip className="h-4 w-4 text-rose-600 dark:text-rose-400" />
             </div>
             <div className="text-2xl font-bold font-mono text-rose-700 dark:text-rose-400">
               {globalStats?.totalAiScrapersBlocked || 0}
@@ -354,10 +380,13 @@ export default function Dashboard() {
             <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">Meta, ByteDance, TikTok pixels</p>
           </div>
 
-          <div className="sentry-card border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
+          <div
+            className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors"
+            style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+          >
             <div className="flex items-center justify-between text-stone-500 dark:text-[#A6ADC8] mb-1">
               <span className="text-xs font-mono uppercase tracking-wider">Brokers Cleared / Audited</span>
-              <Database className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+              <HiCircleStack className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
             </div>
             <div className="text-2xl font-bold font-mono text-emerald-800 dark:text-emerald-300">
               {removedCount} / {totalBrokersCount}
@@ -370,11 +399,14 @@ export default function Dashboard() {
         {activeTab === 'brokers' && (
           <div className="space-y-6">
             {/* Identity Profile & Local AES-256 Vault */}
-            <div className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
+            <div
+              className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors"
+              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+            >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-100 dark:border-[#383852] pb-4">
                 <div>
                   <div className="flex items-center space-x-2">
-                    <Lock className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
+                    <HiLockClosed className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
                     <h2 className="text-base font-bold text-stone-900 dark:text-white">
                       Encrypted Personal Identity Vault (AES-256-GCM)
                     </h2>
@@ -398,7 +430,7 @@ export default function Dashboard() {
                         onClick={handleUnlockVault}
                         className="flex items-center space-x-1.5 rounded-lg bg-emerald-700 dark:bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800 transition"
                       >
-                        <Unlock className="h-3.5 w-3.5" />
+                        <HiLockOpen className="h-3.5 w-3.5" />
                         <span>Unlock</span>
                       </button>
                     </div>
@@ -407,7 +439,7 @@ export default function Dashboard() {
                       onClick={() => setIsVaultLocked(true)}
                       className="flex items-center space-x-1.5 rounded-lg bg-stone-100 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] px-3 py-1.5 text-xs font-semibold text-stone-700 dark:text-[#CDD6F4] hover:border-stone-400"
                     >
-                      <Lock className="h-3.5 w-3.5" />
+                      <HiLockClosed className="h-3.5 w-3.5" />
                       <span>Lock Vault</span>
                     </button>
                   )}
@@ -520,7 +552,10 @@ export default function Dashboard() {
             </div>
 
             {/* Broker Registry & Workflow Table */}
-            <div className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors">
+            <div
+              className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors"
+              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+            >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <h3 className="text-base font-bold text-stone-900 dark:text-white">
@@ -534,7 +569,7 @@ export default function Dashboard() {
                 {/* Filter and Search Bar */}
                 <div className="flex items-center space-x-2">
                   <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-stone-400" />
+                    <HiMagnifyingGlass className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-stone-400" />
                     <input
                       type="text"
                       placeholder="Search broker name..."
@@ -602,7 +637,7 @@ export default function Dashboard() {
                               className="text-emerald-700 dark:text-emerald-400 hover:underline flex items-center space-x-1"
                             >
                               <span>Opt-Out Portal</span>
-                              <ExternalLink className="h-3 w-3" />
+                              <HiArrowTopRightOnSquare className="h-3 w-3" />
                             </a>
                             <div className="text-[10px] text-stone-400 dark:text-[#9399B2]">{broker.contactEmail}</div>
                           </td>
@@ -643,9 +678,12 @@ export default function Dashboard() {
         {/* TAB 2: AI TRAINING OPT-OUT HUB */}
         {activeTab === 'ai-shield' && (
           <div className="space-y-6">
-            <div className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
+            <div
+              className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors"
+              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+            >
               <div className="flex items-center space-x-2 border-b border-stone-100 dark:border-[#383852] pb-3">
-                <Bot className="h-6 w-6 text-emerald-700 dark:text-emerald-400" />
+                <HiCpuChip className="h-6 w-6 text-emerald-700 dark:text-emerald-400" />
                 <div>
                   <h2 className="text-base font-bold text-stone-900 dark:text-white">
                     Commercial AI Model Training Defenses
@@ -658,9 +696,12 @@ export default function Dashboard() {
 
               {/* Protocol Defense Status */}
               <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="sentry-card p-4 bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] rounded-xl">
+                <div
+                  className="p-4 border rounded-xl"
+                  style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+                >
                   <div className="flex items-center space-x-2 text-emerald-700 dark:text-emerald-400 mb-2">
-                    <CheckCircle2 className="h-4 w-4" />
+                    <HiCheckCircle className="h-4 w-4" />
                     <h3 className="text-xs font-bold font-mono uppercase tracking-wider">
                       Global Privacy Control (Sec-GPC: 1)
                     </h3>
@@ -674,9 +715,12 @@ export default function Dashboard() {
                   </span>
                 </div>
 
-                <div className="sentry-card p-4 bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] rounded-xl">
+                <div
+                  className="p-4 border rounded-xl"
+                  style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+                >
                   <div className="flex items-center space-x-2 text-emerald-700 dark:text-emerald-400 mb-2">
-                    <CheckCircle2 className="h-4 w-4" />
+                    <HiCheckCircle className="h-4 w-4" />
                     <h3 className="text-xs font-bold font-mono uppercase tracking-wider">
                       Anti AI Scraping Crawler Nullifier
                     </h3>
@@ -696,7 +740,10 @@ export default function Dashboard() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Meta AI */}
-                <div className="sentry-card p-4 flex flex-col justify-between bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] rounded-xl">
+                <div
+                  className="p-4 flex flex-col justify-between border rounded-xl"
+                  style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+                >
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-sm font-bold text-stone-900 dark:text-white">Meta / Facebook AI Training</h4>
@@ -719,13 +766,16 @@ export default function Dashboard() {
                       className="flex items-center space-x-1 rounded bg-stone-200/80 dark:bg-[#2E2E44] px-3 py-1 text-xs text-stone-800 dark:text-stone-200 hover:bg-emerald-700 hover:text-white transition"
                     >
                       <span>Opt-Out Form</span>
-                      <ExternalLink className="h-3 w-3" />
+                      <HiArrowTopRightOnSquare className="h-3 w-3" />
                     </a>
                   </div>
                 </div>
 
                 {/* X Grok AI */}
-                <div className="sentry-card p-4 flex flex-col justify-between bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] rounded-xl">
+                <div
+                  className="p-4 flex flex-col justify-between border rounded-xl"
+                  style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+                >
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-sm font-bold text-stone-900 dark:text-white">X (Twitter) Grok Model Training</h4>
@@ -748,13 +798,16 @@ export default function Dashboard() {
                       className="flex items-center space-x-1 rounded bg-stone-200/80 dark:bg-[#2E2E44] px-3 py-1 text-xs text-stone-800 dark:text-stone-200 hover:bg-emerald-700 hover:text-white transition"
                     >
                       <span>Grok Settings</span>
-                      <ExternalLink className="h-3 w-3" />
+                      <HiArrowTopRightOnSquare className="h-3 w-3" />
                     </a>
                   </div>
                 </div>
 
                 {/* Google Gemini */}
-                <div className="sentry-card p-4 flex flex-col justify-between bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] rounded-xl">
+                <div
+                  className="p-4 flex flex-col justify-between border rounded-xl"
+                  style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+                >
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-sm font-bold text-stone-900 dark:text-white">Google Gemini Activity Lock</h4>
@@ -777,13 +830,16 @@ export default function Dashboard() {
                       className="flex items-center space-x-1 rounded bg-stone-200/80 dark:bg-[#2E2E44] px-3 py-1 text-xs text-stone-800 dark:text-stone-200 hover:bg-emerald-700 hover:text-white transition"
                     >
                       <span>Gemini Privacy</span>
-                      <ExternalLink className="h-3 w-3" />
+                      <HiArrowTopRightOnSquare className="h-3 w-3" />
                     </a>
                   </div>
                 </div>
 
                 {/* LinkedIn AI */}
-                <div className="sentry-card p-4 flex flex-col justify-between bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] rounded-xl">
+                <div
+                  className="p-4 flex flex-col justify-between border rounded-xl"
+                  style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+                >
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-sm font-bold text-stone-900 dark:text-white">LinkedIn Model Training Shield</h4>
@@ -806,7 +862,7 @@ export default function Dashboard() {
                       className="flex items-center space-x-1 rounded bg-stone-200/80 dark:bg-[#2E2E44] px-3 py-1 text-xs text-stone-800 dark:text-stone-200 hover:bg-emerald-700 hover:text-white transition"
                     >
                       <span>LinkedIn AI Toggle</span>
-                      <ExternalLink className="h-3 w-3" />
+                      <HiArrowTopRightOnSquare className="h-3 w-3" />
                     </a>
                   </div>
                 </div>
@@ -818,7 +874,10 @@ export default function Dashboard() {
         {/* TAB 3: DOMAIN MATRIX & CUSTOM RULES */}
         {activeTab === 'matrix' && (
           <div className="space-y-6">
-            <div className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors">
+            <div
+              className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors"
+              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+            >
               <div>
                 <h2 className="text-base font-bold text-stone-900 dark:text-white">
                   Domain Whitelist & Exception Matrix
@@ -841,7 +900,7 @@ export default function Dashboard() {
                   onClick={handleAddWhitelist}
                   className="flex items-center space-x-1 rounded-lg bg-emerald-700 dark:bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition"
                 >
-                  <Plus className="h-3.5 w-3.5" />
+                  <HiPlus className="h-3.5 w-3.5" />
                   <span>Add Whitelist</span>
                 </button>
               </div>
@@ -863,7 +922,7 @@ export default function Dashboard() {
                           onClick={() => handleRemoveWhitelist(d)}
                           className="text-stone-400 hover:text-rose-600"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <HiTrash className="h-3 w-3" />
                         </button>
                       </span>
                     ))}
@@ -877,7 +936,10 @@ export default function Dashboard() {
             </div>
 
             {/* DeclarativeNetRequest Active Filters Status */}
-            <div className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-3 transition-colors">
+            <div
+              className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-3 transition-colors"
+              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+            >
               <h3 className="text-sm font-bold text-stone-900 dark:text-white">
                 DeclarativeNetRequest Static Engine Rulesets
               </h3>
@@ -916,7 +978,10 @@ export default function Dashboard() {
 
         {/* TAB 4: LIVE THREAT LEDGER */}
         {activeTab === 'ledger' && (
-          <div className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors">
+          <div
+            className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors"
+            style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+          >
             <div className="flex items-center justify-between border-b border-stone-100 dark:border-[#383852] pb-3">
               <div>
                 <h2 className="text-base font-bold text-stone-900 dark:text-white">
@@ -982,7 +1047,10 @@ export default function Dashboard() {
         {/* Modal: Formal Deletion Demand Notice */}
         {selectedBroker && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-            <div className="sentry-card max-w-2xl w-full p-6 space-y-4 border border-stone-300 dark:border-[#383852] rounded-2xl shadow-xl">
+            <div
+              className="sentry-card max-w-2xl w-full p-6 space-y-4 border border-stone-300 dark:border-[#383852] rounded-2xl shadow-xl"
+              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+            >
               <div className="flex items-center justify-between border-b border-stone-200 dark:border-[#383852] pb-3">
                 <div>
                   <h3 className="text-base font-bold text-stone-900 dark:text-white">
@@ -994,9 +1062,9 @@ export default function Dashboard() {
                 </div>
                 <button
                   onClick={() => setSelectedBroker(null)}
-                  className="text-stone-400 hover:text-stone-700 dark:hover:text-white"
+                  className="text-stone-400 hover:text-stone-700 dark:hover:text-white p-1 rounded-md"
                 >
-                  ✕
+                  <HiXMark className="h-5 w-5" />
                 </button>
               </div>
 
@@ -1044,9 +1112,9 @@ export default function Dashboard() {
                   className="flex items-center space-x-1.5 rounded-lg border border-stone-300 dark:border-[#4E4E70] bg-stone-100 dark:bg-[#181825] px-3 py-2 text-xs font-semibold text-stone-800 dark:text-stone-200 hover:border-emerald-600 transition"
                 >
                   {copiedTemplate ? (
-                    <Check className="h-3.5 w-3.5 text-emerald-600" />
+                    <HiCheck className="h-3.5 w-3.5 text-emerald-600" />
                   ) : (
-                    <Copy className="h-3.5 w-3.5" />
+                    <HiClipboardDocument className="h-3.5 w-3.5" />
                   )}
                   <span>{copiedTemplate ? 'Copied to Clipboard!' : 'Copy Demand Text'}</span>
                 </button>
@@ -1059,7 +1127,7 @@ export default function Dashboard() {
                     onClick={() => handleStatusChange(selectedBroker.id, 'Dispatched')}
                     className="flex items-center space-x-1.5 rounded-lg bg-emerald-700 dark:bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition"
                   >
-                    <Send className="h-3.5 w-3.5" />
+                    <HiPaperAirplane className="h-3.5 w-3.5" />
                     <span>Send via Email Client</span>
                   </a>
                 </div>
