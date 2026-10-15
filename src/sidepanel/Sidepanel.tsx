@@ -41,11 +41,12 @@ import { cleanUrl } from '../lib/urlCleaner';
 import SentryShieldLogo from '../components/SentryShieldLogo';
 import { useTheme } from '../hooks/useTheme';
 
-type SidebarTab = 'overview' | 'matrix' | 'fingerprint' | 'network' | 'broker' | 'cleaner';
+type SidebarTab = 'overview' | 'matrix' | 'broker' | 'cleaner' | 'network';
 
 export default function Sidepanel() {
   const { themeMode, cycleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<SidebarTab>('overview');
+  const [matrixFilter, setMatrixFilter] = useState<'all' | 'traffic' | 'entropy' | 'rules'>('all');
   const [settings, setSettings] = useState<PrivacySettings | null>(null);
   const [siteZapRules, setSiteZapRules] = useState<ZapRule[]>([]);
   const [stats, setStats] = useState<TabThreatStats | null>(null);
@@ -577,10 +578,9 @@ export default function Sidepanel() {
         {[
           { id: 'overview' as const, label: 'Overview', icon: HiOutlineShieldCheck },
           { id: 'matrix' as const, label: 'Matrix', icon: HiSquares2X2 },
-          { id: 'fingerprint' as const, label: 'Entropy', icon: HiFingerPrint },
+          { id: 'broker' as const, label: 'AI Guard (Brokers)', icon: HiCpuChip },
           { id: 'cleaner' as const, label: 'Cleaner', icon: HiLink },
           { id: 'network' as const, label: 'Traffic', icon: HiChartBar },
-          { id: 'broker' as const, label: 'Brokers', icon: HiCircleStack },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -1122,8 +1122,44 @@ export default function Sidepanel() {
         {/* ========================================================= */}
         {activeTab === 'matrix' && (
           <div className="space-y-3.5">
-            {/* DYNAMIC TRAFFIC MATRIX */}
+            {/* View Sub-Filter Pill Control */}
             <div
+              className="flex items-center rounded-xl p-1 gap-1"
+              style={{
+                backgroundColor: 'var(--bg-surface-subtle)',
+                border: '1px solid var(--border-subtle)',
+              }}
+            >
+              {(['all', 'traffic', 'entropy', 'rules'] as const).map((filter) => {
+                const isSelected = matrixFilter === filter;
+                return (
+                  <button
+                    key={filter}
+                    onClick={() => setMatrixFilter(filter)}
+                    className={`flex-1 py-1 text-[10px] font-semibold rounded-lg capitalize transition cursor-pointer ${
+                      isSelected ? 'shadow-xs' : 'opacity-70 hover:opacity-100'
+                    }`}
+                    style={{
+                      backgroundColor: isSelected ? 'var(--bg-surface)' : 'transparent',
+                      color: isSelected ? 'var(--green-primary)' : 'var(--text-secondary)',
+                      border: isSelected ? '1px solid var(--border-subtle)' : '1px solid transparent',
+                    }}
+                  >
+                    {filter === 'all'
+                      ? 'All Matrix'
+                      : filter === 'traffic'
+                      ? 'Traffic'
+                      : filter === 'entropy'
+                      ? 'Entropy'
+                      : 'Rules'}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* DYNAMIC TRAFFIC MATRIX */}
+            {(matrixFilter === 'all' || matrixFilter === 'traffic') && (
+              <div
               className="sentry-card p-3.5 space-y-3"
               style={{
                 backgroundColor: 'var(--bg-surface)',
@@ -1205,8 +1241,162 @@ export default function Sidepanel() {
                 })}
               </div>
             </div>
+            )}
 
-            {/* GLOBAL FILTER LISTS */}
+            {/* SECTION 2: ENTROPY & ANTI-FINGERPRINTING DEFENSE */}
+            {(matrixFilter === 'all' || matrixFilter === 'entropy') && (
+              <>
+                {/* LIVE SIMULATOR TEST */}
+                <div
+                  className="sentry-card p-3.5 space-y-2.5"
+                  style={{
+                    backgroundColor: 'var(--bg-surface)',
+                    borderColor: 'var(--border-subtle)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                        Canvas Entropy Verification
+                      </h3>
+                      <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                        Test real-time mathematical noise injection
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleRunCanvasTest}
+                      disabled={isTestingCanvas}
+                      className="rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer"
+                      style={{
+                        backgroundColor: 'var(--green-primary)',
+                        color: 'var(--text-inverse)',
+                      }}
+                    >
+                      {isTestingCanvas ? 'Computing...' : 'Run Test'}
+                    </button>
+                  </div>
+
+                  {testCanvasHash && (
+                    <div
+                      className="rounded-xl p-2.5 text-xs font-mono flex items-center justify-between"
+                      style={{
+                        backgroundColor: 'var(--green-subtle)',
+                        border: '1px solid var(--green-border)',
+                      }}
+                    >
+                      <div>
+                        <div className="text-[10px]" style={{ color: 'var(--green-text)' }}>
+                          Scrambled Canvas Hash:
+                        </div>
+                        <div className="font-bold text-sm" style={{ color: 'var(--green-primary)' }}>
+                          {testCanvasHash}
+                        </div>
+                      </div>
+                      <HiCheckCircle className="h-4 w-4" style={{ color: 'var(--green-primary)' }} />
+                    </div>
+                  )}
+                </div>
+
+                {/* GRANULAR ENTROPY CONTROLS */}
+                <div
+                  className="sentry-card p-3.5 space-y-2.5"
+                  style={{
+                    backgroundColor: 'var(--bg-surface)',
+                    borderColor: 'var(--border-subtle)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                    Granular Anti-Fingerprinting Matrix
+                  </h3>
+
+                  <div className="space-y-2">
+                    {[
+                      {
+                        key: 'ignoreFrequentColors' as const,
+                        label: 'Preserve Solid Colors',
+                        desc: 'Avoids altering 100% white/black backgrounds',
+                      },
+                      {
+                        key: 'fakeAlphaChannel' as const,
+                        label: 'Perturb Alpha Transparency',
+                        desc: 'Adds subtle noise to canvas alpha channels',
+                      },
+                      {
+                        key: 'webglMaskVendor' as const,
+                        label: 'Spoof WebGL GPU Vendor',
+                        desc: 'Masks hardware vendor as Intel Iris',
+                      },
+                      {
+                        key: 'webglPerturbPixels' as const,
+                        label: 'Perturb WebGL readPixels',
+                        desc: 'Prevents shader rendering profiling',
+                      },
+                      {
+                        key: 'domRectShield' as const,
+                        label: 'DOMRect & Layout Sub-Pixel Jitter',
+                        desc: 'Neutralizes CSS layout & font profiling',
+                      },
+                      {
+                        key: 'textMetricsShield' as const,
+                        label: 'TextMetrics Measurement Dithering',
+                        desc: 'Prevents canvas text width font probing',
+                      },
+                      {
+                        key: 'navigatorHardwareShield' as const,
+                        label: 'Hardware Concurrency Masking',
+                        desc: 'Normalizes CPU threads to 8 cores',
+                      },
+                    ].map((item) => (
+                      <div
+                        key={item.key}
+                        className="flex items-center justify-between rounded-xl p-2.5 text-xs"
+                        style={{
+                          backgroundColor: 'var(--bg-surface-subtle)',
+                          border: '1px solid var(--border-subtle)',
+                        }}
+                      >
+                        <div className="pr-2 min-w-0">
+                          <div className="font-semibold text-xs" style={{ color: 'var(--text-primary)' }}>
+                            {item.label}
+                          </div>
+                          <div className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>
+                            {item.desc}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() =>
+                            handleCanvasBlockerChange(item.key, !settings.canvasBlocker[item.key])
+                          }
+                          className="rounded-lg px-2 py-0.5 text-[10px] font-mono font-semibold transition cursor-pointer"
+                          style={{
+                            backgroundColor: settings.canvasBlocker[item.key]
+                              ? 'var(--green-subtle)'
+                              : 'var(--bg-surface)',
+                            color: settings.canvasBlocker[item.key]
+                              ? 'var(--green-primary)'
+                              : 'var(--text-muted)',
+                            border: `1px solid ${
+                              settings.canvasBlocker[item.key]
+                                ? 'var(--green-border)'
+                                : 'var(--border-subtle)'
+                            }`,
+                          }}
+                        >
+                          {settings.canvasBlocker[item.key] ? 'ENABLED' : 'DISABLED'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* SECTION 3: FILTER LISTS & CUSTOM RULES */}
+            {(matrixFilter === 'all' || matrixFilter === 'rules') && (
+              <>
+                {/* GLOBAL FILTER LISTS */}
             <div
               className="sentry-card p-3.5 space-y-2.5"
               style={{
@@ -1318,17 +1508,19 @@ export default function Sidepanel() {
                 </div>
               )}
             </div>
+              </>
+            )}
           </div>
         )}
 
         {/* ========================================================= */}
-        {/* TAB 3: ENTROPY & ANTI-FINGERPRINTING */}
+        {/* TAB 3: AI GUARD (BROKERS) */}
         {/* ========================================================= */}
-        {activeTab === 'fingerprint' && (
+        {activeTab === 'broker' && (
           <div className="space-y-3.5">
-            {/* LIVE SIMULATOR TEST */}
+            {/* COMMERCIAL AI MODEL TRAINING DEFENSES */}
             <div
-              className="sentry-card p-3.5 space-y-2.5"
+              className="sentry-card p-3.5 space-y-3"
               style={{
                 backgroundColor: 'var(--bg-surface)',
                 borderColor: 'var(--border-subtle)',
@@ -1338,241 +1530,90 @@ export default function Sidepanel() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                    Canvas Entropy Verification
+                    Commercial AI Model Training Defenses
                   </h3>
                   <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                    Test real-time mathematical noise injection
+                    Block scrapers feeding LLM datasets & declare zero-training intent
                   </p>
                 </div>
-                <button
-                  onClick={handleRunCanvasTest}
-                  disabled={isTestingCanvas}
-                  className="rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer"
-                  style={{
-                    backgroundColor: 'var(--green-primary)',
-                    color: 'var(--text-inverse)',
-                  }}
-                >
-                  {isTestingCanvas ? 'Computing...' : 'Run Test'}
-                </button>
-              </div>
-
-              {testCanvasHash && (
                 <div
-                  className="rounded-xl p-2.5 text-xs font-mono flex items-center justify-between"
+                  className="rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider uppercase font-mono"
                   style={{
                     backgroundColor: 'var(--green-subtle)',
+                    color: 'var(--green-primary)',
                     border: '1px solid var(--green-border)',
                   }}
                 >
-                  <div>
-                    <div className="text-[10px]" style={{ color: 'var(--green-text)' }}>
-                      Scrambled Canvas Hash:
-                    </div>
-                    <div className="font-bold text-sm" style={{ color: 'var(--green-primary)' }}>
-                      {testCanvasHash}
-                    </div>
-                  </div>
-                  <HiCheckCircle className="h-4 w-4" style={{ color: 'var(--green-primary)' }} />
+                  Active
                 </div>
-              )}
-            </div>
-
-            {/* GRANULAR ENTROPY CONTROLS */}
-            <div
-              className="sentry-card p-3.5 space-y-2.5"
-              style={{
-                backgroundColor: 'var(--bg-surface)',
-                borderColor: 'var(--border-subtle)',
-                color: 'var(--text-primary)',
-              }}
-            >
-              <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                Granular Anti-Fingerprinting Matrix
-              </h3>
-
-              <div className="space-y-2">
-                {[
-                  {
-                    key: 'ignoreFrequentColors' as const,
-                    label: 'Preserve Solid Colors',
-                    desc: 'Avoids altering 100% white/black backgrounds',
-                  },
-                  {
-                    key: 'fakeAlphaChannel' as const,
-                    label: 'Perturb Alpha Transparency',
-                    desc: 'Adds subtle noise to canvas alpha channels',
-                  },
-                  {
-                    key: 'webglMaskVendor' as const,
-                    label: 'Spoof WebGL GPU Vendor',
-                    desc: 'Masks hardware vendor as Intel Iris',
-                  },
-                  {
-                    key: 'webglPerturbPixels' as const,
-                    label: 'Perturb WebGL readPixels',
-                    desc: 'Prevents shader rendering profiling',
-                  },
-                  {
-                    key: 'domRectShield' as const,
-                    label: 'DOMRect & Layout Sub-Pixel Jitter',
-                    desc: 'Neutralizes CSS layout & font profiling',
-                  },
-                  {
-                    key: 'textMetricsShield' as const,
-                    label: 'TextMetrics Measurement Dithering',
-                    desc: 'Prevents canvas text width font probing',
-                  },
-                  {
-                    key: 'navigatorHardwareShield' as const,
-                    label: 'Hardware Concurrency Masking',
-                    desc: 'Normalizes CPU threads to 8 cores',
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.key}
-                    className="flex items-center justify-between rounded-xl p-2.5 text-xs"
-                    style={{
-                      backgroundColor: 'var(--bg-surface-subtle)',
-                      border: '1px solid var(--border-subtle)',
-                    }}
-                  >
-                    <div className="pr-2 min-w-0">
-                      <div className="font-semibold text-xs" style={{ color: 'var(--text-primary)' }}>
-                        {item.label}
-                      </div>
-                      <div className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>
-                        {item.desc}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() =>
-                        handleCanvasBlockerChange(item.key, !settings.canvasBlocker[item.key])
-                      }
-                      className="rounded-lg px-2 py-0.5 text-[10px] font-mono font-semibold transition cursor-pointer"
-                      style={{
-                        backgroundColor: settings.canvasBlocker[item.key]
-                          ? 'var(--green-subtle)'
-                          : 'var(--bg-surface)',
-                        color: settings.canvasBlocker[item.key]
-                          ? 'var(--green-primary)'
-                          : 'var(--text-muted)',
-                        border: `1px solid ${
-                          settings.canvasBlocker[item.key]
-                            ? 'var(--green-border)'
-                            : 'var(--border-subtle)'
-                        }`,
-                      }}
-                    >
-                      {settings.canvasBlocker[item.key] ? 'ENABLED' : 'DISABLED'}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================= */}
-        {/* TAB 4: REAL-TIME TRAFFIC & INTERCEPTION LOG */}
-        {/* ========================================================= */}
-        {activeTab === 'network' && (
-          <div className="space-y-3.5">
-            <div
-              className="sentry-card p-3.5 space-y-2.5"
-              style={{
-                backgroundColor: 'var(--bg-surface)',
-                borderColor: 'var(--border-subtle)',
-                color: 'var(--text-primary)',
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                  Real-Time Traffic Log
-                </h3>
-                <span className="font-mono text-[10px] font-semibold" style={{ color: 'var(--green-primary)' }}>
-                  {filteredLogs.length} Requests
-                </span>
               </div>
 
-              {/* Filter Row */}
-              <div className="flex space-x-1.5">
+              {/* Status Pills */}
+              <div className="grid grid-cols-2 gap-2">
                 <div
-                  className="flex flex-1 items-center space-x-1.5 rounded-xl px-2.5 py-1 text-xs"
+                  className="rounded-xl p-2 text-xs"
                   style={{
                     backgroundColor: 'var(--bg-surface-subtle)',
                     border: '1px solid var(--border-subtle)',
                   }}
                 >
-                  <HiMagnifyingGlass className="h-4 w-4" style={{ color: 'var(--text-muted)' }} />
-                  <input
-                    type="text"
-                    placeholder="Filter request URL..."
-                    value={networkSearch}
-                    onChange={(e) => setNetworkSearch(e.target.value)}
-                    className="w-full bg-transparent outline-none text-xs"
-                    style={{ color: 'var(--text-primary)' }}
-                  />
+                  <div className="flex items-center space-x-1.5 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
+                    <HiShieldCheck className="h-3.5 w-3.5 shrink-0" />
+                    <span>Global Privacy Control</span>
+                  </div>
+                  <div className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
+                    Injects <code className="font-mono text-[9px]">Sec-GPC: 1</code> & <code className="font-mono text-[9px]">DNT: 1</code> headers
+                  </div>
+                </div>
+
+                <div
+                  className="rounded-xl p-2 text-xs"
+                  style={{
+                    backgroundColor: 'var(--bg-surface-subtle)',
+                    border: '1px solid var(--border-subtle)',
+                  }}
+                >
+                  <div className="flex items-center space-x-1.5 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
+                    <HiShieldCheck className="h-3.5 w-3.5 shrink-0" />
+                    <span>Crawler Nullifier</span>
+                  </div>
+                  <div className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
+                    Declares <code className="font-mono text-[9px]">X-Robots: noai</code> against AI scraping bots
+                  </div>
                 </div>
               </div>
 
-              {/* Log Entries */}
-              <div className="space-y-1.5 max-h-[380px] overflow-y-auto font-mono text-[11px]">
-                {filteredLogs.length > 0 ? (
-                  filteredLogs.map((log) => (
-                    <div
-                      key={log.id}
-                      className="flex items-center justify-between rounded-xl p-2"
+              {/* Platform AI Opt-Out Direct Portals */}
+              <div className="space-y-1.5 pt-1">
+                <div className="text-[10.5px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                  Platform AI Opt-Out Portals
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {[
+                    { name: 'Meta AI', url: 'https://www.facebook.com/privacy/genai' },
+                    { name: 'X Grok', url: 'https://x.com/settings/grok_settings' },
+                    { name: 'Gemini', url: 'https://myactivity.google.com/product/gemini' },
+                    { name: 'LinkedIn AI', url: 'https://www.linkedin.com/psettings/data-sharing' },
+                  ].map((p) => (
+                    <a
+                      key={p.name}
+                      href={p.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition cursor-pointer hover:opacity-85"
                       style={{
                         backgroundColor: 'var(--bg-surface-subtle)',
                         border: '1px solid var(--border-subtle)',
+                        color: 'var(--text-primary)',
                       }}
                     >
-                      <div className="truncate max-w-[210px]">
-                        <div className="truncate font-semibold" style={{ color: 'var(--text-primary)' }}>
-                          {log.url}
-                        </div>
-                        <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                          {log.domain} • {log.type}
-                        </div>
-                      </div>
-                      <span
-                        className="rounded-md px-1.5 py-0.5 text-[9px] uppercase font-bold shrink-0"
-                        style={{
-                          backgroundColor:
-                            log.action === 'BLOCKED'
-                              ? 'var(--danger-subtle)'
-                              : 'var(--green-subtle)',
-                          color:
-                            log.action === 'BLOCKED'
-                              ? 'var(--danger-primary)'
-                              : 'var(--green-primary)',
-                          border: `1px solid ${
-                            log.action === 'BLOCKED'
-                              ? 'var(--danger-border)'
-                              : 'var(--green-border)'
-                          }`,
-                        }}
-                      >
-                        {log.action}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="py-8 text-center text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
-                    No network requests logged for active page.
-                  </div>
-                )}
+                      <span>{p.name}</span>
+                      <HiArrowTopRightOnSquare className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                    </a>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* ========================================================= */}
-        {/* TAB 5: BROKER HUB & LEGAL REMEDIATION */}
-        {/* ========================================================= */}
-        {activeTab === 'broker' && (
-          <div className="space-y-3.5">
             <div
               className="sentry-card p-3.5 space-y-3"
               style={{
@@ -2072,6 +2113,101 @@ export default function Sidepanel() {
               <span>Launch Batch Cleaner & Parameter Directory</span>
               <HiArrowTopRightOnSquare className="h-3.5 w-3.5" />
             </button>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB 5: REAL-TIME TRAFFIC & INTERCEPTION LOG */}
+        {/* ========================================================= */}
+        {activeTab === 'network' && (
+          <div className="space-y-3.5">
+            <div
+              className="sentry-card p-3.5 space-y-2.5"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                  Real-Time Traffic Log
+                </h3>
+                <span className="font-mono text-[10px] font-semibold" style={{ color: 'var(--green-primary)' }}>
+                  {filteredLogs.length} Requests
+                </span>
+              </div>
+
+              {/* Filter Row */}
+              <div className="flex space-x-1.5">
+                <div
+                  className="flex flex-1 items-center space-x-1.5 rounded-xl px-2.5 py-1 text-xs"
+                  style={{
+                    backgroundColor: 'var(--bg-surface-subtle)',
+                    border: '1px solid var(--border-subtle)',
+                  }}
+                >
+                  <HiMagnifyingGlass className="h-4 w-4" style={{ color: 'var(--text-muted)' }} />
+                  <input
+                    type="text"
+                    placeholder="Filter request URL..."
+                    value={networkSearch}
+                    onChange={(e) => setNetworkSearch(e.target.value)}
+                    className="w-full bg-transparent outline-none text-xs"
+                    style={{ color: 'var(--text-primary)' }}
+                  />
+                </div>
+              </div>
+
+              {/* Log Entries */}
+              <div className="space-y-1.5 max-h-[380px] overflow-y-auto font-mono text-[11px]">
+                {filteredLogs.length > 0 ? (
+                  filteredLogs.map((log) => (
+                    <div
+                      key={log.id}
+                      className="flex items-center justify-between rounded-xl p-2"
+                      style={{
+                        backgroundColor: 'var(--bg-surface-subtle)',
+                        border: '1px solid var(--border-subtle)',
+                      }}
+                    >
+                      <div className="truncate max-w-[210px]">
+                        <div className="truncate font-semibold" style={{ color: 'var(--text-primary)' }}>
+                          {log.url}
+                        </div>
+                        <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                          {log.domain} • {log.type}
+                        </div>
+                      </div>
+                      <span
+                        className="rounded-md px-1.5 py-0.5 text-[9px] uppercase font-bold shrink-0"
+                        style={{
+                          backgroundColor:
+                            log.action === 'BLOCKED'
+                              ? 'var(--danger-subtle)'
+                              : 'var(--green-subtle)',
+                          color:
+                            log.action === 'BLOCKED'
+                              ? 'var(--danger-primary)'
+                              : 'var(--green-primary)',
+                          border: `1px solid ${
+                            log.action === 'BLOCKED'
+                              ? 'var(--danger-border)'
+                              : 'var(--green-border)'
+                          }`,
+                        }}
+                      >
+                        {log.action}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="py-8 text-center text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
+                    No network requests logged for active page.
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
