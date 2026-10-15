@@ -585,8 +585,8 @@ https://news.ycombinator.com/item?id=123456`
             {/* 2-Option Light & Dark Theme Toggle (Only icons, default system) */}
             <div className="flex items-center rounded-xl border border-stone-200/90 dark:border-[#383852] bg-stone-100/90 dark:bg-[#181825]/90 p-1 shadow-xs">
               <button
-                onClick={() => setThemeMode('light')}
-                title="Light Mode"
+                onClick={() => setThemeMode(themeMode === 'light' ? 'system' : 'light')}
+                title={themeMode === 'system' ? 'Light Mode (System scheme default)' : themeMode === 'light' ? 'Light Mode (Active - click to return to System)' : 'Switch to Light Mode'}
                 className={`flex items-center justify-center h-7 w-7 rounded-lg transition-all duration-200 cursor-pointer ${
                   !isDark
                     ? 'bg-white dark:bg-[#2E2E44] text-amber-600 shadow-xs'
@@ -596,8 +596,8 @@ https://news.ycombinator.com/item?id=123456`
                 <HiSun className="h-4 w-4" />
               </button>
               <button
-                onClick={() => setThemeMode('dark')}
-                title="Dark Mode"
+                onClick={() => setThemeMode(themeMode === 'dark' ? 'system' : 'dark')}
+                title={themeMode === 'system' ? 'Dark Mode (System scheme default)' : themeMode === 'dark' ? 'Dark Mode (Active - click to return to System)' : 'Switch to Dark Mode'}
                 className={`flex items-center justify-center h-7 w-7 rounded-lg transition-all duration-200 cursor-pointer ${
                   isDark
                     ? 'bg-white dark:bg-[#2E2E44] text-emerald-400 shadow-xs'

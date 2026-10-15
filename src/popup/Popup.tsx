@@ -145,8 +145,8 @@ export default function Popup() {
           {/* 2-Option Light & Dark Mode Toggle (No system button, no text, defaults to system) */}
           <div className="flex items-center rounded-lg border border-stone-200 dark:border-[#383852] bg-stone-100/90 dark:bg-[#181825] p-0.5">
             <button
-              onClick={() => setThemeMode('light')}
-              title="Light Mode"
+              onClick={() => setThemeMode(themeMode === 'light' ? 'system' : 'light')}
+              title={themeMode === 'system' ? 'Light Mode (System scheme default)' : themeMode === 'light' ? 'Light Mode (Active - click to return to System)' : 'Switch to Light Mode'}
               className={`flex items-center justify-center h-6 w-6 rounded-md transition cursor-pointer ${
                 !isDark
                   ? 'bg-white dark:bg-[#2E2E44] text-amber-600 shadow-xs'
@@ -156,8 +156,8 @@ export default function Popup() {
               <HiSun className="h-3.5 w-3.5" />
             </button>
             <button
-              onClick={() => setThemeMode('dark')}
-              title="Dark Mode"
+              onClick={() => setThemeMode(themeMode === 'dark' ? 'system' : 'dark')}
+              title={themeMode === 'system' ? 'Dark Mode (System scheme default)' : themeMode === 'dark' ? 'Dark Mode (Active - click to return to System)' : 'Switch to Dark Mode'}
               className={`flex items-center justify-center h-6 w-6 rounded-md transition cursor-pointer ${
                 isDark
                   ? 'bg-white dark:bg-[#2E2E44] text-emerald-400 shadow-xs'

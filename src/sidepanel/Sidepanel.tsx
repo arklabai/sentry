@@ -478,8 +478,8 @@ export default function Sidepanel() {
               }}
             >
               <button
-                onClick={() => setThemeMode('light')}
-                title="Light Mode"
+                onClick={() => setThemeMode(themeMode === 'light' ? 'system' : 'light')}
+                title={themeMode === 'system' ? 'Light Mode (System scheme default)' : themeMode === 'light' ? 'Light Mode (Active - click to return to System)' : 'Switch to Light Mode'}
                 className="flex items-center justify-center h-6 w-6 rounded-md transition cursor-pointer"
                 style={{
                   backgroundColor: !isDark ? 'var(--bg-surface)' : 'transparent',
@@ -490,8 +490,8 @@ export default function Sidepanel() {
                 <HiSun className="h-3.5 w-3.5" />
               </button>
               <button
-                onClick={() => setThemeMode('dark')}
-                title="Dark Mode"
+                onClick={() => setThemeMode(themeMode === 'dark' ? 'system' : 'dark')}
+                title={themeMode === 'system' ? 'Dark Mode (System scheme default)' : themeMode === 'dark' ? 'Dark Mode (Active - click to return to System)' : 'Switch to Dark Mode'}
                 className="flex items-center justify-center h-6 w-6 rounded-md transition cursor-pointer"
                 style={{
                   backgroundColor: isDark ? 'var(--bg-surface)' : 'transparent',
