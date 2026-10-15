@@ -79,6 +79,12 @@ assert(claudeTest.strippedParams.includes('from'), 'Stripped from parameter');
 assert(claudeTest.strippedParams.includes('reauth'), 'Stripped reauth parameter');
 assert(claudeTest.strippedParams.includes('returnTo'), 'Stripped returnTo parameter');
 
+// Test 9: Aggressive Pure Link Mode (stripAllQueryParams)
+const pureTest = cleanUrl('https://example.com/search?q=shoes&category=mens&page=2&custom=1', { stripAllQueryParams: true });
+assert(pureTest.hasChanged, 'Pure Link Mode detected changes');
+assert(pureTest.cleanedUrl === 'https://example.com/search', 'Pure Link Mode stripped all query parameters');
+assert(pureTest.strippedParams.length === 4, 'Pure Link Mode tracked all 4 stripped parameters');
+
 console.log(`\nURL Cleaner Test Results: ${passed} Passed, ${failed} Failed.`);
 if (failed > 0) {
   process.exit(1);
