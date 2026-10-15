@@ -1528,6 +1528,176 @@ https://news.ycombinator.com/item?id=123456`
               </div>
             </div>
 
+            {/* HARDENED DEVICE IDENTITY & ANTI-FINGERPRINTING SHIELD */}
+            <div className="sentry-card p-6 rounded-2xl space-y-5 transition-all">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-stone-100 dark:border-[#383852] pb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400 shrink-0">
+                    <HiCpuChip className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <h2 className="text-base font-bold text-stone-900 dark:text-white">
+                        Hardened Device Identity &amp; Anti-Fingerprinting
+                      </h2>
+                      <span className="rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                        MAIN WORLD INJECTION
+                      </span>
+                    </div>
+                    <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-0.5">
+                      Cloaks WebGL GPU identity, Acoustic AudioContext frequencies, Battery Status tracking, and local Timezone offsets.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* GPU Profile */}
+                <div className="sentry-inset p-4 rounded-xl border border-stone-200 dark:border-[#383852] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-semibold text-stone-900 dark:text-white">WebGL GPU Hardware Profile</div>
+                      <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] mt-0.5">
+                        Masks unmasked vendor &amp; renderer queries to defeat hardware fingerprinting.
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold uppercase text-emerald-700 dark:text-emerald-400">
+                      {settings?.canvasBlocker?.gpuProfile || 'intel_uhd'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1 text-xs font-semibold">
+                    {[
+                      { id: 'intel_uhd', label: 'Intel UHD 630' },
+                      { id: 'nvidia_geforce', label: 'NVIDIA GTX' },
+                      { id: 'apple_silicon', label: 'Apple GPU' },
+                      { id: 'swiftshader', label: 'SwiftShader' },
+                    ].map((gpu) => {
+                      const isSelected = (settings?.canvasBlocker?.gpuProfile || 'intel_uhd') === gpu.id;
+                      return (
+                        <button
+                          key={gpu.id}
+                          onClick={() => {
+                            if (!settings) return;
+                            const updated = {
+                              ...settings,
+                              canvasBlocker: {
+                                ...(settings.canvasBlocker || {}),
+                                gpuProfile: gpu.id as any,
+                              },
+                            };
+                            setSettings(updated as any);
+                            chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
+                          }}
+                          className={`rounded-lg py-1.5 px-2 text-xs transition cursor-pointer text-center truncate ${
+                            isSelected
+                              ? 'bg-emerald-700 dark:bg-emerald-600 text-white shadow-xs font-bold'
+                              : 'bg-white dark:bg-[#181825] border border-stone-200 dark:border-[#383852] text-stone-600 dark:text-[#A6ADC8] hover:bg-stone-50 dark:hover:bg-[#252538]'
+                          }`}
+                        >
+                          {gpu.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Timezone Spoof */}
+                <div className="sentry-inset p-4 rounded-xl border border-stone-200 dark:border-[#383852] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-semibold text-stone-900 dark:text-white">Timezone &amp; Clock Masking</div>
+                      <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] mt-0.5">
+                        Overrides Intl.DateTimeFormat and Date.getTimezoneOffset.
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold uppercase text-emerald-700 dark:text-emerald-400">
+                      {settings?.canvasBlocker?.timezoneSpoof || 'system'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1 text-xs font-semibold">
+                    {[
+                      { id: 'system', label: 'System Default' },
+                      { id: 'utc', label: 'UTC +00:00' },
+                      { id: 'america_new_york', label: 'US Eastern' },
+                      { id: 'europe_london', label: 'London GMT' },
+                    ].map((tz) => {
+                      const isSelected = (settings?.canvasBlocker?.timezoneSpoof || 'system') === tz.id;
+                      return (
+                        <button
+                          key={tz.id}
+                          onClick={() => {
+                            if (!settings) return;
+                            const updated = {
+                              ...settings,
+                              canvasBlocker: {
+                                ...(settings.canvasBlocker || {}),
+                                timezoneSpoof: tz.id as any,
+                              },
+                            };
+                            setSettings(updated as any);
+                            chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
+                          }}
+                          className={`rounded-lg py-1.5 px-2 text-xs transition cursor-pointer text-center truncate ${
+                            isSelected
+                              ? 'bg-emerald-700 dark:bg-emerald-600 text-white shadow-xs font-bold'
+                              : 'bg-white dark:bg-[#181825] border border-stone-200 dark:border-[#383852] text-stone-600 dark:text-[#A6ADC8] hover:bg-stone-50 dark:hover:bg-[#252538]'
+                          }`}
+                        >
+                          {tz.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Toggles for Battery and CPU */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div className="flex items-center justify-between p-3.5 rounded-xl sentry-inset border border-stone-200 dark:border-[#383852]">
+                  <div>
+                    <div className="text-xs font-semibold text-stone-900 dark:text-white">Live Battery Status Cloak</div>
+                    <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] mt-0.5">
+                      Reports static 100% plugged-in state to defeat correlation attacks.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (!settings) return;
+                      const isEnabled = !(settings.canvasBlocker?.batteryShield !== false);
+                      const updated = {
+                        ...settings,
+                        canvasBlocker: {
+                          ...(settings.canvasBlocker || {}),
+                          batteryShield: isEnabled,
+                        },
+                      };
+                      setSettings(updated as any);
+                      chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
+                    }}
+                    className={`rounded-lg px-2.5 py-1 text-[10px] font-mono font-bold transition cursor-pointer ${
+                      (settings?.canvasBlocker?.batteryShield !== false)
+                        ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30'
+                        : 'bg-stone-100 dark:bg-[#181825] text-stone-500 border border-stone-200 dark:border-[#383852]'
+                    }`}
+                  >
+                    {(settings?.canvasBlocker?.batteryShield !== false) ? 'ACTIVE' : 'OFF'}
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-3.5 rounded-xl sentry-inset border border-stone-200 dark:border-[#383852]">
+                  <div>
+                    <div className="text-xs font-semibold text-stone-900 dark:text-white">CPU Concurrency Normalization</div>
+                    <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] mt-0.5">
+                      Normalizes navigator.hardwareConcurrency to 4 cores.
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 px-2.5 py-1 text-[10px] font-bold font-mono">
+                    4 CORES
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* UNIVERSAL COOKIE CONSENT GUARD (ALL SITES) */}
             <div className="sentry-card p-6 rounded-2xl space-y-4 transition-all">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-stone-100 dark:border-[#383852] pb-4">

@@ -157,15 +157,34 @@ export default function Sidepanel() {
       | 'urlCleaner'
       | 'cookieConsent'
       | 'thirdPartyCookies'
+      | 'batteryShield'
   ) => {
     if (!settings) return;
+    if (key === 'batteryShield') {
+      const isEnabled = !(settings.canvasBlocker?.batteryShield !== false);
+      const updated: PrivacySettings = {
+        ...settings,
+        canvasBlocker: {
+          ...settings.canvasBlocker,
+          batteryShield: isEnabled,
+        },
+      };
+      setSettings(updated);
+      chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
+      return;
+    }
     if (key === 'thirdPartyCookies') {
-      const isEnabled = !(settings.uBlock?.blockThirdPartyCookies ?? true);
+      const current = settings.uBlock?.blockThirdPartyCookies ?? (settings.uBlock?.matrix?.thirdPartyCookies === 'block');
+      const isEnabled = !current;
       const updated: PrivacySettings = {
         ...settings,
         uBlock: {
           ...settings.uBlock,
           blockThirdPartyCookies: isEnabled,
+          matrix: {
+            ...settings.uBlock?.matrix,
+            thirdPartyCookies: isEnabled ? 'block' : 'noop',
+          },
         },
       };
       setSettings(updated);
@@ -302,10 +321,12 @@ export default function Sidepanel() {
     action: MatrixAction
   ) => {
     if (!settings) return;
+    const isCookieKey = key === 'thirdPartyCookies';
     const updated: PrivacySettings = {
       ...settings,
       uBlock: {
         ...settings.uBlock,
+        blockThirdPartyCookies: isCookieKey ? action === 'block' : settings.uBlock?.blockThirdPartyCookies,
         matrix: {
           ...settings.uBlock.matrix,
           [key]: action,
@@ -901,6 +922,12 @@ export default function Sidepanel() {
                     icon: HiShieldCheck,
                   },
                   {
+                    key: 'batteryShield' as const,
+                    label: 'Battery Status Guard',
+                    desc: 'Neutralizes live battery level & charging probes',
+                    icon: HiBolt,
+                  },
+                  {
                     key: 'urlCleaner' as const,
                     label: 'Clean Link Guard',
                     desc: 'Removes tracking tokens from web links',
@@ -920,7 +947,9 @@ export default function Sidepanel() {
                       : item.key === 'cookieConsent'
                       ? settings.cookieConsent?.enabled ?? true
                       : item.key === 'thirdPartyCookies'
-                      ? settings.uBlock?.blockThirdPartyCookies ?? true
+                      ? (settings.uBlock?.blockThirdPartyCookies || settings.uBlock?.matrix?.thirdPartyCookies === 'block') ?? false
+                      : item.key === 'batteryShield'
+                      ? settings.canvasBlocker?.batteryShield !== false
                       : settings[item.key];
                   return (
                     <div
@@ -1047,6 +1076,23 @@ export default function Sidepanel() {
                   className="flex items-center justify-between p-1.5 rounded-lg"
                   style={{ backgroundColor: 'var(--bg-surface-subtle)', border: '1px solid var(--border-subtle)' }}
                 >
+                  <span style={{ color: 'var(--text-secondary)' }}>3rd Cookies:</span>
+                  <span
+                    className="font-bold uppercase text-[10px]"
+                    style={{
+                      color:
+                        settings.uBlock?.matrix?.thirdPartyCookies === 'block' || settings.uBlock?.blockThirdPartyCookies
+                          ? 'var(--danger-primary)'
+                          : 'var(--green-primary)',
+                    }}
+                  >
+                    {settings.uBlock?.matrix?.thirdPartyCookies || (settings.uBlock?.blockThirdPartyCookies ? 'BLOCK' : 'NOOP')}
+                  </span>
+                </div>
+                <div
+                  className="flex items-center justify-between p-1.5 rounded-lg"
+                  style={{ backgroundColor: 'var(--bg-surface-subtle)', border: '1px solid var(--border-subtle)' }}
+                >
                   <span style={{ color: 'var(--text-secondary)' }}>WebSockets:</span>
                   <span
                     className="font-bold uppercase text-[10px]"
@@ -1058,6 +1104,23 @@ export default function Sidepanel() {
                     }}
                   >
                     {settings.uBlock?.matrix?.webSockets || 'NOOP'}
+                  </span>
+                </div>
+                <div
+                  className="flex items-center justify-between p-1.5 rounded-lg"
+                  style={{ backgroundColor: 'var(--bg-surface-subtle)', border: '1px solid var(--border-subtle)' }}
+                >
+                  <span style={{ color: 'var(--text-secondary)' }}>Inline Scripts:</span>
+                  <span
+                    className="font-bold uppercase text-[10px]"
+                    style={{
+                      color:
+                        settings.uBlock?.matrix?.inlineScripts === 'block'
+                          ? 'var(--danger-primary)'
+                          : 'var(--green-primary)',
+                    }}
+                  >
+                    {settings.uBlock?.matrix?.inlineScripts || 'NOOP'}
                   </span>
                 </div>
               </div>
@@ -1314,6 +1377,7 @@ export default function Sidepanel() {
                     { key: 'firstPartyScripts' as const, label: '1st-Party Scripts' },
                     { key: 'thirdPartyScripts' as const, label: '3rd-Party Scripts' },
                     { key: 'thirdPartyFrames' as const, label: '3rd-Party Iframes' },
+                    { key: 'thirdPartyCookies' as const, label: '3rd-Party Cookies' },
                     { key: 'inlineScripts' as const, label: 'Inline Scripts' },
                     { key: 'webSockets' as const, label: 'WebSockets & Beacons' },
                   ].map((row) => {
@@ -1393,7 +1457,85 @@ export default function Sidepanel() {
                     Granular Anti-Fingerprinting Matrix
                   </h3>
 
-                  <div className="space-y-2">
+                  {/* GPU PROFILE SELECTOR */}
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-[11px]" style={{ color: 'var(--text-primary)' }}>
+                        WebGL GPU Hardware Profile
+                      </span>
+                      <span className="text-[10px] font-mono font-bold uppercase" style={{ color: 'var(--green-primary)' }}>
+                        {settings.canvasBlocker?.gpuProfile || 'intel_uhd'}
+                      </span>
+                    </div>
+                    <div
+                      className="grid grid-cols-4 gap-1 rounded-xl p-1 text-[10px] font-semibold"
+                      style={{ backgroundColor: 'var(--bg-surface-subtle)', border: '1px solid var(--border-subtle)' }}
+                    >
+                      {[
+                        { id: 'intel_uhd', label: 'Intel UHD' },
+                        { id: 'nvidia_geforce', label: 'NVIDIA' },
+                        { id: 'apple_silicon', label: 'Apple GPU' },
+                        { id: 'swiftshader', label: 'SwiftShader' },
+                      ].map((gpu) => {
+                        const isSelected = (settings.canvasBlocker?.gpuProfile || 'intel_uhd') === gpu.id;
+                        return (
+                          <button
+                            key={gpu.id}
+                            onClick={() => handleCanvasBlockerChange('gpuProfile', gpu.id as any)}
+                            className="rounded-lg py-1 transition cursor-pointer text-center truncate"
+                            style={{
+                              backgroundColor: isSelected ? 'var(--green-primary)' : 'transparent',
+                              color: isSelected ? 'var(--text-inverse)' : 'var(--text-secondary)',
+                              boxShadow: isSelected ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                            }}
+                          >
+                            {gpu.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* TIMEZONE SPOOF SELECTOR */}
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-[11px]" style={{ color: 'var(--text-primary)' }}>
+                        Timezone & Clock Masking
+                      </span>
+                      <span className="text-[10px] font-mono font-bold uppercase" style={{ color: 'var(--green-primary)' }}>
+                        {settings.canvasBlocker?.timezoneSpoof || 'system'}
+                      </span>
+                    </div>
+                    <div
+                      className="grid grid-cols-4 gap-1 rounded-xl p-1 text-[10px] font-semibold"
+                      style={{ backgroundColor: 'var(--bg-surface-subtle)', border: '1px solid var(--border-subtle)' }}
+                    >
+                      {[
+                        { id: 'system', label: 'System' },
+                        { id: 'utc', label: 'UTC +0' },
+                        { id: 'america_new_york', label: 'US East' },
+                        { id: 'europe_london', label: 'London' },
+                      ].map((tz) => {
+                        const isSelected = (settings.canvasBlocker?.timezoneSpoof || 'system') === tz.id;
+                        return (
+                          <button
+                            key={tz.id}
+                            onClick={() => handleCanvasBlockerChange('timezoneSpoof', tz.id as any)}
+                            className="rounded-lg py-1 transition cursor-pointer text-center truncate"
+                            style={{
+                              backgroundColor: isSelected ? 'var(--green-primary)' : 'transparent',
+                              color: isSelected ? 'var(--text-inverse)' : 'var(--text-secondary)',
+                              boxShadow: isSelected ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                            }}
+                          >
+                            {tz.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-1">
                     {[
                       {
                         key: 'ignoreFrequentColors' as const,
@@ -1407,13 +1549,18 @@ export default function Sidepanel() {
                       },
                       {
                         key: 'webglMaskVendor' as const,
-                        label: 'Spoof WebGL GPU Vendor',
-                        desc: 'Masks hardware vendor as Intel Iris',
+                        label: 'Spoof WebGL GPU Vendor & Renderer',
+                        desc: 'Masks hardware vendor & renderer to chosen profile',
                       },
                       {
                         key: 'webglPerturbPixels' as const,
                         label: 'Perturb WebGL readPixels',
                         desc: 'Prevents shader rendering profiling',
+                      },
+                      {
+                        key: 'batteryShield' as const,
+                        label: 'Live Battery Status Masking',
+                        desc: 'Reports static 100% plugged-in state to trackers',
                       },
                       {
                         key: 'domRectShield' as const,
@@ -1428,7 +1575,7 @@ export default function Sidepanel() {
                       {
                         key: 'navigatorHardwareShield' as const,
                         label: 'Hardware Concurrency Masking',
-                        desc: 'Normalizes CPU threads to 8 cores',
+                        desc: 'Normalizes CPU threads to 4 cores',
                       },
                     ].map((item) => (
                       <div

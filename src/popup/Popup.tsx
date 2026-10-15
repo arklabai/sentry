@@ -65,9 +65,27 @@ export default function Popup() {
   };
 
   const handleToggleFeature = (
-    key: 'canvasShield' | 'audioShield' | 'webglShield' | 'aiScraperShield'
+    key: 'canvasShield' | 'audioShield' | 'webglShield' | 'aiScraperShield' | 'thirdPartyCookies'
   ) => {
     if (!settings) return;
+    if (key === 'thirdPartyCookies') {
+      const current = settings.uBlock?.blockThirdPartyCookies ?? (settings.uBlock?.matrix?.thirdPartyCookies === 'block');
+      const isEnabled = !current;
+      const updated: PrivacySettings = {
+        ...settings,
+        uBlock: {
+          ...settings.uBlock,
+          blockThirdPartyCookies: isEnabled,
+          matrix: {
+            ...settings.uBlock?.matrix,
+            thirdPartyCookies: isEnabled ? 'block' : 'noop',
+          },
+        },
+      };
+      setSettings(updated);
+      chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
+      return;
+    }
     const updated = { ...settings, [key]: !settings[key] };
     setSettings(updated);
     chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
@@ -380,7 +398,7 @@ export default function Popup() {
               </button>
             </div>
 
-            <div className="flex items-center justify-between py-1">
+            <div className="flex items-center justify-between py-1 border-b border-stone-100 dark:border-[#383852]/60">
               <span className="text-stone-700 dark:text-[#CDD6F4] font-medium">AI Training Defense</span>
               <button
                 onClick={() => handleToggleFeature('aiScraperShield')}
@@ -393,6 +411,24 @@ export default function Popup() {
                 <span
                   className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ${
                     settings.aiScraperShield ? 'translate-x-4' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between py-1">
+              <span className="text-stone-700 dark:text-[#CDD6F4] font-medium">Cross-Site Cookie Guard</span>
+              <button
+                onClick={() => handleToggleFeature('thirdPartyCookies')}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${
+                  (settings.uBlock?.blockThirdPartyCookies || settings.uBlock?.matrix?.thirdPartyCookies === 'block')
+                    ? 'bg-emerald-700 dark:bg-[#A6E3A1]'
+                    : 'bg-stone-300 dark:bg-[#383852]'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ${
+                    (settings.uBlock?.blockThirdPartyCookies || settings.uBlock?.matrix?.thirdPartyCookies === 'block') ? 'translate-x-4' : 'translate-x-0'
                   }`}
                 />
               </button>

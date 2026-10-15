@@ -1,13 +1,15 @@
 /**
- * Sentry AI CanvasDefender (Mathematical Anti-Fingerprinting Core)
+ * Sentry AI CanvasDefender (Hardened Mathematical Anti-Fingerprinting Core)
  * Execution World: MAIN (injected at document_start)
  *
- * Implements mathematical noise injection to defeat:
+ * Implements mathematical noise injection and hardware cloaking to defeat:
  * 1. HTML5 Canvas Fingerprinting (toDataURL, toBlob, getImageData)
- * 2. WebGL Hardware & Shader Fingerprinting (getParameter, readPixels)
- * 3. AudioContext Acoustic Frequency Fingerprinting (getFloatFrequencyData, getByteFrequencyData, getChannelData)
- * 4. DOMRect & TextMetrics Font/Layout Probing (getBoundingClientRect, getClientRects, measureText)
- * 5. Screen, Window, and Hardware Concurrency Probes
+ * 2. WebGL Hardware & Shader Fingerprinting (UNMASKED_RENDERER, UNMASKED_VENDOR, readPixels, shaderPrecision)
+ * 3. AudioContext Acoustic Frequency Fingerprinting (getFloatFrequencyData, getByteFrequencyData, getChannelData, copyFromChannel, OfflineAudioContext)
+ * 4. DOMRect & TextMetrics Font/Layout Probing (getBoundingClientRect, measureText)
+ * 5. Battery Status API Tracking (navigator.getBattery)
+ * 6. Date, Time & Timezone Offset Probing (Intl.DateTimeFormat, Date.prototype)
+ * 7. Screen, Window, Hardware Concurrency, and Client Hints Probes
  */
 
 (function () {
@@ -44,7 +46,10 @@
   const domainRng = createPRNG(domainSeed);
 
   // Telemetry dispatcher to notify the extension content script bridge
-  function reportThreat(type: 'canvas' | 'audio' | 'webgl' | 'domrect', detail: string) {
+  function reportThreat(
+    type: 'canvas' | 'audio' | 'webgl' | 'domrect' | 'battery' | 'timezone' | 'hardware',
+    detail: string
+  ) {
     try {
       window.dispatchEvent(
         new CustomEvent('sentry:telemetry', {
@@ -60,6 +65,57 @@
       // Ignore in restricted sandboxes
     }
   }
+
+  // ==========================================
+  // CONFIGURATION STATE & DYNAMIC SYNC
+  // ==========================================
+  const GPU_PROFILES: Record<string, { vendor: string; renderer: string }> = {
+    intel_uhd: {
+      vendor: 'Google Inc. (Intel)',
+      renderer: 'ANGLE (Intel, Intel(R) UHD Graphics 630 Direct3D11 vs_5_0 ps_5_0)',
+    },
+    nvidia_geforce: {
+      vendor: 'Google Inc. (NVIDIA)',
+      renderer: 'ANGLE (NVIDIA, NVIDIA GeForce GTX 1660 SUPER Direct3D11 vs_5_0 ps_5_0)',
+    },
+    apple_silicon: {
+      vendor: 'Apple Inc.',
+      renderer: 'Apple GPU (Metal)',
+    },
+    swiftshader: {
+      vendor: 'Google Inc. (Google)',
+      renderer: 'ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)',
+    },
+  };
+
+  const TIMEZONE_CONFIGS: Record<string, { timeZone: string; offsetMinutes: number; tzName: string }> = {
+    utc: { timeZone: 'UTC', offsetMinutes: 0, tzName: 'Coordinated Universal Time' },
+    america_new_york: { timeZone: 'America/New_York', offsetMinutes: 240, tzName: 'Eastern Daylight Time' },
+    europe_london: { timeZone: 'Europe/London', offsetMinutes: 0, tzName: 'Greenwich Mean Time' },
+  };
+
+  let activeGpuProfile = GPU_PROFILES.intel_uhd;
+  let activeTimezone: 'system' | 'utc' | 'america_new_york' | 'europe_london' = 'system';
+  let activeConcurrency = 4;
+  let batteryShieldEnabled = true;
+
+  // Listen for dynamic configuration updates from ISOLATED world bridge
+  window.addEventListener('sentry:config', (e: Event) => {
+    const detail = (e as CustomEvent).detail;
+    if (!detail) return;
+    if (detail.gpuProfile && GPU_PROFILES[detail.gpuProfile]) {
+      activeGpuProfile = GPU_PROFILES[detail.gpuProfile];
+    }
+    if (detail.timezoneSpoof) {
+      activeTimezone = detail.timezoneSpoof;
+    }
+    if (typeof detail.hardwareConcurrencyValue === 'number') {
+      activeConcurrency = detail.hardwareConcurrencyValue;
+    }
+    if (typeof detail.batteryShield === 'boolean') {
+      batteryShieldEnabled = detail.batteryShield;
+    }
+  });
 
   // ==========================================
   // 1. CANVAS DEFENSE: Pixel Noise Injection
@@ -134,7 +190,7 @@
     return scrambleImageData(imgData);
   };
 
-  // Text metrics font probe defense (modifiedTextMetricsAPI)
+  // Text metrics font probe defense
   const origMeasureText = CanvasRenderingContext2D.prototype.measureText;
   CanvasRenderingContext2D.prototype.measureText = function () {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -165,6 +221,8 @@
   // ==========================================
   const UNMASKED_VENDOR_WEBGL = 0x9245;
   const UNMASKED_RENDERER_WEBGL = 0x9246;
+  const VENDOR_WEBGL = 0x1f00;
+  const RENDERER_WEBGL = 0x1f01;
 
   function patchWebGL(proto: WebGLRenderingContext | WebGL2RenderingContext) {
     if (!proto) return;
@@ -174,12 +232,18 @@
     proto.getParameter = function (param: number) {
       try {
         if (param === UNMASKED_VENDOR_WEBGL) {
-          reportThreat('webgl', 'UNMASKED_VENDOR_WEBGL probe normalized');
-          return 'Apple Inc.';
+          reportThreat('webgl', `UNMASKED_VENDOR_WEBGL probe masked to ${activeGpuProfile.vendor}`);
+          return activeGpuProfile.vendor;
         }
         if (param === UNMASKED_RENDERER_WEBGL) {
-          reportThreat('webgl', 'UNMASKED_RENDERER_WEBGL probe normalized');
-          return 'Apple GPU (Metal)';
+          reportThreat('webgl', `UNMASKED_RENDERER_WEBGL probe masked to ${activeGpuProfile.renderer}`);
+          return activeGpuProfile.renderer;
+        }
+        if (param === VENDOR_WEBGL) {
+          return 'WebKit';
+        }
+        if (param === RENDERER_WEBGL) {
+          return 'WebKit WebGL';
         }
       } catch {}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -202,6 +266,16 @@
       } catch {}
       return res;
     };
+
+    // Standardize shader precision format
+    proto.getShaderPrecisionFormat = function () {
+      reportThreat('webgl', 'WebGL shader precision format normalized');
+      return {
+        rangeMin: 127,
+        rangeMax: 127,
+        precision: 23,
+      };
+    };
   }
 
   if (typeof WebGLRenderingContext !== 'undefined') {
@@ -212,7 +286,7 @@
   }
 
   // ==========================================
-  // 3. AUDIOCONTEXT DEFENSE: Acoustic Perturbation
+  // 3. AUDIOCONTEXT DEFENSE: Acoustic Scrambling
   // ==========================================
   if (typeof AnalyserNode !== 'undefined') {
     const origGetFloatFreq = AnalyserNode.prototype.getFloatFrequencyData;
@@ -252,43 +326,125 @@
       const data = (origGetChannelData as any).apply(this, arguments);
       try {
         reportThreat('audio', `AudioBuffer.getChannelData perturbed (channel ${channel})`);
-        for (let i = 0; i < data.length; i += 8) {
+        for (let i = 0; i < data.length; i += 4) {
           if (data[i] !== 0) {
-            data[i] += (domainRng() - 0.5) * 0.00005;
+            data[i] += (domainRng() - 0.5) * 0.0001;
           }
         }
       } catch {}
       return data;
     };
+
+    const origCopyFromChannel = AudioBuffer.prototype.copyFromChannel;
+    if (origCopyFromChannel) {
+      AudioBuffer.prototype.copyFromChannel = function (
+        destination: Float32Array,
+        channelNumber: number
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (origCopyFromChannel as any).apply(this, arguments);
+        try {
+          reportThreat('audio', `AudioBuffer.copyFromChannel perturbed (channel ${channelNumber})`);
+          for (let i = 0; i < destination.length; i += 4) {
+            if (destination[i] !== 0) {
+              destination[i] += (domainRng() - 0.5) * 0.0001;
+            }
+          }
+        } catch {}
+      };
+    }
+  }
+
+  // Hook OfflineAudioContext rendering to ensure completed buffer has mathematical noise
+  if (typeof OfflineAudioContext !== 'undefined') {
+    const origStartRendering = OfflineAudioContext.prototype.startRendering;
+    if (origStartRendering) {
+      OfflineAudioContext.prototype.startRendering = function () {
+        reportThreat('audio', 'OfflineAudioContext.startRendering intercepted and acoustic buffer cloaked');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (origStartRendering as any).apply(this, arguments).then((buffer: AudioBuffer) => {
+          try {
+            for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+              const data = buffer.getChannelData(ch);
+              for (let i = 0; i < data.length; i += 4) {
+                if (data[i] !== 0) {
+                  data[i] += (domainRng() - 0.5) * 0.0001;
+                }
+              }
+            }
+          } catch {}
+          return buffer;
+        });
+      };
+    }
   }
 
   // ==========================================
-  // 4. DOMRECT & CLIENTRECTS FONT PROBE DEFENSE
+  // 4. BATTERY STATUS API DEFENSE
   // ==========================================
-  const origGetBoundingClientRect = Element.prototype.getBoundingClientRect;
-  Element.prototype.getBoundingClientRect = function () {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rect = (origGetBoundingClientRect as any).apply(this, arguments);
-    // Microscopic fractional shift to block font rendering analysis while preserving visual positioning
-    const delta = (domainRng() - 0.5) * 0.00005;
+  if (typeof navigator !== 'undefined' && 'getBattery' in navigator) {
+    const fakeBattery = {
+      charging: true,
+      chargingTime: 0,
+      dischargingTime: Infinity,
+      level: 1.0,
+      onchargingchange: null,
+      onchargingtimechange: null,
+      ondischargingtimechange: null,
+      onlevelchange: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    };
+
     try {
-      return new DOMRect(
-        rect.x + delta,
-        rect.y + delta,
-        rect.width + delta,
-        rect.height + delta
-      );
-    } catch {
-      return rect;
+      Object.defineProperty(navigator, 'getBattery', {
+        value: () => {
+          if (batteryShieldEnabled) {
+            reportThreat('battery', 'navigator.getBattery() probe cloaked to static 100% plugged-in state');
+            return Promise.resolve(fakeBattery);
+          }
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          return (navigator as any)._origGetBattery ? (navigator as any)._origGetBattery() : Promise.resolve(fakeBattery);
+        },
+        configurable: true,
+        enumerable: true,
+        writable: true,
+      });
+    } catch {}
+  }
+
+  // ==========================================
+  // 5. TIMEZONE & DATE SPOOFING ENGINE
+  // ==========================================
+  if (typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
+    const origResolvedOptions = Intl.DateTimeFormat.prototype.resolvedOptions;
+    Intl.DateTimeFormat.prototype.resolvedOptions = function () {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const opts = (origResolvedOptions as any).apply(this, arguments);
+      if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+        reportThreat('timezone', `Intl.DateTimeFormat timezone masked to ${TIMEZONE_CONFIGS[activeTimezone].timeZone}`);
+        opts.timeZone = TIMEZONE_CONFIGS[activeTimezone].timeZone;
+      }
+      return opts;
+    };
+  }
+
+  const origGetTimezoneOffset = Date.prototype.getTimezoneOffset;
+  Date.prototype.getTimezoneOffset = function () {
+    if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+      return TIMEZONE_CONFIGS[activeTimezone].offsetMinutes;
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (origGetTimezoneOffset as any).apply(this, arguments);
   };
 
   // ==========================================
-  // 5. HARDWARE CONCURRENCY, MEMORY & SCREEN DEFENSE
+  // 6. HARDWARE CONCURRENCY, MEMORY & SCREEN DEFENSE
   // ==========================================
   try {
     Object.defineProperty(navigator, 'hardwareConcurrency', {
-      get: () => 8,
+      get: () => activeConcurrency,
       configurable: true,
       enumerable: true,
     });
@@ -300,6 +456,24 @@
         enumerable: true,
       });
     }
+
+    // Client Hints Architecture normalizer
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const navUaData = (navigator as any).userAgentData;
+    if (navUaData && navUaData.getHighEntropyValues) {
+      const origGetHighEntropy = navUaData.getHighEntropyValues;
+      navUaData.getHighEntropyValues = async function (hints: string[]) {
+        const values = await origGetHighEntropy.apply(this, [hints]);
+        if (values && typeof values === 'object') {
+          reportThreat('hardware', 'Client Hints high-entropy query sanitized');
+          if (values.architecture) values.architecture = 'x86';
+          if (values.bitness) values.bitness = '64';
+          if ('model' in values) values.model = '';
+        }
+        return values;
+      };
+    }
+
     // Prevent window.name cross-site tracking
     let internalWindowName = window.name;
     Object.defineProperty(window, 'name', {
@@ -313,10 +487,31 @@
     // Readonly on certain strict engines
   }
 
+  // ==========================================
+  // 7. DOMRECT & CLIENTRECTS FONT PROBE DEFENSE
+  // ==========================================
+  const origGetBoundingClientRect = Element.prototype.getBoundingClientRect;
+  Element.prototype.getBoundingClientRect = function () {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rect = (origGetBoundingClientRect as any).apply(this, arguments);
+    const delta = (domainRng() - 0.5) * 0.00005;
+    try {
+      return new DOMRect(
+        rect.x + delta,
+        rect.y + delta,
+        rect.width + delta,
+        rect.height + delta
+      );
+    } catch {
+      return rect;
+    }
+  };
+
   console.info(
-    '%c[Sentry AI]%c Complete Defense Matrix Active (Canvas, WebGL, Audio, DOMRect, Hardware).',
+    '%c[Sentry AI]%c Complete Defense Matrix Active (Canvas, WebGL, Audio, Battery, Concurrency, Timezone).',
     'color: #38bdf8; font-weight: bold; background: #0b0f19; padding: 2px 6px; border-radius: 4px;',
     'color: #00f0ff;'
   );
 })();
 export {};
+

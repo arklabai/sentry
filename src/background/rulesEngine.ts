@@ -41,6 +41,11 @@ export const DEFAULT_SETTINGS: PrivacySettings = {
     screenResolutionShield: true,
     windowNameShield: true,
     historyLengthShield: true,
+    gpuProfile: 'intel_uhd',
+    batteryShield: true,
+    timezoneSpoof: 'system',
+    hardwareConcurrencyValue: 4,
+    visibilityShield: false,
   },
 
   // Full Dynamic Traffic Matrix Engine Settings
@@ -50,13 +55,14 @@ export const DEFAULT_SETTINGS: PrivacySettings = {
       thirdPartyScripts: 'noop',
       firstPartyFrames: 'allow',
       thirdPartyFrames: 'noop',
+      thirdPartyCookies: 'noop',
       inlineScripts: 'noop',
       images: 'allow',
       webSockets: 'noop',
     },
     cosmeticFiltering: true,
     blockCookieBanners: true,
-    blockThirdPartyCookies: true,
+    blockThirdPartyCookies: false,
     blockPopups: true,
     blockMedia: false,
     strictBlocking: false,
@@ -235,7 +241,7 @@ export async function applySettings(settings: PrivacySettings): Promise<void> {
         });
       }
 
-      if (settings.uBlock.blockThirdPartyCookies) {
+      if (settings.uBlock.blockThirdPartyCookies || settings.uBlock.matrix?.thirdPartyCookies === 'block') {
         addRules.push({
           id: MATRIX_RULE_BASE + 4,
           priority: 4,

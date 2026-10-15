@@ -356,7 +356,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         } else if (payload.type === 'webgl') {
           stats.webglFaked += 1;
           globalStats.totalFingerprintsScrambled += 1;
-        } else if (payload.type === 'domrect') {
+        } else if (payload.type === 'domrect' || payload.type === 'battery' || payload.type === 'timezone' || payload.type === 'hardware') {
           stats.canvasFaked += 1;
           globalStats.totalFingerprintsScrambled += 1;
         } else if (payload.type === 'tracker') {

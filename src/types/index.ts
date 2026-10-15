@@ -20,10 +20,15 @@ export interface DynamicMatrixRules {
   thirdPartyScripts: MatrixAction;
   firstPartyFrames: MatrixAction;
   thirdPartyFrames: MatrixAction;
+  thirdPartyCookies: MatrixAction;
   inlineScripts: MatrixAction;
   images: MatrixAction;
   webSockets: MatrixAction;
 }
+
+export type GpuProfile = 'intel_uhd' | 'nvidia_geforce' | 'apple_silicon' | 'swiftshader';
+
+export type TimezoneSpoof = 'system' | 'utc' | 'america_new_york' | 'europe_london';
 
 export interface CanvasBlockerSettings {
   canvasMode: 'fake' | 'block' | 'allow';
@@ -35,6 +40,7 @@ export interface CanvasBlockerSettings {
   webglMaskVendor: boolean;
   webglMaskRenderer: boolean;
   webglPerturbPixels: boolean;
+  gpuProfile?: GpuProfile;
   
   audioMode: 'fake' | 'block' | 'allow';
   audioNoiseLevel: NoiseIntensity;
@@ -45,6 +51,12 @@ export interface CanvasBlockerSettings {
   screenResolutionShield: boolean;
   windowNameShield: boolean;
   historyLengthShield: boolean;
+
+  // Hardened Cloaking Layers
+  batteryShield?: boolean;
+  timezoneSpoof?: TimezoneSpoof;
+  hardwareConcurrencyValue?: number;
+  visibilityShield?: boolean;
 }
 
 export interface UBlockSettings {

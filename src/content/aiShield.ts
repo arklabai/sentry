@@ -9,10 +9,46 @@
 (function () {
   'use strict';
 
+  // Synchronize settings from chrome.storage to MAIN world canvasDefender
+  function syncSettingsToMainWorld() {
+    try {
+      chrome.storage.local.get(['sentry_settings'], (res) => {
+        if (res && res.sentry_settings && res.sentry_settings.canvasBlocker) {
+          const cb = res.sentry_settings.canvasBlocker;
+          window.dispatchEvent(
+            new CustomEvent('sentry:config', {
+              detail: {
+                gpuProfile: cb.gpuProfile || 'intel_uhd',
+                timezoneSpoof: cb.timezoneSpoof || 'system',
+                hardwareConcurrencyValue: cb.hardwareConcurrencyValue || 4,
+                batteryShield: cb.batteryShield !== false,
+                visibilityShield: !!cb.visibilityShield,
+              },
+            })
+          );
+        }
+      });
+    } catch {
+      // Storage access restricted
+    }
+  }
+
+  // Initial sync
+  syncSettingsToMainWorld();
+
+  // Listen for storage changes to update MAIN world in real time
+  try {
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName === 'local' && changes.sentry_settings) {
+        syncSettingsToMainWorld();
+      }
+    });
+  } catch {}
+
   // Listen for threat telemetry dispatched from MAIN world (canvasDefender)
   window.addEventListener('sentry:telemetry', (e: Event) => {
     const customEvent = e as CustomEvent<{
-      type: 'canvas' | 'audio' | 'webgl';
+      type: string;
       detail: string;
       domain: string;
       timestamp: number;
