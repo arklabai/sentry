@@ -18,7 +18,7 @@ import SentryShieldLogo from '../components/SentryShieldLogo';
 import { useTheme } from '../hooks/useTheme';
 
 export default function Popup() {
-  const { themeMode, isDark, cycleTheme } = useTheme();
+  const { themeMode, isDark, setThemeMode } = useTheme();
   const [settings, setSettings] = useState<PrivacySettings | null>(null);
   const [stats, setStats] = useState<TabThreatStats | null>(null);
   const [globalStats, setGlobalStats] = useState<GlobalPrivacyStats | null>(null);
@@ -142,16 +142,31 @@ export default function Popup() {
         </div>
 
         <div className="flex items-center space-x-1.5">
-          {/* Theme switcher */}
-          <button
-            onClick={cycleTheme}
-            title={`Current Theme: ${themeMode} (Click to toggle)`}
-            className="flex items-center justify-center h-7 w-7 rounded-lg border border-stone-200 dark:border-[#383852] bg-stone-100/80 dark:bg-[#181825] text-stone-600 dark:text-[#CDD6F4] hover:border-emerald-500 transition"
-          >
-            {themeMode === 'system' && <HiComputerDesktop className="h-4 w-4" />}
-            {themeMode === 'light' && <HiSun className="h-4 w-4 text-amber-600" />}
-            {themeMode === 'dark' && <HiMoon className="h-4 w-4 text-emerald-400" />}
-          </button>
+          {/* 2-Option Light & Dark Mode Toggle (No system button, no text, defaults to system) */}
+          <div className="flex items-center rounded-lg border border-stone-200 dark:border-[#383852] bg-stone-100/90 dark:bg-[#181825] p-0.5">
+            <button
+              onClick={() => setThemeMode('light')}
+              title="Light Mode"
+              className={`flex items-center justify-center h-6 w-6 rounded-md transition cursor-pointer ${
+                !isDark
+                  ? 'bg-white dark:bg-[#2E2E44] text-amber-600 shadow-xs'
+                  : 'text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300'
+              }`}
+            >
+              <HiSun className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => setThemeMode('dark')}
+              title="Dark Mode"
+              className={`flex items-center justify-center h-6 w-6 rounded-md transition cursor-pointer ${
+                isDark
+                  ? 'bg-white dark:bg-[#2E2E44] text-emerald-400 shadow-xs'
+                  : 'text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300'
+              }`}
+            >
+              <HiMoon className="h-3.5 w-3.5" />
+            </button>
+          </div>
 
           {/* Dock to Side Panel */}
           <button

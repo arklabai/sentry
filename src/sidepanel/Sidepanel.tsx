@@ -44,7 +44,7 @@ import { useTheme } from '../hooks/useTheme';
 type SidebarTab = 'overview' | 'matrix' | 'broker' | 'cleaner' | 'network';
 
 export default function Sidepanel() {
-  const { themeMode, cycleTheme } = useTheme();
+  const { themeMode, isDark, setThemeMode } = useTheme();
   const [activeTab, setActiveTab] = useState<SidebarTab>('overview');
   const [matrixFilter, setMatrixFilter] = useState<'all' | 'traffic' | 'entropy' | 'rules'>('all');
   const [settings, setSettings] = useState<PrivacySettings | null>(null);
@@ -469,25 +469,39 @@ export default function Sidepanel() {
 
           {/* Quick Utility Tools (Compact icon cluster) */}
           <div className="flex items-center space-x-1.5 shrink-0">
-            {/* Theme Toggle */}
-            <button
-              onClick={cycleTheme}
-              title={`Theme: ${themeMode.toUpperCase()} (Click to cycle)`}
-              className="flex items-center justify-center h-7 w-7 rounded-lg border transition hover:scale-105 active:scale-95 cursor-pointer"
+            {/* 2-Option Light & Dark Mode Toggle (No system button, no text, defaults to system) */}
+            <div
+              className="flex items-center rounded-lg p-0.5 border"
               style={{
                 backgroundColor: 'var(--bg-surface-subtle)',
                 borderColor: 'var(--border-subtle)',
-                color: 'var(--text-secondary)',
               }}
             >
-              {themeMode === 'system' ? (
-                <HiComputerDesktop className="h-4 w-4" style={{ color: 'var(--green-primary)' }} />
-              ) : themeMode === 'light' ? (
-                <HiSun className="h-4 w-4 text-amber-600" />
-              ) : (
-                <HiMoon className="h-4 w-4" style={{ color: 'var(--green-primary)' }} />
-              )}
-            </button>
+              <button
+                onClick={() => setThemeMode('light')}
+                title="Light Mode"
+                className="flex items-center justify-center h-6 w-6 rounded-md transition cursor-pointer"
+                style={{
+                  backgroundColor: !isDark ? 'var(--bg-surface)' : 'transparent',
+                  color: !isDark ? '#D97706' : 'var(--text-muted)',
+                  boxShadow: !isDark ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                }}
+              >
+                <HiSun className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={() => setThemeMode('dark')}
+                title="Dark Mode"
+                className="flex items-center justify-center h-6 w-6 rounded-md transition cursor-pointer"
+                style={{
+                  backgroundColor: isDark ? 'var(--bg-surface)' : 'transparent',
+                  color: isDark ? 'var(--green-primary)' : 'var(--text-muted)',
+                  boxShadow: isDark ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                }}
+              >
+                <HiMoon className="h-3.5 w-3.5" />
+              </button>
+            </div>
 
             {/* Element Zapper */}
             <button
@@ -517,10 +531,10 @@ export default function Sidepanel() {
               <HiArrowPath className="h-4 w-4" />
             </button>
 
-            {/* Fullscreen Command Center */}
+            {/* Fullscreen Dashboard */}
             <button
               onClick={() => chrome.runtime.openOptionsPage()}
-              title="Launch Fullscreen Command Center & Broker Vault"
+              title="Launch Fullscreen Dashboard & Data Broker Hub"
               className="flex items-center justify-center h-7 w-7 rounded-lg border transition hover:scale-105 active:scale-95 cursor-pointer"
               style={{
                 backgroundColor: 'var(--bg-surface-subtle)',
@@ -578,7 +592,7 @@ export default function Sidepanel() {
         {[
           { id: 'overview' as const, label: 'Overview', icon: HiOutlineShieldCheck },
           { id: 'matrix' as const, label: 'Matrix', icon: HiSquares2X2 },
-          { id: 'broker' as const, label: 'AI Guard (Brokers)', icon: HiCpuChip },
+          { id: 'broker' as const, label: 'AI Guard', icon: HiCpuChip },
           { id: 'cleaner' as const, label: 'Cleaner', icon: HiLink },
           { id: 'network' as const, label: 'Traffic', icon: HiChartBar },
         ].map((tab) => {
@@ -1588,12 +1602,20 @@ export default function Sidepanel() {
                 <div className="text-[10.5px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                   Platform AI Opt-Out Portals
                 </div>
-                <div className="grid grid-cols-2 gap-1.5">
+                <div className="grid grid-cols-2 gap-1.5 max-h-56 overflow-y-auto pr-0.5">
                   {[
                     { name: 'Meta AI', url: 'https://www.facebook.com/privacy/genai' },
                     { name: 'X Grok', url: 'https://x.com/settings/grok_settings' },
                     { name: 'Gemini', url: 'https://myactivity.google.com/product/gemini' },
-                    { name: 'LinkedIn AI', url: 'https://www.linkedin.com/psettings/data-sharing' },
+                    { name: 'LinkedIn AI', url: 'https://www.linkedin.com/mypreferences/d/data-for-ai-improvement' },
+                    { name: 'OpenAI (ChatGPT)', url: 'https://privacy.openai.com/' },
+                    { name: 'Anthropic Claude', url: 'https://privacy.anthropic.com/' },
+                    { name: 'Microsoft Copilot', url: 'https://account.microsoft.com/privacy' },
+                    { name: 'Reddit AI', url: 'https://www.reddit.com/settings/privacy' },
+                    { name: 'Adobe Firefly', url: 'https://account.adobe.com/privacy' },
+                    { name: 'Perplexity AI', url: 'https://www.perplexity.ai/settings/account' },
+                    { name: 'Slack AI', url: 'https://slack.com/help/articles/27543490731283-Slack-AI-privacy-and-security' },
+                    { name: 'Apple Intelligence', url: 'https://www.apple.com/privacy/' },
                   ].map((p) => (
                     <a
                       key={p.name}
@@ -1607,8 +1629,8 @@ export default function Sidepanel() {
                         color: 'var(--text-primary)',
                       }}
                     >
-                      <span>{p.name}</span>
-                      <HiArrowTopRightOnSquare className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                      <span className="truncate pr-1">{p.name}</span>
+                      <HiArrowTopRightOnSquare className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
                     </a>
                   ))}
                 </div>

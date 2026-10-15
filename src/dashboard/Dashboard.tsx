@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   HiOutlineShieldCheck,
+  HiSquares2X2,
   HiShieldCheck,
   HiShieldExclamation,
   HiAdjustmentsHorizontal,
@@ -182,8 +183,16 @@ const TRACKING_DICTIONARY: ParameterEntry[] = [
 ];
 
 export default function Dashboard() {
-  const { themeMode, isDark, cycleTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState<ActiveTab>('brokers');
+  const { themeMode, isDark, setThemeMode } = useTheme();
+  const [activeTab, setActiveTab] = useState<ActiveTab>(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.replace('#', '') as ActiveTab;
+      if (['matrix', 'ai-shield', 'brokers', 'cleaner', 'ledger'].includes(hash)) {
+        return hash;
+      }
+    }
+    return 'matrix';
+  });
   const [brokers, setBrokers] = useState<BrokerEntry[]>([]);
   const [settings, setSettings] = useState<PrivacySettings | null>(null);
   const [globalStats, setGlobalStats] = useState<GlobalPrivacyStats | null>(null);
@@ -537,9 +546,6 @@ https://news.ycombinator.com/item?id=123456`
                 <h1 className="text-xl font-black tracking-tight text-stone-900 dark:text-white">
                   SENTRY <span className="text-emerald-700 dark:text-emerald-400">AI</span>
                 </h1>
-                <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/40 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-emerald-800 dark:text-emerald-300 uppercase">
-                  COMMAND CENTER
-                </span>
               </div>
               <p className="text-xs text-stone-500 dark:text-[#A6ADC8]">
                 Be Fearless Online
@@ -549,83 +555,58 @@ https://news.ycombinator.com/item?id=123456`
 
           <div className="flex items-center space-x-3">
             {/* Navigation Tabs */}
-            <nav className="flex space-x-1 rounded-xl bg-stone-100/90 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] p-1">
-              <button
-                onClick={() => setActiveTab('brokers')}
-                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'brokers'
-                    ? 'bg-emerald-700 text-white shadow-xs dark:bg-emerald-600 dark:text-white'
-                    : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
-                }`}
-              >
-                <HiCircleStack className="h-4 w-4" />
-                <span>Data Broker Hub</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('ai-shield')}
-                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'ai-shield'
-                    ? 'bg-emerald-700 text-white shadow-xs dark:bg-emerald-600 dark:text-white'
-                    : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
-                }`}
-              >
-                <HiCpuChip className="h-4 w-4" />
-                <span>AI Opt-Out Center</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('matrix')}
-                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'matrix'
-                    ? 'bg-emerald-700 text-white shadow-xs dark:bg-emerald-600 dark:text-white'
-                    : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
-                }`}
-              >
-                <HiAdjustmentsHorizontal className="h-4 w-4" />
-                <span>Domain Matrix</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('ledger')}
-                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'ledger'
-                    ? 'bg-emerald-700 text-white shadow-xs dark:bg-emerald-600 dark:text-white'
-                    : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
-                }`}
-              >
-                <HiChartBar className="h-4 w-4" />
-                <span>Live Threat Ledger</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('cleaner')}
-                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'cleaner'
-                    ? 'bg-emerald-700 text-white shadow-xs dark:bg-emerald-600 dark:text-white'
-                    : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
-                }`}
-              >
-                <HiLink className="h-4 w-4" />
-                <span>URL Cleaner & Link Guard</span>
-              </button>
+            <nav className="flex space-x-1.5 rounded-2xl bg-stone-100/90 dark:bg-[#181825]/90 border border-stone-200/90 dark:border-[#383852] p-1.5 shadow-xs backdrop-blur-md">
+              {[
+                { id: 'matrix' as const, label: 'Matrix', icon: HiSquares2X2 },
+                { id: 'ai-shield' as const, label: 'AI Guard', icon: HiCpuChip },
+                { id: 'brokers' as const, label: 'Data Brokers', icon: HiCircleStack },
+                { id: 'cleaner' as const, label: 'Cleaner', icon: HiLink },
+                { id: 'ledger' as const, label: 'Traffic', icon: HiChartBar },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center space-x-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                      isActive
+                        ? 'bg-emerald-700 dark:bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-600/30 dark:ring-emerald-400/30'
+                        : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-white hover:bg-stone-200/60 dark:hover:bg-[#252538]'
+                    }`}
+                  >
+                    <Icon className={`h-4 w-4 transition-transform duration-200 ${isActive ? 'scale-105' : ''}`} />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
             </nav>
 
-            {/* Theme Toggle Button */}
-            <button
-              onClick={cycleTheme}
-              title={`Theme: ${themeMode.toUpperCase()} (Click to toggle)`}
-              className="flex items-center space-x-1.5 rounded-xl border border-stone-200 dark:border-[#4E4E70] bg-stone-100/90 dark:bg-[#181825] px-3 py-1.5 text-xs font-medium text-stone-700 dark:text-[#CDD6F4] hover:bg-stone-200 dark:hover:bg-[#2E2E44] transition cursor-pointer"
-            >
-              {themeMode === 'system' ? (
-                <HiComputerDesktop className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
-              ) : themeMode === 'light' ? (
-                <HiSun className="h-4 w-4 text-amber-600" />
-              ) : (
-                <HiMoon className="h-4 w-4 text-indigo-400" />
-              )}
-              <span className="capitalize">{themeMode}</span>
-            </button>
+            {/* 2-Option Light & Dark Theme Toggle (Only icons, default system) */}
+            <div className="flex items-center rounded-xl border border-stone-200/90 dark:border-[#383852] bg-stone-100/90 dark:bg-[#181825]/90 p-1 shadow-xs">
+              <button
+                onClick={() => setThemeMode('light')}
+                title="Light Mode"
+                className={`flex items-center justify-center h-7 w-7 rounded-lg transition-all duration-200 cursor-pointer ${
+                  !isDark
+                    ? 'bg-white dark:bg-[#2E2E44] text-amber-600 shadow-xs'
+                    : 'text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300'
+                }`}
+              >
+                <HiSun className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setThemeMode('dark')}
+                title="Dark Mode"
+                className={`flex items-center justify-center h-7 w-7 rounded-lg transition-all duration-200 cursor-pointer ${
+                  isDark
+                    ? 'bg-white dark:bg-[#2E2E44] text-emerald-400 shadow-xs'
+                    : 'text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300'
+                }`}
+              >
+                <HiMoon className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -1207,6 +1188,238 @@ https://news.ycombinator.com/item?id=123456`
                         className="inline-flex items-center space-x-1.5 rounded-lg border border-stone-200 dark:border-[#383852] bg-white hover:bg-stone-50 dark:bg-[#252538] dark:hover:bg-[#2E2E44] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 transition cursor-pointer"
                       >
                         <span>LinkedIn AI Toggle</span>
+                        <HiArrowTopRightOnSquare className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* OpenAI ChatGPT */}
+                  <div className="sentry-inset p-4.5 flex flex-col justify-between border border-stone-200 dark:border-[#383852] rounded-xl space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <h4 className="text-xs font-bold text-stone-900 dark:text-white">OpenAI / ChatGPT Data Training</h4>
+                        <span className="rounded-full bg-rose-50 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 text-[10px] font-semibold px-2 py-0.5">
+                          High Ingestion Rate
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
+                        Default settings allow chat history, code, and prompts to be utilized for training frontier GPT models.
+                      </p>
+                    </div>
+                    <div className="pt-3 flex items-center justify-between border-t border-stone-200/70 dark:border-[#383852]">
+                      <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                        GPTBot Crawlers: Blocked
+                      </span>
+                      <a
+                        href="https://privacy.openai.com/"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center space-x-1.5 rounded-lg border border-stone-200 dark:border-[#383852] bg-white hover:bg-stone-50 dark:bg-[#252538] dark:hover:bg-[#2E2E44] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 transition cursor-pointer"
+                      >
+                        <span>OpenAI Privacy</span>
+                        <HiArrowTopRightOnSquare className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Anthropic Claude */}
+                  <div className="sentry-inset p-4.5 flex flex-col justify-between border border-stone-200 dark:border-[#383852] rounded-xl space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <h4 className="text-xs font-bold text-stone-900 dark:text-white">Anthropic Claude Privacy Portal</h4>
+                        <span className="rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 text-[10px] font-semibold px-2 py-0.5">
+                          Strict Consent Model
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
+                        Manage user feedback sharing, opt-out requests, and verify data retention policies across Claude workspaces.
+                      </p>
+                    </div>
+                    <div className="pt-3 flex items-center justify-between border-t border-stone-200/70 dark:border-[#383852]">
+                      <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                        ClaudeBot Crawlers: Blocked
+                      </span>
+                      <a
+                        href="https://privacy.anthropic.com/"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center space-x-1.5 rounded-lg border border-stone-200 dark:border-[#383852] bg-white hover:bg-stone-50 dark:bg-[#252538] dark:hover:bg-[#2E2E44] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 transition cursor-pointer"
+                      >
+                        <span>Anthropic Portal</span>
+                        <HiArrowTopRightOnSquare className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Microsoft Copilot */}
+                  <div className="sentry-inset p-4.5 flex flex-col justify-between border border-stone-200 dark:border-[#383852] rounded-xl space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <h4 className="text-xs font-bold text-stone-900 dark:text-white">Microsoft Copilot &amp; Bing AI</h4>
+                        <span className="rounded-full bg-rose-50 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 text-[10px] font-semibold px-2 py-0.5">
+                          Cross-Product Sync
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
+                        Windows and Edge sync search queries, browsing habits, and Office telemetry with Copilot models.
+                      </p>
+                    </div>
+                    <div className="pt-3 flex items-center justify-between border-t border-stone-200/70 dark:border-[#383852]">
+                      <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                        Bing Telemetry: Intercepted
+                      </span>
+                      <a
+                        href="https://account.microsoft.com/privacy"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center space-x-1.5 rounded-lg border border-stone-200 dark:border-[#383852] bg-white hover:bg-stone-50 dark:bg-[#252538] dark:hover:bg-[#2E2E44] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 transition cursor-pointer"
+                      >
+                        <span>MS Privacy Dashboard</span>
+                        <HiArrowTopRightOnSquare className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Reddit AI */}
+                  <div className="sentry-inset p-4.5 flex flex-col justify-between border border-stone-200 dark:border-[#383852] rounded-xl space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <h4 className="text-xs font-bold text-stone-900 dark:text-white">Reddit AI Licensing &amp; Data Sharing</h4>
+                        <span className="rounded-full bg-rose-50 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 text-[10px] font-semibold px-2 py-0.5">
+                          Commercial Licensing
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
+                        Reddit licenses user posts, threads, and voting patterns to Google and OpenAI for model fine-tuning.
+                      </p>
+                    </div>
+                    <div className="pt-3 flex items-center justify-between border-t border-stone-200/70 dark:border-[#383852]">
+                      <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                        Tracking Pixels: Blocked
+                      </span>
+                      <a
+                        href="https://www.reddit.com/settings/privacy"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center space-x-1.5 rounded-lg border border-stone-200 dark:border-[#383852] bg-white hover:bg-stone-50 dark:bg-[#252538] dark:hover:bg-[#2E2E44] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 transition cursor-pointer"
+                      >
+                        <span>Reddit Privacy</span>
+                        <HiArrowTopRightOnSquare className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Adobe Firefly */}
+                  <div className="sentry-inset p-4.5 flex flex-col justify-between border border-stone-200 dark:border-[#383852] rounded-xl space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <h4 className="text-xs font-bold text-stone-900 dark:text-white">Adobe Firefly Content Analysis</h4>
+                        <span className="rounded-full bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 text-[10px] font-semibold px-2 py-0.5">
+                          Cloud Media Analysis
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
+                        Creative Cloud scans uploaded graphics, photos, and files to train Firefly diffusion and generative models.
+                      </p>
+                    </div>
+                    <div className="pt-3 flex items-center justify-between border-t border-stone-200/70 dark:border-[#383852]">
+                      <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                        Creative Telemetry: Blocked
+                      </span>
+                      <a
+                        href="https://account.adobe.com/privacy"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center space-x-1.5 rounded-lg border border-stone-200 dark:border-[#383852] bg-white hover:bg-stone-50 dark:bg-[#252538] dark:hover:bg-[#2E2E44] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 transition cursor-pointer"
+                      >
+                        <span>Adobe Privacy</span>
+                        <HiArrowTopRightOnSquare className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Perplexity AI */}
+                  <div className="sentry-inset p-4.5 flex flex-col justify-between border border-stone-200 dark:border-[#383852] rounded-xl space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <h4 className="text-xs font-bold text-stone-900 dark:text-white">Perplexity AI Search &amp; Data Retention</h4>
+                        <span className="rounded-full bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 text-[10px] font-semibold px-2 py-0.5">
+                          Search Query Training
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
+                        Default search inputs and thread follow-ups are retained to improve Perplexity LLM relevance and ranking.
+                      </p>
+                    </div>
+                    <div className="pt-3 flex items-center justify-between border-t border-stone-200/70 dark:border-[#383852]">
+                      <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                        PerplexityBot: Blocked
+                      </span>
+                      <a
+                        href="https://www.perplexity.ai/settings/account"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center space-x-1.5 rounded-lg border border-stone-200 dark:border-[#383852] bg-white hover:bg-stone-50 dark:bg-[#252538] dark:hover:bg-[#2E2E44] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 transition cursor-pointer"
+                      >
+                        <span>Perplexity Account</span>
+                        <HiArrowTopRightOnSquare className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Slack AI */}
+                  <div className="sentry-inset p-4.5 flex flex-col justify-between border border-stone-200 dark:border-[#383852] rounded-xl space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <h4 className="text-xs font-bold text-stone-900 dark:text-white">Slack AI Workspace Data Protection</h4>
+                        <span className="rounded-full bg-rose-50 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 text-[10px] font-semibold px-2 py-0.5">
+                          Internal Conversations
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
+                        Salesforce uses conversation metadata, summaries, and channel text for global model training unless opted out.
+                      </p>
+                    </div>
+                    <div className="pt-3 flex items-center justify-between border-t border-stone-200/70 dark:border-[#383852]">
+                      <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                        Beacon Telemetry: Blocked
+                      </span>
+                      <a
+                        href="https://slack.com/help/articles/27543490731283-Slack-AI-privacy-and-security"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center space-x-1.5 rounded-lg border border-stone-200 dark:border-[#383852] bg-white hover:bg-stone-50 dark:bg-[#252538] dark:hover:bg-[#2E2E44] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 transition cursor-pointer"
+                      >
+                        <span>Slack Opt-Out Guide</span>
+                        <HiArrowTopRightOnSquare className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Apple Intelligence */}
+                  <div className="sentry-inset p-4.5 flex flex-col justify-between border border-stone-200 dark:border-[#383852] rounded-xl space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <h4 className="text-xs font-bold text-stone-900 dark:text-white">Apple Intelligence &amp; Private Cloud</h4>
+                        <span className="rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 text-[10px] font-semibold px-2 py-0.5">
+                          Zero Data Retention
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
+                        Apple's cryptographic server verification and Siri query governance prevents unprompted cloud training.
+                      </p>
+                    </div>
+                    <div className="pt-3 flex items-center justify-between border-t border-stone-200/70 dark:border-[#383852]">
+                      <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                        Device Identity: Shielded
+                      </span>
+                      <a
+                        href="https://www.apple.com/privacy/"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center space-x-1.5 rounded-lg border border-stone-200 dark:border-[#383852] bg-white hover:bg-stone-50 dark:bg-[#252538] dark:hover:bg-[#2E2E44] px-3 py-1.5 text-xs font-semibold text-stone-800 dark:text-stone-200 transition cursor-pointer"
+                      >
+                        <span>Apple Privacy Hub</span>
                         <HiArrowTopRightOnSquare className="h-3 w-3" />
                       </a>
                     </div>
