@@ -95,7 +95,7 @@
   };
 
   let activeGpuProfile = GPU_PROFILES.intel_uhd;
-  let activeTimezone: 'system' | 'utc' | 'america_new_york' | 'europe_london' = 'system';
+  let activeTimezone: 'system' | 'utc' | 'america_new_york' | 'europe_london' = 'utc';
   let activeConcurrency = 4;
   let batteryShieldEnabled = true;
 
@@ -422,9 +422,84 @@
   // ==========================================
   // 5. TIMEZONE & DATE SPOOFING ENGINE
   // ==========================================
-  if (typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
-    const origResolvedOptions = Intl.DateTimeFormat.prototype.resolvedOptions;
-    Intl.DateTimeFormat.prototype.resolvedOptions = function () {
+  const origDateTimeFormat = typeof Intl !== 'undefined' ? Intl.DateTimeFormat : null;
+  const origResolvedOptions = origDateTimeFormat ? origDateTimeFormat.prototype.resolvedOptions : null;
+  const origDateToString = Date.prototype.toString;
+  const origDateToTimeString = Date.prototype.toTimeString;
+  const origDateToDateString = Date.prototype.toDateString;
+  const origDateToLocaleString = Date.prototype.toLocaleString;
+  const origDateToLocaleDateString = Date.prototype.toLocaleDateString;
+  const origDateToLocaleTimeString = Date.prototype.toLocaleTimeString;
+  const origGetTimezoneOffset = Date.prototype.getTimezoneOffset;
+  const origGetHours = Date.prototype.getHours;
+  const origGetMinutes = Date.prototype.getMinutes;
+  const origGetSeconds = Date.prototype.getSeconds;
+  const origGetDate = Date.prototype.getDate;
+  const origGetDay = Date.prototype.getDay;
+  const origGetMonth = Date.prototype.getMonth;
+  const origGetFullYear = Date.prototype.getFullYear;
+
+  function getTzSnapshot(date: Date, tz: string) {
+    if (!origDateTimeFormat) return null;
+    try {
+      const dtf = new origDateTimeFormat('en-US', {
+        timeZone: tz,
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        timeZoneName: 'longOffset',
+      });
+      const map: Record<string, any> = {};
+      const parts = dtf.formatToParts(date);
+      for (let i = 0; i < parts.length; i++) {
+        map[parts[i].type] = parts[i].value;
+      }
+
+      const dtfName = new origDateTimeFormat('en-US', {
+        timeZone: tz,
+        timeZoneName: 'long',
+      });
+      const namePart = dtfName.formatToParts(date).find((p) => p.type === 'timeZoneName');
+      map.tzFullName = namePart ? namePart.value : tz;
+
+      const match = (map.timeZoneName || '').match(/GMT([+-])(\d{2}):?(\d{2})?/);
+      const sign = match ? match[1] : '+';
+      const h = match ? match[2] : '00';
+      const m = match ? (match[3] || '00') : '00';
+      map.gmtString = `GMT${sign}${h}${m}`;
+      map.offsetMinutes = (sign === '-' ? 1 : -1) * (parseInt(h, 10) * 60 + parseInt(m, 10));
+
+      return map;
+    } catch {
+      return null;
+    }
+  }
+
+  if (origDateTimeFormat) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ProxyDateTimeFormat = function (locales?: any, options?: any) {
+      if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+        options = Object.assign({}, options);
+        if (!options.timeZone) {
+          options.timeZone = TIMEZONE_CONFIGS[activeTimezone].timeZone;
+        }
+      }
+      return new (origDateTimeFormat as any)(locales, options);
+    } as any;
+
+    ProxyDateTimeFormat.prototype = origDateTimeFormat.prototype;
+    if (typeof origDateTimeFormat.supportedLocalesOf === 'function') {
+      ProxyDateTimeFormat.supportedLocalesOf = origDateTimeFormat.supportedLocalesOf.bind(origDateTimeFormat);
+    }
+
+    Intl.DateTimeFormat = ProxyDateTimeFormat;
+
+    origDateTimeFormat.prototype.resolvedOptions = function () {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const opts = (origResolvedOptions as any).apply(this, arguments);
       if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
@@ -435,13 +510,169 @@
     };
   }
 
-  const origGetTimezoneOffset = Date.prototype.getTimezoneOffset;
+  Date.prototype.toString = function () {
+    if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+      const snap = getTzSnapshot(this, TIMEZONE_CONFIGS[activeTimezone].timeZone);
+      if (snap) {
+        reportThreat('timezone', `Date.prototype.toString() masked to ${TIMEZONE_CONFIGS[activeTimezone].timeZone}`);
+        return `${snap.weekday} ${snap.month} ${snap.day} ${snap.year} ${snap.hour}:${snap.minute}:${snap.second} ${snap.gmtString} (${snap.tzFullName})`;
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (origDateToString as any).apply(this, arguments);
+  };
+
+  Date.prototype.toTimeString = function () {
+    if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+      const snap = getTzSnapshot(this, TIMEZONE_CONFIGS[activeTimezone].timeZone);
+      if (snap) {
+        return `${snap.hour}:${snap.minute}:${snap.second} ${snap.gmtString} (${snap.tzFullName})`;
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (origDateToTimeString as any).apply(this, arguments);
+  };
+
+  Date.prototype.toDateString = function () {
+    if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+      const snap = getTzSnapshot(this, TIMEZONE_CONFIGS[activeTimezone].timeZone);
+      if (snap) {
+        return `${snap.weekday} ${snap.month} ${snap.day} ${snap.year}`;
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (origDateToDateString as any).apply(this, arguments);
+  };
+
   Date.prototype.getTimezoneOffset = function () {
     if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+      const snap = getTzSnapshot(this, TIMEZONE_CONFIGS[activeTimezone].timeZone);
+      if (snap && typeof snap.offsetMinutes === 'number') {
+        return snap.offsetMinutes;
+      }
       return TIMEZONE_CONFIGS[activeTimezone].offsetMinutes;
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (origGetTimezoneOffset as any).apply(this, arguments);
+  };
+
+  Date.prototype.toLocaleString = function (locales?: any, options?: any) {
+    if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+      options = Object.assign({}, options);
+      if (!options.timeZone) {
+        options.timeZone = TIMEZONE_CONFIGS[activeTimezone].timeZone;
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (origDateToLocaleString as any).call(this, locales, options);
+  };
+
+  Date.prototype.toLocaleDateString = function (locales?: any, options?: any) {
+    if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+      options = Object.assign({}, options);
+      if (!options.timeZone) {
+        options.timeZone = TIMEZONE_CONFIGS[activeTimezone].timeZone;
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (origDateToLocaleDateString as any).call(this, locales, options);
+  };
+
+  Date.prototype.toLocaleTimeString = function (locales?: any, options?: any) {
+    if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+      options = Object.assign({}, options);
+      if (!options.timeZone) {
+        options.timeZone = TIMEZONE_CONFIGS[activeTimezone].timeZone;
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (origDateToLocaleTimeString as any).call(this, locales, options);
+  };
+
+  Date.prototype.getHours = function () {
+    if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+      const snap = getTzSnapshot(this, TIMEZONE_CONFIGS[activeTimezone].timeZone);
+      if (snap && snap.hour) {
+        return parseInt(snap.hour, 10);
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (origGetHours as any).apply(this, arguments);
+  };
+
+  Date.prototype.getMinutes = function () {
+    if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+      const snap = getTzSnapshot(this, TIMEZONE_CONFIGS[activeTimezone].timeZone);
+      if (snap && snap.minute) {
+        return parseInt(snap.minute, 10);
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (origGetMinutes as any).apply(this, arguments);
+  };
+
+  Date.prototype.getSeconds = function () {
+    if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+      const snap = getTzSnapshot(this, TIMEZONE_CONFIGS[activeTimezone].timeZone);
+      if (snap && snap.second) {
+        return parseInt(snap.second, 10);
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (origGetSeconds as any).apply(this, arguments);
+  };
+
+  Date.prototype.getDate = function () {
+    if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+      const snap = getTzSnapshot(this, TIMEZONE_CONFIGS[activeTimezone].timeZone);
+      if (snap && snap.day) {
+        return parseInt(snap.day, 10);
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (origGetDate as any).apply(this, arguments);
+  };
+
+  Date.prototype.getDay = function () {
+    if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+      const snap = getTzSnapshot(this, TIMEZONE_CONFIGS[activeTimezone].timeZone);
+      if (snap && snap.weekday) {
+        const days: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+        if (typeof days[snap.weekday] === 'number') {
+          return days[snap.weekday];
+        }
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (origGetDay as any).apply(this, arguments);
+  };
+
+  Date.prototype.getMonth = function () {
+    if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+      const snap = getTzSnapshot(this, TIMEZONE_CONFIGS[activeTimezone].timeZone);
+      if (snap && snap.month) {
+        const months: Record<string, number> = {
+          Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+          Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
+        };
+        if (typeof months[snap.month] === 'number') {
+          return months[snap.month];
+        }
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (origGetMonth as any).apply(this, arguments);
+  };
+
+  Date.prototype.getFullYear = function () {
+    if (activeTimezone !== 'system' && TIMEZONE_CONFIGS[activeTimezone]) {
+      const snap = getTzSnapshot(this, TIMEZONE_CONFIGS[activeTimezone].timeZone);
+      if (snap && snap.year) {
+        return parseInt(snap.year, 10);
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (origGetFullYear as any).apply(this, arguments);
   };
 
   // ==========================================
@@ -518,7 +749,7 @@
   let allowRightClickEnabled = true;
 
   function updateAllowRightClickStyles() {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined' || typeof document.getElementById !== 'function') return;
     const styleId = 'sentry-allow-right-click-styles';
     let styleEl = document.getElementById(styleId);
     if (allowRightClickEnabled) {
@@ -551,8 +782,8 @@
   const guardedEvents = ['contextmenu', 'selectstart', 'copy', 'cut', 'dragstart'];
   if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     guardedEvents.forEach((type) => {
-      window.addEventListener(type, unblockEvents, true);
-      document.addEventListener(type, unblockEvents, true);
+      if (typeof window.addEventListener === 'function') window.addEventListener(type, unblockEvents, true);
+      if (typeof document.addEventListener === 'function') document.addEventListener(type, unblockEvents, true);
     });
   }
 

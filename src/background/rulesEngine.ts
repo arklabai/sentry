@@ -44,7 +44,7 @@ export const DEFAULT_SETTINGS: PrivacySettings = {
     historyLengthShield: true,
     gpuProfile: 'intel_uhd',
     batteryShield: true,
-    timezoneSpoof: 'system',
+    timezoneSpoof: 'utc',
     hardwareConcurrencyValue: 4,
     visibilityShield: false,
     allowRightClick: true,

@@ -55,8 +55,15 @@ export const COOKIE_BANNER_SELECTORS: string[] = [
   '[class*="cookie-banner" i]',
   '[class*="cookie-consent" i]',
   '[class*="cookiebanner" i]',
+// Osano / CookieConsent / Cookie-Script / Vanilla-CookieConsent
+  '#cc-main',
+  '.cc-window',
+  '#c-b-bn',
+  '#cookiescript_injected',
+  '#cookiescript_wrapper',
   '[aria-label*="cookie consent" i]',
   '[aria-label*="cookie banner" i]',
+  '[aria-label*="cookie" i]',
   '[data-nosnippet*="cookie" i]',
 ];
 
@@ -69,20 +76,76 @@ export const REJECT_BUTTON_SELECTORS: string[] = [
   '.cmplz-deny',
   'button[data-cookiefirst-action="reject"]',
   '#didomi-notice-learn-more-button',
+  '#c-s-bn', // CookieConsent.js reject/settings
+  '#cookiescript_reject',
   'button[id*="reject" i]',
   'button[class*="reject" i]',
   'button[aria-label*="reject" i]',
   'button[id*="decline" i]',
   'button[class*="decline" i]',
   'button[aria-label*="decline" i]',
+  'button[id*="deny" i]',
+  'button[class*="deny" i]',
+  'button[aria-label*="deny" i]',
   'button[data-testid*="reject" i]',
+];
+
+/**
+ * Manage settings / Preferences button selectors for banners without direct reject
+ */
+export const MANAGE_SETTINGS_BUTTON_SELECTORS: string[] = [
+  '#onetrust-pc-btn-handler',
+  '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowallSelection',
+  '#CybotCookiebotDialogBodyButtonDetails',
+  '#c-s-bn',
+  '#cookiescript_manage',
+  'button[id*="manage" i]',
+  'button[class*="manage" i]',
+  'button[aria-label*="manage" i]',
+  'button[id*="preference" i]',
+  'button[class*="preference" i]',
+  'button[aria-label*="preference" i]',
+  'button[id*="setting" i]',
+  'button[class*="setting" i]',
+  'a[id*="cookie-setting" i]',
+  'a[class*="cookie-setting" i]',
+  'a[id*="manage" i]',
+  'a[class*="manage" i]',
+];
+
+/**
+ * Save settings / Confirm choices button selectors inside preferences modals
+ */
+export const SAVE_PREFERENCES_BUTTON_SELECTORS: string[] = [
+  '.save-preference-btn-handler',
+  '#onetrust-pc-btn-handler',
+  '#c-s-sv',
+  '#cookiescript_save',
+  'button[id*="save" i]',
+  'button[class*="save" i]',
+  'button[aria-label*="save" i]',
+  'button[id*="confirm" i]',
+  'button[class*="confirm" i]',
+  'button[aria-label*="confirm" i]',
 ];
 
 /**
  * Text regex for buttons that reject or limit tracking
  */
 export const REJECT_TEXT_REGEX =
-  /(^|\s)(reject all|decline all|reject non-essential|only necessary|essential only|strictly necessary|refuse all|decline|disagree|deny all)(\s|$)/i;
+  /(^|\s)(reject all|decline all|reject non-essential|reject optional|only necessary|essential only|strictly necessary|refuse all|decline|disagree|deny all|reject|disable all)(\s|$)/i;
+
+/**
+ * Text regex for buttons that open settings / preferences
+ */
+export const MANAGE_SETTINGS_TEXT_REGEX =
+  /(^|\s)(manage settings|manage cookies|cookie settings|manage preferences|privacy settings|preferences|customize|customise|more options|configure|view settings|settings)(\s|$)/i;
+
+/**
+ * Text regex for saving minimal preferences once modal opens
+ */
+export const SAVE_PREFERENCES_TEXT_REGEX =
+  /(^|\s)(save settings|save preferences|confirm my choices|confirm choices|save & close|save and close|save & exit|save and exit|save selection|allow selection|accept selected|save choices)(\s|$)/i;
 
 /**
  * Fallback dismiss button text regex
@@ -174,7 +237,7 @@ export function autoClickRejectButtons(): boolean {
   }
 
   // 2. Scan buttons/links for rejection text within banner containers
-  const buttons = Array.from(document.querySelectorAll<HTMLElement>('button, a[role="button"], input[type="button"]'));
+  const buttons = Array.from(document.querySelectorAll<HTMLElement>('button, a[role="button"], a, input[type="button"]'));
   for (const btn of buttons) {
     const text = (btn.textContent || btn.getAttribute('aria-label') || '').trim();
     if (text && REJECT_TEXT_REGEX.test(text)) {
@@ -193,6 +256,76 @@ export function autoClickRejectButtons(): boolean {
   }
 
   return false;
+}
+
+/**
+ * Searches for a "Manage settings" / "Preferences" button on the active banner
+ */
+export function findManageSettingsButton(): HTMLElement | null {
+  for (const sel of MANAGE_SETTINGS_BUTTON_SELECTORS) {
+    try {
+      const btn = document.querySelector<HTMLElement>(sel);
+      if (btn && btn.offsetParent !== null) {
+        return btn;
+      }
+    } catch {}
+  }
+
+  const candidates = Array.from(
+    document.querySelectorAll<HTMLElement>('button, a[role="button"], a, input[type="button"]')
+  );
+  for (const el of candidates) {
+    const text = (el.textContent || el.getAttribute('aria-label') || '').trim();
+    if (text && MANAGE_SETTINGS_TEXT_REGEX.test(text)) {
+      // Avoid false positive matching 'Accept all'
+      if (!/accept/i.test(text)) {
+        return el;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Searches for a "Save settings" / "Confirm choices" button inside a preferences modal
+ */
+export function findSavePreferencesButton(): HTMLElement | null {
+  for (const sel of SAVE_PREFERENCES_BUTTON_SELECTORS) {
+    try {
+      const btn = document.querySelector<HTMLElement>(sel);
+      if (btn && btn.offsetParent !== null) {
+        return btn;
+      }
+    } catch {}
+  }
+
+  const candidates = Array.from(
+    document.querySelectorAll<HTMLElement>('button, a[role="button"], a, input[type="button"]')
+  );
+  for (const el of candidates) {
+    const text = (el.textContent || el.getAttribute('aria-label') || '').trim();
+    if (text && SAVE_PREFERENCES_TEXT_REGEX.test(text)) {
+      return el;
+    }
+  }
+  return null;
+}
+
+/**
+ * Disables non-essential tracking checkboxes inside preferences modals
+ */
+export function uncheckNonEssentialCheckboxes(): void {
+  try {
+    const checkboxes = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'));
+    for (const cb of checkboxes) {
+      const label = (cb.name || cb.id || cb.getAttribute('aria-label') || '').toLowerCase();
+      if (!label.includes('essential') && !label.includes('necessary') && !cb.disabled) {
+        if (cb.checked) {
+          cb.click();
+        }
+      }
+    }
+  } catch {}
 }
 
 /**
@@ -217,7 +350,7 @@ export function setUniversalConsentCookies(): void {
 }
 
 /**
- * Executes full Cookie Consent Guard flow
+ * Executes full Cookie Consent Guard flow with fallback to "Manage settings -> Reject/Save"
  */
 export function handleCookieConsentGuard(
   settings: CookieConsentSettings,
@@ -234,19 +367,61 @@ export function handleCookieConsentGuard(
     unlockPageScroll();
   }
 
-  // Run auto-clicker in stages (at start, and after delay for async loaded CMPs)
-  const attemptReject = () => {
-    const clicked = autoClickRejectButtons();
-    if (clicked) {
+  let isHandled = false;
+
+  // Run auto-clicker with fallback to Manage Settings modal expansion
+  const attemptHandle = () => {
+    if (isHandled) return;
+
+    // Phase 1: Try direct rejection button
+    const directClicked = autoClickRejectButtons();
+    if (directClicked) {
+      isHandled = true;
       unlockPageScroll();
       setUniversalConsentCookies();
       if (onHandled) {
         onHandled(`Auto-rejected cookie tracking dialog on ${domain}`);
       }
+      return;
+    }
+
+    // Phase 2: If no direct reject button, click "Manage settings" / "Preferences"
+    const manageBtn = findManageSettingsButton();
+    if (manageBtn) {
+      manageBtn.click();
+
+      // After modal expands, find Reject or Save Minimal Preferences
+      setTimeout(() => {
+        const subReject = autoClickRejectButtons();
+        if (subReject) {
+          isHandled = true;
+          unlockPageScroll();
+          setUniversalConsentCookies();
+          if (onHandled) {
+            onHandled(`Auto-rejected cookie tracking via Manage Settings on ${domain}`);
+          }
+          return;
+        }
+
+        // Uncheck non-essential tracking categories
+        uncheckNonEssentialCheckboxes();
+
+        const saveBtn = findSavePreferencesButton();
+        if (saveBtn) {
+          saveBtn.click();
+          isHandled = true;
+          unlockPageScroll();
+          setUniversalConsentCookies();
+          if (onHandled) {
+            onHandled(`Saved minimal non-tracking preferences on ${domain}`);
+          }
+        }
+      }, 350);
     }
   };
 
-  attemptReject();
-  setTimeout(attemptReject, 600);
-  setTimeout(attemptReject, 1800);
+  attemptHandle();
+  setTimeout(attemptHandle, 600);
+  setTimeout(attemptHandle, 1800);
+  setTimeout(attemptHandle, 3200);
 }

@@ -91,6 +91,14 @@ const sandbox = {
     },
   },
   document: {
+    readyState: 'complete',
+    head: { appendChild: () => {} },
+    documentElement: { appendChild: () => {} },
+    getElementById: (id) => null,
+    addEventListener: (type, handler) => {
+      eventListeners[`doc:${type}`] = handler;
+    },
+    removeEventListener: () => {},
     createElement: (tag) => {
       if (tag === 'canvas') {
         return {
@@ -126,21 +134,8 @@ const sandbox = {
   AudioBuffer: MockAudioBuffer,
   OfflineAudioContext: MockOfflineAudioContext,
   WebGLRenderingContext: MockWebGLContext,
-  Intl: {
-    DateTimeFormat: class MockDateTimeFormat {
-      resolvedOptions() {
-        return {
-          timeZone: 'Asia/Dhaka',
-          locale: 'en-US',
-        };
-      }
-    },
-  },
-  Date: class MockDate {
-    getTimezoneOffset() {
-      return -360; // UTC+6
-    }
-  },
+  Intl: Intl,
+  Date: Date,
   Float32Array: Float32Array,
   Uint8ClampedArray: Uint8ClampedArray,
   Proxy: Proxy,

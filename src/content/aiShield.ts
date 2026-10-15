@@ -19,7 +19,7 @@
             new CustomEvent('sentry:config', {
               detail: {
                 gpuProfile: cb.gpuProfile || 'intel_uhd',
-                timezoneSpoof: cb.timezoneSpoof || 'system',
+                timezoneSpoof: cb.timezoneSpoof || 'utc',
                 hardwareConcurrencyValue: cb.hardwareConcurrencyValue || 4,
                 batteryShield: cb.batteryShield !== false,
                 visibilityShield: !!cb.visibilityShield,

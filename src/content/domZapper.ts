@@ -356,32 +356,58 @@ import type { ZapRule, PrivacySettings } from '../types/index.ts';
     stopZapper();
   }
 
-  function onKeyDown(e: KeyboardEvent) {
-    if (e.key === 'Escape') {
+  function handleEscapeKey(e: KeyboardEvent) {
+    if (e.key === 'Escape' || e.key === 'Esc' || e.code === 'Escape' || e.keyCode === 27) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       stopZapper();
     }
+  }
+
+  function onZapperContextMenu(e: MouseEvent) {
+    if (!zapperActive) return;
+    // Right-clicking while zapper is active cancels the zapper mode cleanly
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    stopZapper();
   }
 
   function startZapper() {
     zapperActive = true;
     createOverlay();
     setZapperCursor(true);
+    window.addEventListener('keydown', handleEscapeKey, true);
+    document.addEventListener('keydown', handleEscapeKey, true);
+    window.addEventListener('keyup', handleEscapeKey, true);
+    document.addEventListener('keyup', handleEscapeKey, true);
     document.addEventListener('mousemove', onMouseMove, true);
     document.addEventListener('click', onClick, true);
-    document.addEventListener('keydown', onKeyDown, true);
+    document.addEventListener('contextmenu', onZapperContextMenu, true);
   }
 
   function stopZapper() {
     zapperActive = false;
     setZapperCursor(false);
+    window.removeEventListener('keydown', handleEscapeKey, true);
+    document.removeEventListener('keydown', handleEscapeKey, true);
+    window.removeEventListener('keyup', handleEscapeKey, true);
+    document.removeEventListener('keyup', handleEscapeKey, true);
     document.removeEventListener('mousemove', onMouseMove, true);
     document.removeEventListener('click', onClick, true);
-    document.removeEventListener('keydown', onKeyDown, true);
+    document.removeEventListener('contextmenu', onZapperContextMenu, true);
+
+    const existingOverlay = document.getElementById('sentry-zapper-overlay');
+    if (existingOverlay) existingOverlay.remove();
     if (overlay) {
       overlay.remove();
       overlay = null;
       badge = null;
     }
+    const existingStyle = document.getElementById('sentry-zapper-cursor-override');
+    if (existingStyle) existingStyle.remove();
+    zapperCursorStyle = null;
     hoveredElement = null;
   }
 

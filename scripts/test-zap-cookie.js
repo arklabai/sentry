@@ -79,6 +79,26 @@ assert(DISMISS_TEXT_REGEX.test('Dismiss'), 'Matches "Dismiss"');
 assert(DISMISS_TEXT_REGEX.test('Continue without accepting'), 'Matches "Continue without accepting"');
 assert(DISMISS_TEXT_REGEX.test('Opt out'), 'Matches "Opt out"');
 
+// 6. Manage Settings & Modal Preferences Tests
+import {
+  MANAGE_SETTINGS_TEXT_REGEX,
+  SAVE_PREFERENCES_TEXT_REGEX,
+  MANAGE_SETTINGS_BUTTON_SELECTORS,
+} from '../src/lib/cookieGuard.ts';
+
+assert(MANAGE_SETTINGS_TEXT_REGEX.test('Manage settings'), 'Matches "Manage settings"');
+assert(MANAGE_SETTINGS_TEXT_REGEX.test('manage cookies'), 'Matches "manage cookies"');
+assert(MANAGE_SETTINGS_TEXT_REGEX.test('Cookie Preferences'), 'Matches "Cookie Preferences"');
+assert(MANAGE_SETTINGS_TEXT_REGEX.test('Customize'), 'Matches "Customize"');
+assert(!MANAGE_SETTINGS_TEXT_REGEX.test('Accept all'), 'Rejects false positive for "Accept all"');
+
+assert(SAVE_PREFERENCES_TEXT_REGEX.test('Save settings'), 'Matches "Save settings"');
+assert(SAVE_PREFERENCES_TEXT_REGEX.test('Confirm my choices'), 'Matches "Confirm my choices"');
+assert(SAVE_PREFERENCES_TEXT_REGEX.test('Save & exit'), 'Matches "Save & exit"');
+
+assert(MANAGE_SETTINGS_BUTTON_SELECTORS.includes('#onetrust-pc-btn-handler'), 'Covers OneTrust preference button');
+assert(MANAGE_SETTINGS_BUTTON_SELECTORS.includes('#CybotCookiebotDialogBodyButtonDetails'), 'Covers Cookiebot details button');
+
 console.log(`\nPersistent Zap & Cookie Guard Results: ${passed} Passed, ${failed} Failed.`);
 if (failed > 0) {
   process.exit(1);

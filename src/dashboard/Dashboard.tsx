@@ -1612,7 +1612,7 @@ https://news.ycombinator.com/item?id=123456`
                       </p>
                     </div>
                     <span className="text-[10px] font-mono font-bold uppercase text-emerald-700 dark:text-emerald-400">
-                      {settings?.canvasBlocker?.timezoneSpoof || 'system'}
+                      {settings?.canvasBlocker?.timezoneSpoof || 'utc'}
                     </span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1 text-xs font-semibold">
@@ -1622,7 +1622,7 @@ https://news.ycombinator.com/item?id=123456`
                       { id: 'america_new_york', label: 'US Eastern' },
                       { id: 'europe_london', label: 'London GMT' },
                     ].map((tz) => {
-                      const isSelected = (settings?.canvasBlocker?.timezoneSpoof || 'system') === tz.id;
+                      const isSelected = (settings?.canvasBlocker?.timezoneSpoof || 'utc') === tz.id;
                       return (
                         <button
                           key={tz.id}

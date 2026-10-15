@@ -1476,7 +1476,7 @@ export default function Sidepanel() {
                         Timezone & Clock Masking
                       </span>
                       <span className="text-[10px] font-mono font-bold uppercase" style={{ color: 'var(--green-primary)' }}>
-                        {settings.canvasBlocker?.timezoneSpoof || 'system'}
+                        {settings.canvasBlocker?.timezoneSpoof || 'utc'}
                       </span>
                     </div>
                     <div
@@ -1489,7 +1489,7 @@ export default function Sidepanel() {
                         { id: 'america_new_york', label: 'US East' },
                         { id: 'europe_london', label: 'London' },
                       ].map((tz) => {
-                        const isSelected = (settings.canvasBlocker?.timezoneSpoof || 'system') === tz.id;
+                        const isSelected = (settings.canvasBlocker?.timezoneSpoof || 'utc') === tz.id;
                         return (
                           <button
                             key={tz.id}
