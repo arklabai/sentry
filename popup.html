@@ -5,19 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sentry AI Be Fearless Online</title>
     <link rel="stylesheet" href="/src/index.css" />
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('sentry_theme_preference');
+          var isDark = saved === 'dark' || ((!saved || saved === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
+          }
+        } catch(e) {}
+      })();
+    </script>
     <style>
-      body {
+      html, body {
         width: 380px;
         min-height: 580px;
         max-height: 600px;
         margin: 0;
         padding: 0;
-        background-color: #060913;
+        background-color: var(--bg-canvas);
+        color: var(--text-primary);
         overflow-y: auto;
       }
     </style>
   </head>
-  <body class="cyber-grid text-slate-100">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/popup/main.tsx"></script>
   </body>

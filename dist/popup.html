@@ -4,24 +4,40 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sentry AI Be Fearless Online</title>
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('sentry_theme_preference');
+          var isDark = saved === 'dark' || ((!saved || saved === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
+          }
+        } catch(e) {}
+      })();
+    </script>
     <style>
-      body {
+      html, body {
         width: 380px;
         min-height: 580px;
         max-height: 600px;
         margin: 0;
         padding: 0;
-        background-color: #060913;
+        background-color: var(--bg-canvas);
+        color: var(--text-primary);
         overflow-y: auto;
       }
     </style>
     <script type="module" crossorigin src="./assets/popup.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/useTheme-YhhQwkYK.js">
-    <link rel="modulepreload" crossorigin href="./assets/volume-2-Ck2hd_6d.js">
-    <link rel="modulepreload" crossorigin href="./assets/sliders-vertical-K2OgqZgx.js">
+    <link rel="modulepreload" crossorigin href="./assets/useTheme-41RaSEuq.js">
+    <link rel="modulepreload" crossorigin href="./assets/zap-BuXcQTY2.js">
+    <link rel="modulepreload" crossorigin href="./assets/sliders-vertical-DHzULP4c.js">
     <link rel="stylesheet" crossorigin href="./assets/useTheme.css">
   </head>
-  <body class="cyber-grid text-slate-100">
+  <body>
     <div id="root"></div>
   </body>
 </html>

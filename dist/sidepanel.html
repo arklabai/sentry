@@ -4,23 +4,39 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sentry AI Be Fearless Online</title>
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('sentry_theme_preference');
+          var isDark = saved === 'dark' || ((!saved || saved === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
+          }
+        } catch(e) {}
+      })();
+    </script>
     <style>
       html, body {
         width: 100%;
         height: 100%;
         margin: 0;
         padding: 0;
-        background-color: #0b0f19;
+        background-color: var(--bg-canvas);
+        color: var(--text-primary);
         overflow-x: hidden;
       }
     </style>
     <script type="module" crossorigin src="./assets/sidepanel.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/useTheme-YhhQwkYK.js">
-    <link rel="modulepreload" crossorigin href="./assets/volume-2-Ck2hd_6d.js">
-    <link rel="modulepreload" crossorigin href="./assets/trash-DcxRYOlR.js">
+    <link rel="modulepreload" crossorigin href="./assets/useTheme-41RaSEuq.js">
+    <link rel="modulepreload" crossorigin href="./assets/zap-BuXcQTY2.js">
+    <link rel="modulepreload" crossorigin href="./assets/trash-tcqFmQ4i.js">
     <link rel="stylesheet" crossorigin href="./assets/useTheme.css">
   </head>
-  <body class="cyber-grid text-slate-100 min-h-screen">
+  <body class="min-h-screen">
     <div id="root" class="h-full"></div>
   </body>
 </html>

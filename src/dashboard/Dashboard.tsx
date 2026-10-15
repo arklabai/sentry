@@ -321,7 +321,7 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto w-full flex-1 p-6 space-y-6">
         {/* Global Protection Metrics Banner */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="sentry-card p-4 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
+          <div className="sentry-card border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
             <div className="flex items-center justify-between text-stone-500 dark:text-[#A6ADC8] mb-1">
               <span className="text-xs font-mono uppercase tracking-wider">Total Trackers Blocked</span>
               <ShieldAlert className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
@@ -332,7 +332,7 @@ export default function Dashboard() {
             <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">DNR static & dynamic filters</p>
           </div>
 
-          <div className="sentry-card p-4 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
+          <div className="sentry-card border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
             <div className="flex items-center justify-between text-stone-500 dark:text-[#A6ADC8] mb-1">
               <span className="text-xs font-mono uppercase tracking-wider">Fingerprints Scrambled</span>
               <ShieldCheck className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
@@ -343,7 +343,7 @@ export default function Dashboard() {
             <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">Canvas, WebGL & Audio noise</p>
           </div>
 
-          <div className="sentry-card p-4 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
+          <div className="sentry-card border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
             <div className="flex items-center justify-between text-stone-500 dark:text-[#A6ADC8] mb-1">
               <span className="text-xs font-mono uppercase tracking-wider">AI Scrapers Blocked</span>
               <Bot className="h-4 w-4 text-rose-600 dark:text-rose-400" />
@@ -354,7 +354,7 @@ export default function Dashboard() {
             <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">Meta, ByteDance, TikTok pixels</p>
           </div>
 
-          <div className="sentry-card p-4 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
+          <div className="sentry-card border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
             <div className="flex items-center justify-between text-stone-500 dark:text-[#A6ADC8] mb-1">
               <span className="text-xs font-mono uppercase tracking-wider">Brokers Cleared / Audited</span>
               <Database className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
@@ -370,7 +370,7 @@ export default function Dashboard() {
         {activeTab === 'brokers' && (
           <div className="space-y-6">
             {/* Identity Profile & Local AES-256 Vault */}
-            <div className="sentry-card p-5 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
+            <div className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-100 dark:border-[#383852] pb-4">
                 <div>
                   <div className="flex items-center space-x-2">
@@ -520,7 +520,7 @@ export default function Dashboard() {
             </div>
 
             {/* Broker Registry & Workflow Table */}
-            <div className="sentry-card p-5 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors">
+            <div className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <h3 className="text-base font-bold text-stone-900 dark:text-white">
@@ -643,7 +643,7 @@ export default function Dashboard() {
         {/* TAB 2: AI TRAINING OPT-OUT HUB */}
         {activeTab === 'ai-shield' && (
           <div className="space-y-6">
-            <div className="sentry-card p-5 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
+            <div className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
               <div className="flex items-center space-x-2 border-b border-stone-100 dark:border-[#383852] pb-3">
                 <Bot className="h-6 w-6 text-emerald-700 dark:text-emerald-400" />
                 <div>
@@ -818,7 +818,7 @@ export default function Dashboard() {
         {/* TAB 3: DOMAIN MATRIX & CUSTOM RULES */}
         {activeTab === 'matrix' && (
           <div className="space-y-6">
-            <div className="sentry-card p-5 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors">
+            <div className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors">
               <div>
                 <h2 className="text-base font-bold text-stone-900 dark:text-white">
                   Domain Whitelist & Exception Matrix
@@ -877,7 +877,7 @@ export default function Dashboard() {
             </div>
 
             {/* DeclarativeNetRequest Active Filters Status */}
-            <div className="sentry-card p-5 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-3 transition-colors">
+            <div className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-3 transition-colors">
               <h3 className="text-sm font-bold text-stone-900 dark:text-white">
                 DeclarativeNetRequest Static Engine Rulesets
               </h3>
@@ -916,7 +916,7 @@ export default function Dashboard() {
 
         {/* TAB 4: LIVE THREAT LEDGER */}
         {activeTab === 'ledger' && (
-          <div className="sentry-card p-5 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors">
+          <div className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors">
             <div className="flex items-center justify-between border-b border-stone-100 dark:border-[#383852] pb-3">
               <div>
                 <h2 className="text-base font-bold text-stone-900 dark:text-white">
@@ -982,7 +982,7 @@ export default function Dashboard() {
         {/* Modal: Formal Deletion Demand Notice */}
         {selectedBroker && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-            <div className="sentry-card max-w-2xl w-full p-6 space-y-4 bg-white dark:bg-[#252538] border border-stone-300 dark:border-[#383852] rounded-2xl shadow-xl">
+            <div className="sentry-card max-w-2xl w-full p-6 space-y-4 border border-stone-300 dark:border-[#383852] rounded-2xl shadow-xl">
               <div className="flex items-center justify-between border-b border-stone-200 dark:border-[#383852] pb-3">
                 <div>
                   <h3 className="text-base font-bold text-stone-900 dark:text-white">
