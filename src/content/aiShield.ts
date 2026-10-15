@@ -23,6 +23,7 @@
                 hardwareConcurrencyValue: cb.hardwareConcurrencyValue || 4,
                 batteryShield: cb.batteryShield !== false,
                 visibilityShield: !!cb.visibilityShield,
+                allowRightClick: cb.allowRightClick !== false && res.sentry_settings.allowRightClick !== false,
               },
             })
           );

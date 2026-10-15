@@ -17,6 +17,7 @@ export const DEFAULT_SETTINGS: PrivacySettings = {
   fontShield: true,
   aiScraperShield: true,
   elementZapperEnabled: true,
+  allowRightClick: true,
   whitelistedDomains: [],
   customRules: [],
 
@@ -46,6 +47,7 @@ export const DEFAULT_SETTINGS: PrivacySettings = {
     timezoneSpoof: 'system',
     hardwareConcurrencyValue: 4,
     visibilityShield: false,
+    allowRightClick: true,
   },
 
   // Full Dynamic Traffic Matrix Engine Settings

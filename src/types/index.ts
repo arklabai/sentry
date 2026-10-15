@@ -57,6 +57,7 @@ export interface CanvasBlockerSettings {
   timezoneSpoof?: TimezoneSpoof;
   hardwareConcurrencyValue?: number;
   visibilityShield?: boolean;
+  allowRightClick?: boolean;
 }
 
 export interface UBlockSettings {
@@ -136,6 +137,7 @@ export interface PrivacySettings {
   aiDefense: AiDefenseSettings;
   urlCleaner: UrlCleanerSettings;
   cookieConsent: CookieConsentSettings;
+  allowRightClick?: boolean;
 }
 
 export interface NetworkLogEntry {

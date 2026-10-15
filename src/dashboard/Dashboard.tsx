@@ -38,6 +38,7 @@ import {
   HiPhone,
   HiMapPin,
   HiGlobeAmericas,
+  HiCursorArrowRays,
 } from 'react-icons/hi2';
 import {
   BrokerEntry,
@@ -1856,7 +1857,114 @@ https://news.ycombinator.com/item?id=123456`
               </div>
             </div>
 
-            {/* PERSISTENT SITE ZAP RULES MANAGER (uBlock Style) */}
+            {/* ALLOW RIGHT-CLICK & UNBLOCK COPY SHIELD */}
+            <div className="sentry-card p-6 rounded-2xl space-y-4 transition-all">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-stone-100 dark:border-[#383852] pb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400 shrink-0">
+                    <HiCursorArrowRays className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <h2 className="text-base font-bold text-stone-900 dark:text-white">
+                        Allow Right-Click &amp; Unblock Copy
+                      </h2>
+                      <span className="rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                        ANTI-RESTRICTION
+                      </span>
+                    </div>
+                    <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-0.5">
+                      Neutralizes hostile site scripts blocking right-click context menus, text selection, and clipboard copy operations.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <span className="text-xs font-medium text-stone-500 dark:text-[#A6ADC8]">Enforce on all sites:</span>
+                  <button
+                    onClick={() => {
+                      if (!settings) return;
+                      const isEnabled = !(settings.allowRightClick ?? true);
+                      const updated = {
+                        ...settings,
+                        allowRightClick: isEnabled,
+                        canvasBlocker: {
+                          ...(settings.canvasBlocker || {}),
+                          allowRightClick: isEnabled,
+                        },
+                      };
+                      setSettings(updated);
+                      chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
+                    }}
+                    className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                    style={{
+                      backgroundColor: (settings?.allowRightClick ?? true) ? 'var(--green-primary)' : 'var(--border-strong)',
+                    }}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                        (settings?.allowRightClick ?? true) ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                <div className="sentry-inset p-4 rounded-xl border border-stone-200 dark:border-[#383852] flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="text-xs font-semibold text-stone-900 dark:text-white mb-1">Context Menu Restore</div>
+                    <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
+                      Halts hostile <code className="text-emerald-700 dark:text-emerald-400 font-mono bg-emerald-50 dark:bg-emerald-950/50 px-1 py-0.5 rounded">contextmenu</code> event hijackers at the capture phase.
+                    </p>
+                  </div>
+                  <div className="pt-3 flex items-center justify-between border-t border-stone-200/70 dark:border-[#383852]">
+                    <span className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold">
+                      STATUS: ACTIVE
+                    </span>
+                    <span className="rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold">
+                      UNRESTRICTED
+                    </span>
+                  </div>
+                </div>
+
+                <div className="sentry-inset p-4 rounded-xl border border-stone-200 dark:border-[#383852] flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="text-xs font-semibold text-stone-900 dark:text-white mb-1">Text Selection &amp; CSS Unlock</div>
+                    <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
+                      Overrides <code className="text-emerald-700 dark:text-emerald-400 font-mono bg-emerald-50 dark:bg-emerald-950/50 px-1 py-0.5 rounded">user-select: none</code> and cancels <code className="text-emerald-700 dark:text-emerald-400 font-mono bg-emerald-50 dark:bg-emerald-950/50 px-1 py-0.5 rounded">selectstart</code> blocking.
+                    </p>
+                  </div>
+                  <div className="pt-3 flex items-center justify-between border-t border-stone-200/70 dark:border-[#383852]">
+                    <span className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold">
+                      STATUS: ACTIVE
+                    </span>
+                    <span className="rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold">
+                      ENABLED
+                    </span>
+                  </div>
+                </div>
+
+                <div className="sentry-inset p-4 rounded-xl border border-stone-200 dark:border-[#383852] flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="text-xs font-semibold text-stone-900 dark:text-white mb-1">Clipboard Copy Bypass</div>
+                    <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] leading-relaxed">
+                      Prevents sites from intercepting <code className="text-emerald-700 dark:text-emerald-400 font-mono bg-emerald-50 dark:bg-emerald-950/50 px-1 py-0.5 rounded">copy</code> and <code className="text-emerald-700 dark:text-emerald-400 font-mono bg-emerald-50 dark:bg-emerald-950/50 px-1 py-0.5 rounded">cut</code> events to block copying quotes or code snippets.
+                    </p>
+                  </div>
+                  <div className="pt-3 flex items-center justify-between border-t border-stone-200/70 dark:border-[#383852]">
+                    <span className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold">
+                      STATUS: ACTIVE
+                    </span>
+                    <span className="rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold">
+                      UNLOCKED
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* PERSISTENT SITE ZAP RULES MANAGER */}
             <div className="sentry-card p-6 rounded-2xl space-y-4 transition-all">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-stone-100 dark:border-[#383852] pb-4">
                 <div className="flex items-center space-x-3">
@@ -1869,7 +1977,7 @@ https://news.ycombinator.com/item?id=123456`
                         Persistent Site Zap Rules Manager
                       </h2>
                       <span className="rounded-full bg-rose-50 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
-                        uBlock Origin Parity
+                        Permanent Cosmetic Shield
                       </span>
                     </div>
                     <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-0.5">

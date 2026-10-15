@@ -25,6 +25,7 @@ import {
   HiClipboardDocument,
   HiCheck,
   HiSparkles,
+  HiCursorArrowRays,
 } from 'react-icons/hi2';
 import {
   PrivacySettings,
@@ -157,6 +158,7 @@ export default function Sidepanel() {
       | 'cookieConsent'
       | 'thirdPartyCookies'
       | 'batteryShield'
+      | 'allowRightClick'
   ) => {
     if (!settings) return;
     if (key === 'batteryShield') {
@@ -166,6 +168,20 @@ export default function Sidepanel() {
         canvasBlocker: {
           ...settings.canvasBlocker,
           batteryShield: isEnabled,
+        },
+      };
+      setSettings(updated);
+      chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
+      return;
+    }
+    if (key === 'allowRightClick') {
+      const isEnabled = !(settings.allowRightClick !== false);
+      const updated: PrivacySettings = {
+        ...settings,
+        allowRightClick: isEnabled,
+        canvasBlocker: {
+          ...settings.canvasBlocker,
+          allowRightClick: isEnabled,
         },
       };
       setSettings(updated);
@@ -932,6 +948,12 @@ export default function Sidepanel() {
                     desc: 'Auto-declines tracking & dismisses popups',
                     icon: HiCheckCircle,
                   },
+                  {
+                    key: 'allowRightClick' as const,
+                    label: 'Allow Right-Click & Copy',
+                    desc: 'Unblocks disabled context menus & copy protection',
+                    icon: HiCursorArrowRays,
+                  },
                 ].map((item) => {
                   const Icon = item.icon;
                   const isEnabled =
@@ -939,6 +961,8 @@ export default function Sidepanel() {
                       ? settings.urlCleaner?.enabled ?? true
                       : item.key === 'cookieConsent'
                       ? settings.cookieConsent?.enabled ?? true
+                      : item.key === 'allowRightClick'
+                      ? settings.allowRightClick !== false
                       : item.key === 'thirdPartyCookies'
                       ? (settings.uBlock?.blockThirdPartyCookies || settings.uBlock?.matrix?.thirdPartyCookies === 'block') ?? false
                       : settings[item.key];
@@ -1525,6 +1549,11 @@ export default function Sidepanel() {
                         key: 'navigatorHardwareShield' as const,
                         label: 'Hardware Concurrency Masking',
                         desc: 'Normalizes CPU threads to 4 cores',
+                      },
+                      {
+                        key: 'allowRightClick' as const,
+                        label: 'Allow Right-Click & Unblock Copy',
+                        desc: 'Bypasses hostile context menu and text selection traps',
                       },
                     ].map((item) => (
                       <div

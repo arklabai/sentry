@@ -115,6 +115,11 @@
     if (typeof detail.batteryShield === 'boolean') {
       batteryShieldEnabled = detail.batteryShield;
     }
+    if (typeof detail.allowRightClick === 'boolean') {
+      allowRightClickEnabled = detail.allowRightClick;
+      updateAllowRightClickStyles();
+      clearInlineBlockers();
+    }
   });
 
   // ==========================================
@@ -507,8 +512,74 @@
     }
   };
 
+  // ==========================================
+  // 8. ABSOLUTE ALLOW RIGHT-CLICK & UNLOCK COPY ENGINE
+  // ==========================================
+  let allowRightClickEnabled = true;
+
+  function updateAllowRightClickStyles() {
+    if (typeof document === 'undefined') return;
+    const styleId = 'sentry-allow-right-click-styles';
+    let styleEl = document.getElementById(styleId);
+    if (allowRightClickEnabled) {
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = styleId;
+        styleEl.textContent = `
+          * {
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+            user-select: text !important;
+          }
+        `;
+        const target = document.head || document.documentElement;
+        if (target) target.appendChild(styleEl);
+      }
+    } else if (styleEl) {
+      styleEl.remove();
+    }
+  }
+
+  function unblockEvents(e: Event) {
+    if (!allowRightClickEnabled) return;
+    // Stop website scripts from intercepting and cancelling contextmenu / selection / copy
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  }
+
+  const guardedEvents = ['contextmenu', 'selectstart', 'copy', 'cut', 'dragstart'];
+  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    guardedEvents.forEach((type) => {
+      window.addEventListener(type, unblockEvents, true);
+      document.addEventListener(type, unblockEvents, true);
+    });
+  }
+
+  const clearInlineBlockers = () => {
+    if (!allowRightClickEnabled || typeof window === 'undefined' || typeof document === 'undefined') return;
+    try {
+      if (window.oncontextmenu) window.oncontextmenu = null;
+      if (document.oncontextmenu) document.oncontextmenu = null;
+      if (document.body && document.body.oncontextmenu) document.body.oncontextmenu = null;
+      if (document.onselectstart) document.onselectstart = null;
+      if (document.oncopy) document.oncopy = null;
+      if (document.oncut) document.oncut = null;
+      if (document.ondragstart) document.ondragstart = null;
+    } catch {}
+  };
+
+  clearInlineBlockers();
+  updateAllowRightClickStyles();
+  if (typeof document !== 'undefined' && document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      clearInlineBlockers();
+      updateAllowRightClickStyles();
+    });
+  }
+
   console.info(
-    '%c[Sentry AI]%c Complete Defense Matrix Active (Canvas, WebGL, Audio, Battery, Concurrency, Timezone).',
+    '%c[Sentry AI]%c Complete Defense Matrix Active (Canvas, WebGL, Audio, Battery, Concurrency, Timezone, Allow Right-Click).',
     'color: #38bdf8; font-weight: bold; background: #0b0f19; padding: 2px 6px; border-radius: 4px;',
     'color: #00f0ff;'
   );
