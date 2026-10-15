@@ -42,6 +42,13 @@
         "mac": "Command+Shift+S"
       },
       "description": "Open Sentry AI Privacy Sidebar"
+    },
+    "activate_element_zapper": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+E",
+        "mac": "Command+Shift+E"
+      },
+      "description": "Activate Sentry AI Element Zapper"
     }
   },
   "options_page": "dashboard.html",

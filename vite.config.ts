@@ -16,23 +16,11 @@ export default defineConfig({
         dashboard: resolve(__dirname, 'dashboard.html'),
         sidepanel: resolve(__dirname, 'sidepanel.html'),
         serviceWorker: resolve(__dirname, 'src/background/serviceWorker.ts'),
-        canvasDefender: resolve(__dirname, 'src/content/canvasDefender.ts'),
-        aiShield: resolve(__dirname, 'src/content/aiShield.ts'),
-        domZapper: resolve(__dirname, 'src/content/domZapper.ts'),
-        urlCleaner: resolve(__dirname, 'src/content/urlCleaner.ts'),
       },
       output: {
         entryFileNames: (chunkInfo) => {
           if (chunkInfo.name === 'serviceWorker') {
             return 'background/[name].js';
-          }
-          if (
-            chunkInfo.name === 'canvasDefender' ||
-            chunkInfo.name === 'aiShield' ||
-            chunkInfo.name === 'domZapper' ||
-            chunkInfo.name === 'urlCleaner'
-          ) {
-            return 'content/[name].js';
           }
           return 'assets/[name].js';
         },

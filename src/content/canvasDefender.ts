@@ -141,10 +141,14 @@
     try {
       const delta = (domainRng() - 0.5) * 0.0001;
       const proxy = new Proxy(metrics, {
-        get(target, prop, receiver) {
-          const val = Reflect.get(target, prop, receiver);
+        get(target, prop) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const val = (target as any)[prop];
           if (typeof val === 'number') {
             return val + delta;
+          }
+          if (typeof val === 'function') {
+            return val.bind(target);
           }
           return val;
         },

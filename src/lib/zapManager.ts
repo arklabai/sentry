@@ -146,10 +146,11 @@ export function generateOptimalSelector(el: HTMLElement): string {
 }
 
 /**
- * Normalizes host to domain key (stripping port if present)
+ * Normalizes host to domain key (stripping port and www if present)
  */
 export function normalizeDomain(rawDomain: string): string {
-  return rawDomain.toLowerCase().replace(/:\d+$/, '').trim();
+  if (!rawDomain) return '';
+  return rawDomain.toLowerCase().replace(/:\d+$/, '').replace(/^www\./, '').trim();
 }
 
 /**
@@ -176,7 +177,7 @@ export async function getDomainZapRules(domain: string): Promise<ZapRule[]> {
   const matched: ZapRule[] = [];
   const seenIds = new Set<string>();
 
-  // Check exact domain
+  // Check normalized domain
   if (allRules[norm]) {
     for (const r of allRules[norm]) {
       if (!seenIds.has(r.id)) {
@@ -186,9 +187,19 @@ export async function getDomainZapRules(domain: string): Promise<ZapRule[]> {
     }
   }
 
-  // Check apex domain (e.g., example.com for sub.example.com)
+  // Check with www if stored under legacy www key
+  if (allRules[`www.${norm}`]) {
+    for (const r of allRules[`www.${norm}`]) {
+      if (!seenIds.has(r.id)) {
+        seenIds.add(r.id);
+        matched.push(r);
+      }
+    }
+  }
+
+  // Check apex domain (e.g., example.com for sub.example.com, skipping IP addresses)
   const parts = norm.split('.');
-  if (parts.length > 2) {
+  if (parts.length > 2 && !/^\d+\.\d+\.\d+\.\d+$/.test(norm)) {
     const apex = parts.slice(-2).join('.');
     if (allRules[apex]) {
       for (const r of allRules[apex]) {

@@ -262,7 +262,10 @@ export default function Sidepanel() {
   };
 
   const handleActivateZapper = () => {
-    chrome.runtime.sendMessage({ action: 'ACTIVATE_ELEMENT_ZAPPER' });
+    chrome.runtime.sendMessage({
+      action: 'ACTIVATE_ELEMENT_ZAPPER',
+      tabId: stats?.tabId,
+    });
   };
 
   const handleReloadTab = () => {

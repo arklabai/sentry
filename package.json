@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && node scripts/build-extension.js",
     "package": "npm run build && (cd dist && zip -r ../sentry-ai-v1.0.0.zip .)",
     "preview": "vite preview"
   },

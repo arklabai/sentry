@@ -90,7 +90,10 @@ export default function Popup() {
   };
 
   const handleActivateZapper = () => {
-    chrome.runtime.sendMessage({ action: 'ACTIVATE_ELEMENT_ZAPPER' }, () => {
+    chrome.runtime.sendMessage({
+      action: 'ACTIVATE_ELEMENT_ZAPPER',
+      tabId: stats?.tabId,
+    }, () => {
       window.close();
     });
   };

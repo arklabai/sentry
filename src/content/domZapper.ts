@@ -139,8 +139,9 @@ import type { ZapRule, PrivacySettings } from '../types/index.ts';
 
   function initCookieConsent() {
     try {
-      chrome.storage.local.get(['sentry_privacy_settings'], (res) => {
-        const settings = (res?.sentry_privacy_settings as PrivacySettings)?.cookieConsent || DEFAULT_COOKIE_CONSENT_SETTINGS;
+      chrome.storage.local.get(['sentry_settings', 'sentry_privacy_settings'], (res) => {
+        const raw = (res?.sentry_settings || res?.sentry_privacy_settings) as PrivacySettings;
+        const settings = raw?.cookieConsent || DEFAULT_COOKIE_CONSENT_SETTINGS;
         if (settings.enabled) {
           handleCookieConsentGuard(settings, currentHost, (detail) => {
             try {
@@ -170,6 +171,29 @@ import type { ZapRule, PrivacySettings } from '../types/index.ts';
   // 3. INTERACTIVE POINT-AND-CLICK ZAPPER
   // =========================================================================
 
+  let zapperCursorStyle: HTMLStyleElement | null = null;
+
+  function setZapperCursor(enabled: boolean) {
+    if (enabled) {
+      if (!zapperCursorStyle) {
+        zapperCursorStyle = document.createElement('style');
+        zapperCursorStyle.id = 'sentry-zapper-cursor-override';
+        zapperCursorStyle.textContent = `
+          * {
+            cursor: crosshair !important;
+          }
+        `;
+        const target = document.head || document.documentElement;
+        if (target) target.appendChild(zapperCursorStyle);
+      }
+    } else {
+      if (zapperCursorStyle) {
+        zapperCursorStyle.remove();
+        zapperCursorStyle = null;
+      }
+    }
+  }
+
   function createOverlay() {
     if (overlay) return;
 
@@ -178,8 +202,8 @@ import type { ZapRule, PrivacySettings } from '../types/index.ts';
     overlay.style.position = 'fixed';
     overlay.style.pointerEvents = 'none';
     overlay.style.border = '2px solid #ef4444';
-    overlay.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
-    overlay.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.5)';
+    overlay.style.backgroundColor = 'rgba(239, 68, 68, 0.2)';
+    overlay.style.boxShadow = '0 0 16px rgba(239, 68, 68, 0.6)';
     overlay.style.zIndex = '2147483647';
     overlay.style.transition = 'all 0.04s ease-out';
     overlay.style.display = 'none';
@@ -193,17 +217,21 @@ import type { ZapRule, PrivacySettings } from '../types/index.ts';
     badge.style.color = '#f38ba8';
     badge.style.border = '1px solid #ef4444';
     badge.style.borderRadius = '6px';
-    badge.style.padding = '3px 8px';
+    badge.style.padding = '4px 10px';
     badge.style.fontSize = '11px';
     badge.style.fontFamily = 'monospace';
     badge.style.fontWeight = 'bold';
     badge.style.whiteSpace = 'nowrap';
-    badge.style.marginBottom = '4px';
-    badge.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.4)';
+    badge.style.marginBottom = '6px';
+    badge.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.5)';
+    badge.style.pointerEvents = 'none'; // Never block mouse pointer events
     badge.textContent = 'ZAP TARGET (Click to Permanently Hide | ESC to Exit)';
 
     overlay.appendChild(badge);
-    document.body.appendChild(overlay);
+    const target = document.body || document.documentElement;
+    if (target) {
+      target.appendChild(overlay);
+    }
   }
 
   function showToast(message: string) {
@@ -224,7 +252,10 @@ import type { ZapRule, PrivacySettings } from '../types/index.ts';
     toast.style.transition = 'all 0.3s ease';
     toast.textContent = message;
 
-    document.body.appendChild(toast);
+    const target = document.body || document.documentElement;
+    if (target) {
+      target.appendChild(toast);
+    }
     setTimeout(() => {
       toast.style.opacity = '0';
       toast.style.transform = 'translateY(10px)';
@@ -252,17 +283,23 @@ import type { ZapRule, PrivacySettings } from '../types/index.ts';
         overlay.style.height = `${rect.height}px`;
 
         const selectorPreview = generateOptimalSelector(target);
-        badge.textContent = `⚡ ZAP: <${selectorPreview}> (Click to Save Rule | ESC to Exit)`;
+        badge.textContent = `ZAP: <${selectorPreview}> (Click to Save Rule | ESC to Exit)`;
       }
     }
   }
 
   async function onClick(e: MouseEvent) {
-    if (!zapperActive || !hoveredElement) return;
+    if (!zapperActive) return;
     e.preventDefault();
     e.stopPropagation();
+    e.stopImmediatePropagation();
 
-    const targetEl = hoveredElement;
+    const targetEl = (hoveredElement || document.elementFromPoint(e.clientX, e.clientY)) as HTMLElement;
+    if (!targetEl || targetEl === document.body || targetEl === document.documentElement) {
+      stopZapper();
+      return;
+    }
+
     const selector = generateOptimalSelector(targetEl);
 
     // 1. Hide element immediately
@@ -271,10 +308,13 @@ import type { ZapRule, PrivacySettings } from '../types/index.ts';
     // 2. Persist rule locally in chrome.storage.local
     try {
       const savedRule = await savePersistentZapRule(currentHost, selector);
-      activeZapRules.push(savedRule);
+      if (!activeZapRules.some((r) => r.id === savedRule.id)) {
+        activeZapRules.push(savedRule);
+      }
       updatePersistentStylesheet(activeZapRules);
+      purgeMatchingElements();
 
-      showToast(`⚡ Sentry AI: Rule saved! <${selector}> permanently hidden on ${currentHost}`);
+      showToast(`Sentry AI: Rule saved! <${selector}> permanently hidden on ${currentHost}`);
 
       // 3. Notify background service worker to update stats and threats
       chrome.runtime.sendMessage({
@@ -302,23 +342,24 @@ import type { ZapRule, PrivacySettings } from '../types/index.ts';
   function startZapper() {
     zapperActive = true;
     createOverlay();
+    setZapperCursor(true);
     document.addEventListener('mousemove', onMouseMove, true);
     document.addEventListener('click', onClick, true);
     document.addEventListener('keydown', onKeyDown, true);
-    document.body.style.cursor = 'crosshair';
   }
 
   function stopZapper() {
     zapperActive = false;
+    setZapperCursor(false);
     document.removeEventListener('mousemove', onMouseMove, true);
     document.removeEventListener('click', onClick, true);
     document.removeEventListener('keydown', onKeyDown, true);
-    document.body.style.cursor = 'default';
     if (overlay) {
       overlay.remove();
       overlay = null;
       badge = null;
     }
+    hoveredElement = null;
   }
 
   // =========================================================================

@@ -229,13 +229,110 @@ chrome.action?.onClicked?.addListener(async (tab) => {
   }
 });
 
-// Side panel keyboard shortcut handler
+// Track last active web tab to ensure side panels and popups always target the correct page
+let lastActiveWebTabId: number | null = null;
+
+function isWebTab(tab?: chrome.tabs.Tab | null): boolean {
+  if (!tab || !tab.id || !tab.url) return false;
+  return (
+    (tab.url.startsWith('http://') || tab.url.startsWith('https://')) &&
+    !tab.url.startsWith('chrome-extension://') &&
+    !tab.url.startsWith('chrome://') &&
+    !tab.url.startsWith('about:')
+  );
+}
+
+chrome.tabs?.onActivated?.addListener(async (activeInfo) => {
+  try {
+    const tab = await chrome.tabs.get(activeInfo.tabId);
+    if (isWebTab(tab)) {
+      lastActiveWebTabId = tab.id ?? null;
+    }
+  } catch {}
+});
+
+chrome.tabs?.onUpdated?.addListener((tabId, _changeInfo, tab) => {
+  if (tab.active && isWebTab(tab)) {
+    lastActiveWebTabId = tabId;
+  }
+});
+
+/**
+ * Resolves the user's active web page tab, ensuring internal extension pages
+ * (like sidepanel.html or popup.html) or about:blank are never mistakenly targeted.
+ */
+async function getTargetWebTab(explicitTabId?: number): Promise<chrome.tabs.Tab | undefined> {
+  // 1. If explicit tab provided and is a valid web tab
+  if (explicitTabId && explicitTabId > 0) {
+    try {
+      const tab = await chrome.tabs.get(explicitTabId);
+      if (isWebTab(tab)) return tab;
+    } catch {}
+  }
+
+  // 2. Try the tracked lastActiveWebTabId
+  if (lastActiveWebTabId && lastActiveWebTabId > 0) {
+    try {
+      const tab = await chrome.tabs.get(lastActiveWebTabId);
+      if (isWebTab(tab)) return tab;
+    } catch {}
+  }
+
+  // 3. Try active tab in lastFocusedWindow (standard when clicked from Side Panel or toolbar)
+  try {
+    const tabsLast = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    const validLast = tabsLast.find(isWebTab);
+    if (validLast) return validLast;
+  } catch {}
+
+  // 4. Try active tab in currentWindow
+  try {
+    const tabsCurr = await chrome.tabs.query({ active: true, currentWindow: true });
+    const validCurr = tabsCurr.find(isWebTab);
+    if (validCurr) return validCurr;
+  } catch {}
+
+  // 5. Try any active tab in any window
+  try {
+    const allActive = await chrome.tabs.query({ active: true });
+    const webActive = allActive.find(isWebTab);
+    if (webActive) return webActive;
+  } catch {}
+
+  // 6. Find any open HTTP/HTTPS tab
+  try {
+    const allTabs = await chrome.tabs.query({});
+    const httpTab = allTabs.find(isWebTab);
+    if (httpTab) return httpTab;
+
+    // 7. Fallback to any non-extension tab
+    return allTabs.find(
+      (t) => t.id && t.url && !t.url.startsWith('chrome-extension://') && !t.url.startsWith('chrome://') && !t.url.startsWith('about:')
+    );
+  } catch {}
+  return undefined;
+}
+
+// Side panel & element zapper keyboard shortcut handler
 chrome.commands.onCommand.addListener(async (command) => {
   if (command === 'open_side_panel') {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tab = await getTargetWebTab();
     if (tab?.windowId) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (chrome as any).sidePanel?.open?.({ windowId: tab.windowId });
+    }
+  } else if (command === 'activate_element_zapper') {
+    const tab = await getTargetWebTab();
+    if (tab && tab.id) {
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ['content/domZapper.js'],
+        });
+      } catch {}
+      chrome.tabs.sendMessage(tab.id, { action: 'ACTIVATE_ZAPPER' }, () => {
+        if (chrome.runtime.lastError) {}
+      });
     }
   }
 });
@@ -301,7 +398,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     case 'GET_ACTIVE_TAB_STATS': {
-      chrome.tabs.query({ active: true, currentWindow: true }).then(([activeTab]) => {
+      getTargetWebTab(message.tabId).then((activeTab) => {
         if (activeTab && activeTab.id) {
           const stats = getOrCreateTabStats(activeTab.id, activeTab.url);
           getSettings().then((settings) => {
@@ -337,7 +434,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     case 'OPEN_SIDE_PANEL': {
-      chrome.tabs.query({ active: true, currentWindow: true }).then(([activeTab]) => {
+      getTargetWebTab().then((activeTab) => {
         if (activeTab?.windowId) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (chrome as any).sidePanel?.open?.({ windowId: activeTab.windowId });
@@ -362,22 +459,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     case 'ACTIVATE_ELEMENT_ZAPPER': {
-      chrome.tabs.query({ active: true, currentWindow: true }).then(async ([activeTab]) => {
+      getTargetWebTab(message.tabId).then(async (activeTab) => {
         if (activeTab && activeTab.id) {
+          try {
+            await chrome.tabs.update(activeTab.id, { active: true });
+            if (activeTab.windowId) {
+              await chrome.windows.update(activeTab.windowId, { focused: true });
+            }
+          } catch {}
+
           try {
             await chrome.scripting.executeScript({
               target: { tabId: activeTab.id },
               files: ['content/domZapper.js'],
             });
           } catch {
-            // Script may already be active
+            // Script may already be active or restricted
           }
           chrome.tabs.sendMessage(activeTab.id, { action: 'ACTIVATE_ZAPPER' }, () => {
             if (chrome.runtime.lastError) {
               // Suppress communication errors
             }
           });
-          sendResponse({ status: 'ok' });
+          sendResponse({ status: 'ok', tabId: activeTab.id });
+        } else {
+          sendResponse({ error: 'No active web tab found' });
         }
       });
       return true;
@@ -500,7 +606,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-// Context Menu: Setup & Event Handlers (ClearURLs feature)
+// Context Menu: Setup & Event Handlers (ClearURLs & Element Zapper feature)
 function setupContextMenus() {
   if (!chrome.contextMenus) return;
   chrome.contextMenus.removeAll(() => {
@@ -514,10 +620,31 @@ function setupContextMenus() {
       title: 'Open Clean Link in New Tab',
       contexts: ['link'],
     });
+    chrome.contextMenus.create({
+      id: 'sentry-zap-page',
+      title: 'Zap Elements on this Page (Sentry AI)',
+      contexts: ['page', 'image', 'video'],
+    });
   });
 }
 
-chrome.contextMenus?.onClicked.addListener((info, tab) => {
+chrome.contextMenus?.onClicked.addListener(async (info, tab) => {
+  if (info.menuItemId === 'sentry-zap-page') {
+    const targetTab = tab?.id ? tab : await getTargetWebTab();
+    if (targetTab && targetTab.id) {
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId: targetTab.id },
+          files: ['content/domZapper.js'],
+        });
+      } catch {}
+      chrome.tabs.sendMessage(targetTab.id, { action: 'ACTIVATE_ZAPPER' }, () => {
+        if (chrome.runtime.lastError) {}
+      });
+    }
+    return;
+  }
+
   if (!info.linkUrl) return;
   const cleanRes = cleanUrl(info.linkUrl);
 
