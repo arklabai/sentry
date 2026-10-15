@@ -51,6 +51,7 @@ export interface UBlockSettings {
   matrix: DynamicMatrixRules;
   cosmeticFiltering: boolean;
   blockCookieBanners: boolean;
+  blockThirdPartyCookies?: boolean;
   blockPopups: boolean;
   blockMedia: boolean;
   strictBlocking: boolean;
@@ -72,6 +73,7 @@ export interface UrlCleanerSettings {
   enabled: boolean;
   stripMarketingParams: boolean;
   stripReferralTokens: boolean;
+  stripAllQueryParams?: boolean;
   blockHyperlinkPings: boolean;
   unwrapRedirects: boolean;
   sanitizeHistoryApi: boolean;

@@ -47,15 +47,16 @@ export const DEFAULT_SETTINGS: PrivacySettings = {
   uBlock: {
     matrix: {
       firstPartyScripts: 'allow',
-      thirdPartyScripts: 'block',
+      thirdPartyScripts: 'noop',
       firstPartyFrames: 'allow',
-      thirdPartyFrames: 'block',
+      thirdPartyFrames: 'noop',
       inlineScripts: 'noop',
       images: 'allow',
       webSockets: 'noop',
     },
     cosmeticFiltering: true,
     blockCookieBanners: true,
+    blockThirdPartyCookies: true,
     blockPopups: true,
     blockMedia: false,
     strictBlocking: false,
@@ -205,6 +206,7 @@ export async function applySettings(settings: PrivacySettings): Promise<void> {
           condition: {
             domainType: chrome.declarativeNetRequest.DomainType.THIRD_PARTY,
             resourceTypes: [chrome.declarativeNetRequest.ResourceType.SCRIPT],
+            excludedRequestDomains: ['challenges.cloudflare.com', 'hcaptcha.com', 'recaptcha.net'],
           },
         });
       }
@@ -217,6 +219,7 @@ export async function applySettings(settings: PrivacySettings): Promise<void> {
           condition: {
             domainType: chrome.declarativeNetRequest.DomainType.THIRD_PARTY,
             resourceTypes: [chrome.declarativeNetRequest.ResourceType.SUB_FRAME],
+            excludedRequestDomains: ['challenges.cloudflare.com', 'hcaptcha.com', 'recaptcha.net'],
           },
         });
       }
@@ -228,6 +231,38 @@ export async function applySettings(settings: PrivacySettings): Promise<void> {
           action: { type: chrome.declarativeNetRequest.RuleActionType.BLOCK },
           condition: {
             resourceTypes: [chrome.declarativeNetRequest.ResourceType.WEBSOCKET],
+          },
+        });
+      }
+
+      if (settings.uBlock.blockThirdPartyCookies) {
+        addRules.push({
+          id: MATRIX_RULE_BASE + 4,
+          priority: 4,
+          action: {
+            type: chrome.declarativeNetRequest.RuleActionType.MODIFY_HEADERS,
+            requestHeaders: [
+              {
+                header: 'cookie',
+                operation: chrome.declarativeNetRequest.HeaderOperation.REMOVE,
+              },
+            ],
+            responseHeaders: [
+              {
+                header: 'set-cookie',
+                operation: chrome.declarativeNetRequest.HeaderOperation.REMOVE,
+              },
+            ],
+          },
+          condition: {
+            domainType: chrome.declarativeNetRequest.DomainType.THIRD_PARTY,
+            resourceTypes: [
+              chrome.declarativeNetRequest.ResourceType.SCRIPT,
+              chrome.declarativeNetRequest.ResourceType.SUB_FRAME,
+              chrome.declarativeNetRequest.ResourceType.XMLHTTPREQUEST,
+              chrome.declarativeNetRequest.ResourceType.IMAGE,
+              chrome.declarativeNetRequest.ResourceType.OTHER,
+            ],
           },
         });
       }

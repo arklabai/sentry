@@ -10,6 +10,7 @@ export const DEFAULT_URL_CLEANER_SETTINGS: UrlCleanerSettings = {
   enabled: true,
   stripMarketingParams: true,
   stripReferralTokens: true,
+  stripAllQueryParams: false,
   blockHyperlinkPings: true,
   unwrapRedirects: true,
   sanitizeHistoryApi: true,
@@ -81,6 +82,13 @@ export const UNIVERSAL_TRACKING_PARAMS: readonly string[] = [
   'trk',
   'trkCampaign',
 
+  // Referral & Campaign Origin Parameters
+  'from',
+  'ref',
+  'referrer',
+  'affiliate_id',
+  'source',
+
   // Email / CRM Tracking
   'vero_id',
   'vero_conv',
@@ -97,6 +105,8 @@ export const UNIVERSAL_TRACKING_PARAMS: readonly string[] = [
  * Domain-specific tracking tokens & referral parameters
  */
 export const DOMAIN_TRACKING_PARAMS: Record<string, string[]> = {
+  claude: ['from', 'reauth', 'returnto', 'return_to'],
+  anthropic: ['from', 'reauth', 'returnto', 'return_to'],
   amazon: [
     'ref',
     'ref_',
@@ -274,7 +284,7 @@ export function cleanUrl(
     const domainSpecificKeys: string[] = [];
     for (const [key, params] of Object.entries(DOMAIN_TRACKING_PARAMS)) {
       if (host.includes(key)) {
-        domainSpecificKeys.push(...params);
+        domainSpecificKeys.push(...params.map((p) => p.toLowerCase()));
       }
     }
 
@@ -285,8 +295,12 @@ export function cleanUrl(
 
       let shouldStrip = false;
 
+      // Aggressive Mode: Purge all query parameters (?...)
+      if (opts.stripAllQueryParams) {
+        shouldStrip = true;
+      }
       // Universal marketing / click IDs
-      if (opts.stripMarketingParams && UNIVERSAL_TRACKING_PARAMS.includes(lowerKey)) {
+      else if (opts.stripMarketingParams && UNIVERSAL_TRACKING_PARAMS.includes(lowerKey)) {
         shouldStrip = true;
       }
       // Pattern match for prefix (e.g. utm_*, ga_*)

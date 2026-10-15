@@ -46,7 +46,8 @@
               "s_kwcid",
               "mkt_tok",
               "vero_id",
-              "_kx"
+              "_kx",
+              "from"
             ]
           }
         }

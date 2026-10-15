@@ -148,9 +148,30 @@ export default function Sidepanel() {
   };
 
   const handleToggleFeature = (
-    key: 'canvasShield' | 'audioShield' | 'webglShield' | 'aiScraperShield' | 'elementZapperEnabled' | 'urlCleaner' | 'cookieConsent'
+    key:
+      | 'canvasShield'
+      | 'audioShield'
+      | 'webglShield'
+      | 'aiScraperShield'
+      | 'elementZapperEnabled'
+      | 'urlCleaner'
+      | 'cookieConsent'
+      | 'thirdPartyCookies'
   ) => {
     if (!settings) return;
+    if (key === 'thirdPartyCookies') {
+      const isEnabled = !(settings.uBlock?.blockThirdPartyCookies ?? true);
+      const updated: PrivacySettings = {
+        ...settings,
+        uBlock: {
+          ...settings.uBlock,
+          blockThirdPartyCookies: isEnabled,
+        },
+      };
+      setSettings(updated);
+      chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
+      return;
+    }
     if (key === 'urlCleaner') {
       const isEnabled = !(settings.urlCleaner?.enabled ?? true);
       const updated: PrivacySettings = {
@@ -874,6 +895,12 @@ export default function Sidepanel() {
                     icon: HiSignal,
                   },
                   {
+                    key: 'thirdPartyCookies' as const,
+                    label: 'Cross-Site Cookie Guard',
+                    desc: 'Blocks 3rd-party tracking cookies & state',
+                    icon: HiShieldCheck,
+                  },
+                  {
                     key: 'urlCleaner' as const,
                     label: 'Clean Link Guard',
                     desc: 'Removes tracking tokens from web links',
@@ -892,6 +919,8 @@ export default function Sidepanel() {
                       ? settings.urlCleaner?.enabled ?? true
                       : item.key === 'cookieConsent'
                       ? settings.cookieConsent?.enabled ?? true
+                      : item.key === 'thirdPartyCookies'
+                      ? settings.uBlock?.blockThirdPartyCookies ?? true
                       : settings[item.key];
                   return (
                     <div
@@ -939,6 +968,98 @@ export default function Sidepanel() {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+
+            {/* COMPACT DYNAMIC TRAFFIC MATRIX STATUS STRIP */}
+            <div
+              className="sentry-card p-3 space-y-2"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-1.5">
+                  <HiSquares2X2 className="h-4 w-4" style={{ color: 'var(--green-primary)' }} />
+                  <span className="text-xs font-bold leading-none">Traffic Filtering Matrix</span>
+                </div>
+                <button
+                  onClick={() => setActiveTab('matrix')}
+                  className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded transition cursor-pointer flex items-center space-x-1"
+                  style={{
+                    backgroundColor: 'var(--green-subtle)',
+                    color: 'var(--green-text)',
+                    border: '1px solid var(--green-border)',
+                  }}
+                >
+                  <span>Tune Matrix</span>
+                  <span>→</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-1.5 pt-0.5 text-[11px] font-mono">
+                <div
+                  className="flex items-center justify-between p-1.5 rounded-lg"
+                  style={{ backgroundColor: 'var(--bg-surface-subtle)', border: '1px solid var(--border-subtle)' }}
+                >
+                  <span style={{ color: 'var(--text-secondary)' }}>1st-Party:</span>
+                  <span className="font-bold uppercase text-[10px]" style={{ color: 'var(--green-primary)' }}>
+                    {settings.uBlock?.matrix?.firstPartyScripts || 'ALLOW'}
+                  </span>
+                </div>
+                <div
+                  className="flex items-center justify-between p-1.5 rounded-lg"
+                  style={{ backgroundColor: 'var(--bg-surface-subtle)', border: '1px solid var(--border-subtle)' }}
+                >
+                  <span style={{ color: 'var(--text-secondary)' }}>3rd-Party:</span>
+                  <span
+                    className="font-bold uppercase text-[10px]"
+                    style={{
+                      color:
+                        settings.uBlock?.matrix?.thirdPartyScripts === 'block'
+                          ? 'var(--danger-primary)'
+                          : 'var(--green-primary)',
+                    }}
+                  >
+                    {settings.uBlock?.matrix?.thirdPartyScripts || 'NOOP'}
+                  </span>
+                </div>
+                <div
+                  className="flex items-center justify-between p-1.5 rounded-lg"
+                  style={{ backgroundColor: 'var(--bg-surface-subtle)', border: '1px solid var(--border-subtle)' }}
+                >
+                  <span style={{ color: 'var(--text-secondary)' }}>3rd Iframes:</span>
+                  <span
+                    className="font-bold uppercase text-[10px]"
+                    style={{
+                      color:
+                        settings.uBlock?.matrix?.thirdPartyFrames === 'block'
+                          ? 'var(--danger-primary)'
+                          : 'var(--green-primary)',
+                    }}
+                  >
+                    {settings.uBlock?.matrix?.thirdPartyFrames || 'NOOP'}
+                  </span>
+                </div>
+                <div
+                  className="flex items-center justify-between p-1.5 rounded-lg"
+                  style={{ backgroundColor: 'var(--bg-surface-subtle)', border: '1px solid var(--border-subtle)' }}
+                >
+                  <span style={{ color: 'var(--text-secondary)' }}>WebSockets:</span>
+                  <span
+                    className="font-bold uppercase text-[10px]"
+                    style={{
+                      color:
+                        settings.uBlock?.matrix?.webSockets === 'block'
+                          ? 'var(--danger-primary)'
+                          : 'var(--green-primary)',
+                    }}
+                  >
+                    {settings.uBlock?.matrix?.webSockets || 'NOOP'}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -1115,146 +1236,149 @@ export default function Sidepanel() {
               })}
             </div>
 
-            {/* DYNAMIC TRAFFIC MATRIX */}
-            {(matrixFilter === 'all' || matrixFilter === 'traffic') && (
+            {/* SECTION 1: CANVAS ENTROPY VERIFICATION (At the Top) */}
+            {(matrixFilter === 'all' || matrixFilter === 'entropy') && (
               <div
-              className="sentry-card p-3.5 space-y-3"
-              style={{
-                backgroundColor: 'var(--bg-surface)',
-                borderColor: 'var(--border-subtle)',
-                color: 'var(--text-primary)',
-              }}
-            >
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                  Dynamic Traffic Filtering Matrix
-                </h3>
-                <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                  Granular outbound request controls for {currentDomain}
-                </p>
-              </div>
+                className="sentry-card p-3.5 space-y-2.5"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: 'var(--border-subtle)',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                      Canvas Entropy Verification
+                    </h3>
+                    <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                      Test real-time mathematical noise injection
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleRunCanvasTest}
+                    disabled={isTestingCanvas}
+                    className="rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer"
+                    style={{
+                      backgroundColor: 'var(--green-primary)',
+                      color: 'var(--text-inverse)',
+                    }}
+                  >
+                    {isTestingCanvas ? 'Computing...' : 'Run Test'}
+                  </button>
+                </div>
 
-              <div className="space-y-2">
-                {[
-                  { key: 'firstPartyScripts' as const, label: '1st-Party Scripts' },
-                  { key: 'thirdPartyScripts' as const, label: '3rd-Party Scripts' },
-                  { key: 'thirdPartyFrames' as const, label: '3rd-Party Iframes' },
-                  { key: 'inlineScripts' as const, label: 'Inline Scripts' },
-                  { key: 'webSockets' as const, label: 'WebSockets & Beacons' },
-                ].map((row) => {
-                  const currentAction = settings.uBlock.matrix[row.key] || 'noop';
-                  return (
-                    <div
-                      key={row.key}
-                      className="flex items-center justify-between rounded-xl p-2 text-xs"
-                      style={{
-                        backgroundColor: 'var(--bg-surface-subtle)',
-                        border: '1px solid var(--border-subtle)',
-                      }}
-                    >
-                      <span className="font-mono text-[11px]" style={{ color: 'var(--text-primary)' }}>
-                        {row.label}
-                      </span>
-                      <div className="flex space-x-1">
-                        {(['allow', 'noop', 'block'] as MatrixAction[]).map((act) => {
-                          const isAct = currentAction === act;
-                          return (
-                            <button
-                              key={act}
-                              onClick={() => handleMatrixChange(row.key, act)}
-                              className="rounded-md px-2 py-0.5 text-[10px] font-mono uppercase font-bold transition cursor-pointer"
-                              style={{
-                                backgroundColor: isAct
-                                  ? act === 'allow'
-                                    ? 'var(--amber-subtle)'
-                                    : act === 'block'
-                                    ? 'var(--danger-subtle)'
-                                    : 'var(--green-subtle)'
-                                  : 'var(--bg-surface)',
-                                color: isAct
-                                  ? act === 'allow'
-                                    ? 'var(--amber-primary)'
-                                    : act === 'block'
-                                    ? 'var(--danger-primary)'
-                                    : 'var(--green-text)'
-                                  : 'var(--text-muted)',
-                                border: `1px solid ${
-                                  isAct
-                                    ? act === 'allow'
-                                      ? 'var(--amber-border)'
-                                      : act === 'block'
-                                      ? 'var(--danger-border)'
-                                      : 'var(--green-border)'
-                                    : 'var(--border-subtle)'
-                                }`,
-                              }}
-                            >
-                              {act}
-                            </button>
-                          );
-                        })}
+                {testCanvasHash && (
+                  <div
+                    className="rounded-xl p-2.5 text-xs font-mono flex items-center justify-between"
+                    style={{
+                      backgroundColor: 'var(--green-subtle)',
+                      border: '1px solid var(--green-border)',
+                    }}
+                  >
+                    <div>
+                      <div className="text-[10px]" style={{ color: 'var(--green-text)' }}>
+                        Scrambled Canvas Hash:
+                      </div>
+                      <div className="font-bold text-sm" style={{ color: 'var(--green-primary)' }}>
+                        {testCanvasHash}
                       </div>
                     </div>
-                  );
-                })}
+                    <HiCheckCircle className="h-4 w-4" style={{ color: 'var(--green-primary)' }} />
+                  </div>
+                )}
               </div>
-            </div>
             )}
 
-            {/* SECTION 2: ENTROPY & ANTI-FINGERPRINTING DEFENSE */}
-            {(matrixFilter === 'all' || matrixFilter === 'entropy') && (
-              <>
-                {/* LIVE SIMULATOR TEST */}
-                <div
-                  className="sentry-card p-3.5 space-y-2.5"
-                  style={{
-                    backgroundColor: 'var(--bg-surface)',
-                    borderColor: 'var(--border-subtle)',
-                    color: 'var(--text-primary)',
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                        Canvas Entropy Verification
-                      </h3>
-                      <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                        Test real-time mathematical noise injection
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleRunCanvasTest}
-                      disabled={isTestingCanvas}
-                      className="rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer"
-                      style={{
-                        backgroundColor: 'var(--green-primary)',
-                        color: 'var(--text-inverse)',
-                      }}
-                    >
-                      {isTestingCanvas ? 'Computing...' : 'Run Test'}
-                    </button>
-                  </div>
+            {/* SECTION 2: DYNAMIC TRAFFIC FILTERING MATRIX */}
+            {(matrixFilter === 'all' || matrixFilter === 'traffic') && (
+              <div
+                className="sentry-card p-3.5 space-y-3"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: 'var(--border-subtle)',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                    Dynamic Traffic Filtering Matrix
+                  </h3>
+                  <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                    Granular outbound request controls for {currentDomain}
+                  </p>
+                </div>
 
-                  {testCanvasHash && (
-                    <div
-                      className="rounded-xl p-2.5 text-xs font-mono flex items-center justify-between"
-                      style={{
-                        backgroundColor: 'var(--green-subtle)',
-                        border: '1px solid var(--green-border)',
-                      }}
-                    >
-                      <div>
-                        <div className="text-[10px]" style={{ color: 'var(--green-text)' }}>
-                          Scrambled Canvas Hash:
-                        </div>
-                        <div className="font-bold text-sm" style={{ color: 'var(--green-primary)' }}>
-                          {testCanvasHash}
+                <div className="space-y-2">
+                  {[
+                    { key: 'firstPartyScripts' as const, label: '1st-Party Scripts' },
+                    { key: 'thirdPartyScripts' as const, label: '3rd-Party Scripts' },
+                    { key: 'thirdPartyFrames' as const, label: '3rd-Party Iframes' },
+                    { key: 'inlineScripts' as const, label: 'Inline Scripts' },
+                    { key: 'webSockets' as const, label: 'WebSockets & Beacons' },
+                  ].map((row) => {
+                    const currentAction = settings.uBlock.matrix[row.key] || 'noop';
+                    return (
+                      <div
+                        key={row.key}
+                        className="flex items-center justify-between rounded-xl p-2 text-xs"
+                        style={{
+                          backgroundColor: 'var(--bg-surface-subtle)',
+                          border: '1px solid var(--border-subtle)',
+                        }}
+                      >
+                        <span className="font-mono text-[11px]" style={{ color: 'var(--text-primary)' }}>
+                          {row.label}
+                        </span>
+                        <div className="flex space-x-1">
+                          {(['allow', 'noop', 'block'] as MatrixAction[]).map((act) => {
+                            const isAct = currentAction === act;
+                            return (
+                              <button
+                                key={act}
+                                onClick={() => handleMatrixChange(row.key, act)}
+                                className="rounded-md px-2 py-0.5 text-[10px] font-mono uppercase font-bold transition cursor-pointer"
+                                style={{
+                                  backgroundColor: isAct
+                                    ? act === 'allow'
+                                      ? 'var(--amber-subtle)'
+                                      : act === 'block'
+                                      ? 'var(--danger-subtle)'
+                                      : 'var(--green-subtle)'
+                                    : 'var(--bg-surface)',
+                                  color: isAct
+                                    ? act === 'allow'
+                                      ? 'var(--amber-primary)'
+                                      : act === 'block'
+                                      ? 'var(--danger-primary)'
+                                      : 'var(--green-text)'
+                                    : 'var(--text-muted)',
+                                  border: `1px solid ${
+                                    isAct
+                                      ? act === 'allow'
+                                        ? 'var(--amber-border)'
+                                        : act === 'block'
+                                        ? 'var(--danger-border)'
+                                        : 'var(--green-border)'
+                                      : 'var(--border-subtle)'
+                                  }`,
+                                }}
+                              >
+                                {act}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
-                      <HiCheckCircle className="h-4 w-4" style={{ color: 'var(--green-primary)' }} />
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
+              </div>
+            )}
+
+            {/* SECTION 3: ENTROPY & ANTI-FINGERPRINTING DEFENSE */}
+            {(matrixFilter === 'all' || matrixFilter === 'entropy') && (
+              <>
 
                 {/* GRANULAR ENTROPY CONTROLS */}
                 <div
@@ -2088,7 +2212,12 @@ export default function Sidepanel() {
                   {
                     key: 'stripReferralTokens' as const,
                     label: 'Platform & Referral Tokens',
-                    desc: 'Amazon ref_, YouTube si, TikTok, Twitter',
+                    desc: 'Amazon ref_, YouTube si, TikTok, Twitter, Claude',
+                  },
+                  {
+                    key: 'stripAllQueryParams' as const,
+                    label: 'Pure Link Mode (Strip All Query ?...)',
+                    desc: 'Purge all query parameters after ? for clean sharing',
                   },
                   {
                     key: 'blockHyperlinkPings' as const,
@@ -2111,7 +2240,10 @@ export default function Sidepanel() {
                     desc: 'Block pushState / replaceState tracker re-injection',
                   },
                 ].map((item) => {
-                  const isEnabled = settings.urlCleaner?.[item.key] ?? true;
+                  const isEnabled =
+                    item.key === 'stripAllQueryParams'
+                      ? settings.urlCleaner?.stripAllQueryParams ?? false
+                      : settings.urlCleaner?.[item.key] ?? true;
                   return (
                     <div
                       key={item.key}

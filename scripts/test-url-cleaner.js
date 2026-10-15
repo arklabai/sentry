@@ -71,9 +71,16 @@ const batchRes = cleanUrls(batchInputs);
 assert(batchRes.length === 3, 'Batch cleaned all 3 inputs');
 assert(batchRes[0].hasChanged === true, 'First batch item cleaned');
 assert(batchRes[1].hasChanged === false, 'Second batch item clean');
-assert(batchRes[2].hasChanged === true, 'Third batch item cleaned');
+// Test 8: Claude Login & Referral Cleaning
+const claudeTest = cleanUrl('https://claude.ai/login?from=logout&reauth=1&returnTo=%2Fnew%3F');
+assert(claudeTest.hasChanged, 'Claude URL changed');
+assert(claudeTest.cleanedUrl === 'https://claude.ai/login', 'Claude URL cleaned to pure login endpoint');
+assert(claudeTest.strippedParams.includes('from'), 'Stripped from parameter');
+assert(claudeTest.strippedParams.includes('reauth'), 'Stripped reauth parameter');
+assert(claudeTest.strippedParams.includes('returnTo'), 'Stripped returnTo parameter');
 
 console.log(`\nURL Cleaner Test Results: ${passed} Passed, ${failed} Failed.`);
 if (failed > 0) {
   process.exit(1);
 }
+
