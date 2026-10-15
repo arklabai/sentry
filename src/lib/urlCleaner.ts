@@ -1,6 +1,6 @@
 /**
  * Sentry AI URL Cleaner & Tracking Parameter Purifier
- * Inspired by ClearURLs — cleans surveillance parameters, referral tags,
+ * Inspired by ClearURLs - cleans surveillance parameters, referral tags,
  * unmasks wrapper redirects, and eliminates hyperlink auditing tracking.
  */
 

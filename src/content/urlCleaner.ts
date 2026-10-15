@@ -1,8 +1,8 @@
 /**
  * Sentry AI In-Page URL & Link Guard (Runs in MAIN world)
- * 1. Hyperlink Auditing (Ping) Eliminator — purges <a ping> attributes across DOM.
- * 2. Search Redirection Bypass — disables Google & Yandex rwt click-hijacking.
- * 3. History API Protection — intercepts pushState/replaceState to prevent tracker re-injection.
+ * 1. Hyperlink Auditing (Ping) Eliminator - purges <a ping> attributes across DOM.
+ * 2. Search Redirection Bypass - disables Google & Yandex rwt click-hijacking.
+ * 3. History API Protection - intercepts pushState/replaceState to prevent tracker re-injection.
  */
 
 (function () {
