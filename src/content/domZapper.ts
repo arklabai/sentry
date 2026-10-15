@@ -1,15 +1,174 @@
 /**
- * Sentry AI Interactive Element Zapper
- * Allows point-and-click removal of invasive DOM tracking elements, banners, and AI widgets.
+ * Sentry AI Persistent Element Zapper & Cosmetic Content Guard
+ * 1. Permanently enforces domain-scoped zap rules saved locally in chrome.storage.local (uBlock style).
+ * 2. Neutralizes cookie consent popups and unblocks page scroll across all sites.
+ * 3. Provides an interactive point-and-click element picker with smart CSS selector generation.
  */
+
+import {
+  generateOptimalSelector,
+  getDomainZapRules,
+  savePersistentZapRule,
+  normalizeDomain,
+} from '../lib/zapManager';
+import {
+  handleCookieConsentGuard,
+  DEFAULT_COOKIE_CONSENT_SETTINGS,
+} from '../lib/cookieGuard';
+import type { ZapRule, PrivacySettings } from '../types/index.ts';
 
 (function () {
   'use strict';
 
-  let active = false;
+  // Prevent multiple injections
+  if ((window as unknown as { __sentryZapperInitialized?: boolean }).__sentryZapperInitialized) {
+    return;
+  }
+  (window as unknown as { __sentryZapperInitialized?: boolean }).__sentryZapperInitialized = true;
+
+  const currentHost = normalizeDomain(window.location.hostname);
+  let persistentStyleEl: HTMLStyleElement | null = null;
+  let activeZapRules: ZapRule[] = [];
+  let mutationObserver: MutationObserver | null = null;
+
+  // Interactive zapper state
+  let zapperActive = false;
   let hoveredElement: HTMLElement | null = null;
   let overlay: HTMLDivElement | null = null;
   let badge: HTMLDivElement | null = null;
+
+  // =========================================================================
+  // 1. PERSISTENT ZAP RULE ENFORCEMENT (Zero Flicker on Reload / Revisit)
+  // =========================================================================
+
+  function updatePersistentStylesheet(rules: ZapRule[]) {
+    if (!rules || rules.length === 0) {
+      if (persistentStyleEl) {
+        persistentStyleEl.remove();
+        persistentStyleEl = null;
+      }
+      return;
+    }
+
+    const cssSelectors = rules.map((r) => r.selector).join(',\n');
+    const cssContent = `
+      ${cssSelectors} {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        max-height: 0 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+      }
+    `;
+
+    if (!persistentStyleEl) {
+      persistentStyleEl = document.createElement('style');
+      persistentStyleEl.id = 'sentry-persistent-zap-rules';
+      const target = document.head || document.documentElement;
+      if (target) {
+        target.appendChild(persistentStyleEl);
+      }
+    }
+
+    persistentStyleEl.textContent = cssContent;
+  }
+
+  function purgeMatchingElements() {
+    if (activeZapRules.length === 0) return;
+    for (const rule of activeZapRules) {
+      try {
+        const matches = document.querySelectorAll<HTMLElement>(rule.selector);
+        matches.forEach((el) => {
+          el.style.setProperty('display', 'none', 'important');
+        });
+      } catch {
+        // Selector may be invalid or obsolete
+      }
+    }
+  }
+
+  function startMutationWatcher() {
+    if (mutationObserver) return;
+    mutationObserver = new MutationObserver(() => {
+      purgeMatchingElements();
+    });
+
+    const target = document.documentElement || document.body;
+    if (target) {
+      mutationObserver.observe(target, {
+        childList: true,
+        subtree: true,
+      });
+    }
+  }
+
+  async function initPersistentRules() {
+    try {
+      activeZapRules = await getDomainZapRules(currentHost);
+      if (activeZapRules.length > 0) {
+        updatePersistentStylesheet(activeZapRules);
+        purgeMatchingElements();
+        startMutationWatcher();
+      }
+    } catch {
+      // Storage access may be restricted
+    }
+  }
+
+  // Run immediately at document_start
+  initPersistentRules();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      purgeMatchingElements();
+      startMutationWatcher();
+    });
+  } else {
+    purgeMatchingElements();
+    startMutationWatcher();
+  }
+
+  // =========================================================================
+  // 2. UNIVERSAL COOKIE CONSENT GUARD ("Save for all sites")
+  // =========================================================================
+
+  function initCookieConsent() {
+    try {
+      chrome.storage.local.get(['sentry_privacy_settings'], (res) => {
+        const settings = (res?.sentry_privacy_settings as PrivacySettings)?.cookieConsent || DEFAULT_COOKIE_CONSENT_SETTINGS;
+        if (settings.enabled) {
+          handleCookieConsentGuard(settings, currentHost, (detail) => {
+            try {
+              chrome.runtime.sendMessage({
+                action: 'RECORD_THREAT',
+                payload: {
+                  type: 'cookie_consent',
+                  detail,
+                  domain: currentHost,
+                  timestamp: Date.now(),
+                },
+              });
+            } catch {
+              // Ignore
+            }
+          });
+        }
+      });
+    } catch {
+      // Ignore
+    }
+  }
+
+  initCookieConsent();
+
+  // =========================================================================
+  // 3. INTERACTIVE POINT-AND-CLICK ZAPPER
+  // =========================================================================
 
   function createOverlay() {
     if (overlay) return;
@@ -19,10 +178,10 @@
     overlay.style.position = 'fixed';
     overlay.style.pointerEvents = 'none';
     overlay.style.border = '2px solid #ef4444';
-    overlay.style.backgroundColor = 'rgba(239, 68, 68, 0.2)';
-    overlay.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.6)';
+    overlay.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
+    overlay.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.5)';
     overlay.style.zIndex = '2147483647';
-    overlay.style.transition = 'all 0.05s ease-out';
+    overlay.style.transition = 'all 0.04s ease-out';
     overlay.style.display = 'none';
 
     badge = document.createElement('div');
@@ -30,65 +189,105 @@
     badge.style.position = 'absolute';
     badge.style.bottom = '100%';
     badge.style.left = '0';
-    badge.style.backgroundColor = '#0f172a';
-    badge.style.color = '#ef4444';
+    badge.style.backgroundColor = '#181825';
+    badge.style.color = '#f38ba8';
     badge.style.border = '1px solid #ef4444';
-    badge.style.borderRadius = '4px';
-    badge.style.padding = '2px 8px';
-    badge.style.fontSize = '12px';
+    badge.style.borderRadius = '6px';
+    badge.style.padding = '3px 8px';
+    badge.style.fontSize = '11px';
     badge.style.fontFamily = 'monospace';
     badge.style.fontWeight = 'bold';
     badge.style.whiteSpace = 'nowrap';
     badge.style.marginBottom = '4px';
-    badge.textContent = 'ZAP TARGET (Click to Purge | ESC to Exit)';
+    badge.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.4)';
+    badge.textContent = 'ZAP TARGET (Click to Permanently Hide | ESC to Exit)';
 
     overlay.appendChild(badge);
     document.body.appendChild(overlay);
   }
 
+  function showToast(message: string) {
+    const toast = document.createElement('div');
+    toast.style.position = 'fixed';
+    toast.style.bottom = '24px';
+    toast.style.right = '24px';
+    toast.style.backgroundColor = '#181825';
+    toast.style.color = '#a6e3a1';
+    toast.style.border = '1px solid #a6e3a1';
+    toast.style.borderRadius = '8px';
+    toast.style.padding = '10px 16px';
+    toast.style.fontSize = '12px';
+    toast.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+    toast.style.fontWeight = '600';
+    toast.style.zIndex = '2147483647';
+    toast.style.boxShadow = '0 8px 24px rgba(0,0,0,0.5)';
+    toast.style.transition = 'all 0.3s ease';
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(10px)';
+      setTimeout(() => toast.remove(), 300);
+    }, 2800);
+  }
+
   function onMouseMove(e: MouseEvent) {
-    if (!active) return;
+    if (!zapperActive) return;
     const target = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement;
-    if (target && target !== overlay && target !== badge && target !== document.body) {
+    if (
+      target &&
+      target !== overlay &&
+      target !== badge &&
+      target !== document.body &&
+      target !== document.documentElement
+    ) {
       hoveredElement = target;
       const rect = target.getBoundingClientRect();
-      if (overlay) {
+      if (overlay && badge) {
         overlay.style.display = 'block';
         overlay.style.top = `${rect.top}px`;
         overlay.style.left = `${rect.left}px`;
         overlay.style.width = `${rect.width}px`;
         overlay.style.height = `${rect.height}px`;
+
+        const selectorPreview = generateOptimalSelector(target);
+        badge.textContent = `⚡ ZAP: <${selectorPreview}> (Click to Save Rule | ESC to Exit)`;
       }
     }
   }
 
-  function onClick(e: MouseEvent) {
-    if (!active || !hoveredElement) return;
+  async function onClick(e: MouseEvent) {
+    if (!zapperActive || !hoveredElement) return;
     e.preventDefault();
     e.stopPropagation();
 
-    // Zap element
-    const tagName = hoveredElement.tagName.toLowerCase();
-    const id = hoveredElement.id ? `#${hoveredElement.id}` : '';
-    const className = hoveredElement.className && typeof hoveredElement.className === 'string'
-      ? `.${hoveredElement.className.trim().split(/\s+/).join('.')}`
-      : '';
-    const selectorDesc = `${tagName}${id}${className}`.slice(0, 40);
+    const targetEl = hoveredElement;
+    const selector = generateOptimalSelector(targetEl);
 
-    hoveredElement.remove();
+    // 1. Hide element immediately
+    targetEl.style.setProperty('display', 'none', 'important');
 
+    // 2. Persist rule locally in chrome.storage.local
     try {
+      const savedRule = await savePersistentZapRule(currentHost, selector);
+      activeZapRules.push(savedRule);
+      updatePersistentStylesheet(activeZapRules);
+
+      showToast(`⚡ Sentry AI: Rule saved! <${selector}> permanently hidden on ${currentHost}`);
+
+      // 3. Notify background service worker to update stats and threats
       chrome.runtime.sendMessage({
-        action: 'RECORD_THREAT',
+        action: 'SAVE_ZAP_RULE',
         payload: {
-          type: 'zapper',
-          detail: `Element zapped: <${selectorDesc}>`,
-          domain: window.location.host,
+          domain: currentHost,
+          selector,
+          description: `Permanent zap rule: <${selector}>`,
           timestamp: Date.now(),
         },
       });
-    } catch {
-      // Ignore
+    } catch (err) {
+      console.warn('Failed to persist zap rule:', err);
     }
 
     stopZapper();
@@ -101,7 +300,7 @@
   }
 
   function startZapper() {
-    active = true;
+    zapperActive = true;
     createOverlay();
     document.addEventListener('mousemove', onMouseMove, true);
     document.addEventListener('click', onClick, true);
@@ -110,7 +309,7 @@
   }
 
   function stopZapper() {
-    active = false;
+    zapperActive = false;
     document.removeEventListener('mousemove', onMouseMove, true);
     document.removeEventListener('click', onClick, true);
     document.removeEventListener('keydown', onKeyDown, true);
@@ -122,11 +321,29 @@
     }
   }
 
+  // =========================================================================
+  // 4. RUNTIME MESSAGE ROUTING
+  // =========================================================================
+
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message.action === 'ACTIVATE_ZAPPER') {
       startZapper();
       sendResponse({ status: 'ok' });
+      return true;
+    }
+
+    if (message.action === 'RELOAD_ZAP_RULES') {
+      initPersistentRules().then(() => {
+        sendResponse({ status: 'ok', count: activeZapRules.length });
+      });
+      return true;
+    }
+
+    if (message.action === 'GET_PAGE_ZAP_RULES') {
+      sendResponse({ rules: activeZapRules, domain: currentHost });
+      return true;
     }
   });
 })();
+
 export {};

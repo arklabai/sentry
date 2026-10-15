@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Sentry AI Be Fearless Online",
-  "short_name": "Sentry AI",
+  "name": "Sentry AI — Be Fearless Online",
+  "short_name": "Sentry AI: Be Fearless Online",
   "version": "1.0.0",
   "description": "Sentry AI: Be Fearless Online. Stop surveillance trackers, scramble browser fingerprints, block unconsented AI training scrapers, and manage personal data broker deletions.",
   "permissions": [
@@ -27,7 +27,7 @@
     "default_path": "sidepanel.html"
   },
   "action": {
-    "default_title": "Sentry AI Be Fearless Online",
+    "default_title": "Sentry AI — Be Fearless Online",
     "default_icon": {
       "16": "icons/icon-16.png",
       "32": "icons/icon-32.png",

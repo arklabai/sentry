@@ -22,6 +22,13 @@ import {
   scheduleBrokerAlarm,
 } from './brokerSync';
 import { cleanUrl, cleanUrls } from '../lib/urlCleaner';
+import {
+  getAllZapRules,
+  getDomainZapRules,
+  savePersistentZapRule,
+  deletePersistentZapRule,
+  clearDomainZapRules,
+} from '../lib/zapManager';
 
 // In-memory per-tab threat statistics
 const tabStatsMap = new Map<number, TabThreatStats>();
@@ -34,6 +41,7 @@ let globalStats: GlobalPrivacyStats = {
   totalElementsZapped: 0,
   totalUrlsCleaned: 0,
   totalParamsStripped: 0,
+  totalCookieBannersHandled: 0,
   activeSince: Date.now(),
 };
 
@@ -259,6 +267,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           globalStats.totalAiScrapersBlocked += 1;
         } else if (payload.type === 'zapper') {
           globalStats.totalElementsZapped += 1;
+        } else if (payload.type === 'cookie_consent') {
+          stats.cookieBannersHandled = (stats.cookieBannersHandled || 0) + 1;
+          globalStats.totalCookieBannersHandled += 1;
         }
 
         stats.threatEvents.unshift({
@@ -368,6 +379,73 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           });
           sendResponse({ status: 'ok' });
         }
+      });
+      return true;
+    }
+
+    case 'SAVE_ZAP_RULE': {
+      const { domain, selector, description } = message.payload;
+      savePersistentZapRule(domain, selector, description).then((rule) => {
+        globalStats.totalElementsZapped += 1;
+        saveGlobalStats();
+        if (tabId && tabId > 0) {
+          const stats = getOrCreateTabStats(tabId);
+          stats.zappedElementsCount = (stats.zappedElementsCount || 0) + 1;
+          stats.threatEvents.unshift({
+            id: rule.id,
+            timestamp: Date.now(),
+            type: 'zapper',
+            source: domain,
+            description: `Permanent zap rule saved: <${selector}>`,
+          });
+          if (stats.threatEvents.length > 60) stats.threatEvents.pop();
+        }
+        sendResponse({ status: 'ok', rule });
+      });
+      return true;
+    }
+
+    case 'GET_ZAP_RULES': {
+      if (message.domain) {
+        getDomainZapRules(message.domain).then((rules) => {
+          sendResponse({ rules });
+        });
+      } else {
+        getAllZapRules().then((allRules) => {
+          sendResponse({ allRules });
+        });
+      }
+      return true;
+    }
+
+    case 'DELETE_ZAP_RULE': {
+      deletePersistentZapRule(message.domain, message.ruleId).then((remaining) => {
+        chrome.tabs.query({ active: true, currentWindow: true }).then(([activeTab]) => {
+          if (activeTab?.id) {
+            chrome.tabs.sendMessage(activeTab.id, { action: 'RELOAD_ZAP_RULES' }, () => {
+              if (chrome.runtime.lastError) {
+                // Ignore
+              }
+            });
+          }
+        });
+        sendResponse({ status: 'ok', rules: remaining });
+      });
+      return true;
+    }
+
+    case 'CLEAR_DOMAIN_ZAP_RULES': {
+      clearDomainZapRules(message.domain).then(() => {
+        chrome.tabs.query({ active: true, currentWindow: true }).then(([activeTab]) => {
+          if (activeTab?.id) {
+            chrome.tabs.sendMessage(activeTab.id, { action: 'RELOAD_ZAP_RULES' }, () => {
+              if (chrome.runtime.lastError) {
+                // Ignore
+              }
+            });
+          }
+        });
+        sendResponse({ status: 'ok' });
       });
       return true;
     }

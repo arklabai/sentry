@@ -379,6 +379,47 @@ export default function Popup() {
                 />
               </button>
             </div>
+
+            {/* Cookie Consent Guard */}
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852]">
+              <div className="flex items-center space-x-2">
+                <HiShieldCheck className="h-4 w-4 text-emerald-700 dark:text-[#A6E3A1]" />
+                <div>
+                  <div className="text-xs font-semibold text-stone-800 dark:text-white">Cookie Consent Guard</div>
+                  <div className="text-[10px] text-stone-400 dark:text-[#A6ADC8]">Auto-reject & hide popups (All Sites)</div>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  if (!settings) return;
+                  const isEnabled = !(settings.cookieConsent?.enabled ?? true);
+                  const updated = {
+                    ...settings,
+                    cookieConsent: {
+                      ...(settings.cookieConsent || {
+                        enabled: true,
+                        autoMode: 'auto_reject' as const,
+                        hideBanners: true,
+                        autoUnlockScroll: true,
+                        totalBannersHandled: 0,
+                      }),
+                      enabled: isEnabled,
+                    },
+                  };
+                  setSettings(updated);
+                  chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
+                }}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  settings.cookieConsent?.enabled ?? true ? 'bg-emerald-700 dark:bg-[#A6E3A1]' : 'bg-stone-300 dark:bg-stone-700'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ${
+                    settings.cookieConsent?.enabled ?? true ? 'translate-x-4' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         </div>
 

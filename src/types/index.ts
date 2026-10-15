@@ -86,6 +86,22 @@ export interface CleanUrlResult {
   redirectUnwrapped?: boolean;
 }
 
+export interface ZapRule {
+  id: string;
+  domain: string;
+  selector: string;
+  description?: string;
+  createdAt: number;
+}
+
+export interface CookieConsentSettings {
+  enabled: boolean;
+  autoMode: 'auto_reject' | 'minimal_necessary' | 'dismiss_hide';
+  hideBanners: boolean;
+  autoUnlockScroll: boolean;
+  totalBannersHandled: number;
+}
+
 export interface PrivacySettings {
   masterShield: boolean;
   mode: ProtectionMode;
@@ -105,6 +121,7 @@ export interface PrivacySettings {
   uBlock: UBlockSettings;
   aiDefense: AiDefenseSettings;
   urlCleaner: UrlCleanerSettings;
+  cookieConsent: CookieConsentSettings;
 }
 
 export interface NetworkLogEntry {
@@ -135,6 +152,8 @@ export interface TabThreatStats {
   aiBeaconsBlocked: number;
   urlsCleaned?: number;
   paramsStripped?: number;
+  cookieBannersHandled?: number;
+  zappedElementsCount?: number;
   safetyScore: SafetyGrade;
   threatEvents: ThreatEvent[];
   networkLogs: NetworkLogEntry[];
@@ -144,7 +163,7 @@ export interface TabThreatStats {
 export interface ThreatEvent {
   id: string;
   timestamp: number;
-  type: 'canvas' | 'audio' | 'webgl' | 'tracker' | 'ai_crawler' | 'zapper' | 'domrect' | 'url_cleaner' | 'ping';
+  type: 'canvas' | 'audio' | 'webgl' | 'tracker' | 'ai_crawler' | 'zapper' | 'domrect' | 'url_cleaner' | 'ping' | 'cookie_consent';
   source: string;
   description: string;
 }
@@ -156,6 +175,7 @@ export interface GlobalPrivacyStats {
   totalElementsZapped: number;
   totalUrlsCleaned: number;
   totalParamsStripped: number;
+  totalCookieBannersHandled: number;
   activeSince: number;
 }
 

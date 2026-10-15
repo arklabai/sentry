@@ -35,6 +35,7 @@ import {
   NetworkLogEntry,
   BrokerEntry,
   CleanUrlResult,
+  ZapRule,
 } from '../types';
 import { cleanUrl } from '../lib/urlCleaner';
 import SentryShieldLogo from '../components/SentryShieldLogo';
@@ -46,6 +47,7 @@ export default function Sidepanel() {
   const { themeMode, cycleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<SidebarTab>('overview');
   const [settings, setSettings] = useState<PrivacySettings | null>(null);
+  const [siteZapRules, setSiteZapRules] = useState<ZapRule[]>([]);
   const [stats, setStats] = useState<TabThreatStats | null>(null);
   const [globalStats, setGlobalStats] = useState<GlobalPrivacyStats | null>(null);
   const [brokers, setBrokers] = useState<BrokerEntry[]>([]);
@@ -103,6 +105,33 @@ export default function Sidepanel() {
     });
   }, []);
 
+  // Fetch site zap rules when domain changes
+  useEffect(() => {
+    if (stats?.domain) {
+      chrome.runtime.sendMessage({ action: 'GET_ZAP_RULES', domain: stats.domain }, (res) => {
+        if (res?.rules) {
+          setSiteZapRules(res.rules);
+        }
+      });
+    }
+  }, [stats?.domain]);
+
+  const handleDeleteZapRule = (ruleId: string) => {
+    if (!stats?.domain) return;
+    chrome.runtime.sendMessage({ action: 'DELETE_ZAP_RULE', domain: stats.domain, ruleId }, (res) => {
+      if (res?.rules) {
+        setSiteZapRules(res.rules);
+      }
+    });
+  };
+
+  const handleClearSiteZapRules = () => {
+    if (!stats?.domain) return;
+    chrome.runtime.sendMessage({ action: 'CLEAR_DOMAIN_ZAP_RULES', domain: stats.domain }, () => {
+      setSiteZapRules([]);
+    });
+  };
+
   const handleToggleMasterShield = () => {
     if (!settings) return;
     const updated = { ...settings, masterShield: !settings.masterShield };
@@ -118,7 +147,7 @@ export default function Sidepanel() {
   };
 
   const handleToggleFeature = (
-    key: 'canvasShield' | 'audioShield' | 'webglShield' | 'aiScraperShield' | 'elementZapperEnabled' | 'urlCleaner'
+    key: 'canvasShield' | 'audioShield' | 'webglShield' | 'aiScraperShield' | 'elementZapperEnabled' | 'urlCleaner' | 'cookieConsent'
   ) => {
     if (!settings) return;
     if (key === 'urlCleaner') {
@@ -134,6 +163,25 @@ export default function Sidepanel() {
             unwrapRedirects: true,
             sanitizeHistoryApi: true,
             bypassSearchRedirection: true,
+          }),
+          enabled: isEnabled,
+        },
+      };
+      setSettings(updated);
+      chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
+      return;
+    }
+    if (key === 'cookieConsent') {
+      const isEnabled = !(settings.cookieConsent?.enabled ?? true);
+      const updated: PrivacySettings = {
+        ...settings,
+        cookieConsent: {
+          ...(settings.cookieConsent || {
+            enabled: true,
+            autoMode: 'auto_reject',
+            hideBanners: true,
+            autoUnlockScroll: true,
+            totalBannersHandled: 0,
           }),
           enabled: isEnabled,
         },
@@ -814,11 +862,19 @@ export default function Sidepanel() {
                     desc: 'Strip surveillance parameters & redirects',
                     icon: HiLink,
                   },
+                  {
+                    key: 'cookieConsent' as const,
+                    label: 'Cookie Consent Guard',
+                    desc: 'Auto-reject cookies & hide popups on all sites',
+                    icon: HiCheckCircle,
+                  },
                 ].map((item) => {
                   const Icon = item.icon;
                   const isEnabled =
                     item.key === 'urlCleaner'
                       ? settings.urlCleaner?.enabled ?? true
+                      : item.key === 'cookieConsent'
+                      ? settings.cookieConsent?.enabled ?? true
                       : settings[item.key];
                   return (
                     <div
@@ -933,6 +989,99 @@ export default function Sidepanel() {
                 </div>
               );
             })()}
+
+            {/* PERMANENT SITE ZAP RULES (uBlock Origin Style) */}
+            <div
+              className="sentry-card p-3.5 space-y-3"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border-subtle)',
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <HiBolt className="h-4 w-4" style={{ color: 'var(--danger-primary)' }} />
+                  <span className="font-semibold text-xs" style={{ color: 'var(--text-primary)' }}>
+                    Site Zap Rules
+                  </span>
+                </div>
+                <span
+                  className="rounded px-2 py-0.5 text-[10px] font-mono font-bold"
+                  style={{
+                    backgroundColor: siteZapRules.length > 0 ? 'var(--green-subtle)' : 'var(--bg-surface-subtle)',
+                    color: siteZapRules.length > 0 ? 'var(--green-primary)' : 'var(--text-muted)',
+                    border: `1px solid ${siteZapRules.length > 0 ? 'var(--green-border)' : 'var(--border-subtle)'}`,
+                  }}
+                >
+                  {siteZapRules.length} PERMANENT {siteZapRules.length === 1 ? 'RULE' : 'RULES'}
+                </span>
+              </div>
+
+              <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                Zapped elements on <strong className="font-mono">{currentDomain}</strong> are stored locally and stay hidden on every revisit.
+              </p>
+
+              {siteZapRules.length > 0 ? (
+                <div className="space-y-1.5 pt-1">
+                  {siteZapRules.map((rule) => (
+                    <div
+                      key={rule.id}
+                      className="flex items-center justify-between rounded-lg p-2 transition text-xs font-mono"
+                      style={{
+                        backgroundColor: 'var(--bg-surface-subtle)',
+                        border: '1px solid var(--border-subtle)',
+                      }}
+                    >
+                      <div className="min-w-0 pr-2 truncate">
+                        <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                          {rule.selector}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteZapRule(rule.id)}
+                        title="Unzap (Remove saved rule)"
+                        className="p-1 rounded text-stone-400 hover:text-rose-600 transition shrink-0 cursor-pointer"
+                      >
+                        <HiTrash className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+
+                  <div className="flex items-center justify-between pt-1">
+                    <button
+                      onClick={handleActivateZapper}
+                      className="flex items-center space-x-1 text-[11px] font-semibold transition cursor-pointer"
+                      style={{ color: 'var(--danger-primary)' }}
+                    >
+                      <HiBolt className="h-3.5 w-3.5" />
+                      <span>Zap Another Element</span>
+                    </button>
+
+                    <button
+                      onClick={handleClearSiteZapRules}
+                      className="text-[10px] font-mono text-stone-400 hover:text-rose-500 transition cursor-pointer"
+                    >
+                      Clear All ({siteZapRules.length})
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="pt-1">
+                  <button
+                    onClick={handleActivateZapper}
+                    className="w-full flex items-center justify-center space-x-2 rounded-xl border p-2.5 text-xs font-semibold transition cursor-pointer hover:opacity-90 active:scale-98"
+                    style={{
+                      backgroundColor: 'var(--danger-subtle)',
+                      borderColor: 'var(--danger-border)',
+                      color: 'var(--danger-primary)',
+                    }}
+                  >
+                    <HiBolt className="h-4 w-4" />
+                    <span>Launch Element Zapper</span>
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* DOMAIN REPUTATION & QUICK ACTIONS */}
             <div className="grid grid-cols-2 gap-2 pt-1">

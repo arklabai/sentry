@@ -138,6 +138,15 @@ export const DEFAULT_SETTINGS: PrivacySettings = {
     sanitizeHistoryApi: true,
     bypassSearchRedirection: true,
   },
+
+  // Universal Cookie Consent Guard (Auto-Reject & Suppress All Sites)
+  cookieConsent: {
+    enabled: true,
+    autoMode: 'auto_reject',
+    hideBanners: true,
+    autoUnlockScroll: true,
+    totalBannersHandled: 0,
+  },
 };
 
 /**

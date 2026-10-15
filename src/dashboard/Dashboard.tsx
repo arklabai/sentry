@@ -43,6 +43,7 @@ import {
   EncryptedVault,
   ThreatEvent,
   CleanUrlResult,
+  ZapRule,
 } from '../types';
 import { cleanUrl, cleanUrls } from '../lib/urlCleaner';
 import { encryptProfile, decryptProfile } from '../lib/crypto';
@@ -211,6 +212,48 @@ export default function Dashboard() {
 
   // New whitelist domain input
   const [newWhitelistDomain, setNewWhitelistDomain] = useState('');
+
+  // Persistent Zap Rules Manager state
+  const [allZapRules, setAllZapRules] = useState<Record<string, ZapRule[]>>({});
+  const [newZapDomain, setNewZapDomain] = useState('');
+  const [newZapSelector, setNewZapSelector] = useState('');
+
+  const loadZapRules = () => {
+    chrome.runtime.sendMessage({ action: 'GET_ZAP_RULES' }, (res) => {
+      if (res?.allRules) {
+        setAllZapRules(res.allRules);
+      }
+    });
+  };
+
+  useEffect(() => {
+    loadZapRules();
+  }, []);
+
+  const handleDeleteZapRule = (domain: string, ruleId: string) => {
+    chrome.runtime.sendMessage({ action: 'DELETE_ZAP_RULE', domain, ruleId }, () => {
+      loadZapRules();
+    });
+  };
+
+  const handleAddManualZapRule = () => {
+    if (!newZapDomain.trim() || !newZapSelector.trim()) return;
+    chrome.runtime.sendMessage(
+      {
+        action: 'SAVE_ZAP_RULE',
+        payload: {
+          domain: newZapDomain.trim().toLowerCase(),
+          selector: newZapSelector.trim(),
+          description: `Manual zap rule: <${newZapSelector.trim()}>`,
+        },
+      },
+      () => {
+        setNewZapDomain('');
+        setNewZapSelector('');
+        loadZapRules();
+      }
+    );
+  };
 
   // URL Cleaner interactive single purifier state
   const [cleanerInput, setCleanerInput] = useState(
@@ -1235,6 +1278,286 @@ https://news.ycombinator.com/item?id=123456`
                 </div>
               </div>
             </div>
+
+            {/* UNIVERSAL COOKIE CONSENT GUARD (ALL SITES) */}
+            <div
+              className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors"
+              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+            >
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-stone-100 dark:border-[#383852] pb-3">
+                <div className="flex items-center space-x-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 shrink-0">
+                    <HiShieldCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <h2 className="text-base font-bold text-stone-900 dark:text-white">
+                        Universal Cookie Consent Guard
+                      </h2>
+                      <span className="rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 px-2 py-0.5 text-[10px] font-mono font-bold">
+                        GLOBAL (ALL SITES)
+                      </span>
+                    </div>
+                    <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-0.5">
+                      Automatically suppresses intrusive cookie consent banners, auto-clicks &quot;Reject All&quot;, and unlocks page scrolling.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <span className="text-xs font-mono text-stone-500 dark:text-[#A6ADC8]">Enforce on all sites:</span>
+                  <button
+                    onClick={() => {
+                      if (!settings) return;
+                      const isEnabled = !(settings.cookieConsent?.enabled ?? true);
+                      const updated = {
+                        ...settings,
+                        cookieConsent: {
+                          ...(settings.cookieConsent || {
+                            enabled: true,
+                            autoMode: 'auto_reject' as const,
+                            hideBanners: true,
+                            autoUnlockScroll: true,
+                            totalBannersHandled: 0,
+                          }),
+                          enabled: isEnabled,
+                        },
+                      };
+                      setSettings(updated);
+                      chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
+                    }}
+                    className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                    style={{
+                      backgroundColor: (settings?.cookieConsent?.enabled ?? true) ? 'var(--green-primary)' : 'var(--border-strong)',
+                    }}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        (settings?.cookieConsent?.enabled ?? true) ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div
+                  className="p-3.5 rounded-xl border"
+                  style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)' }}
+                >
+                  <div className="text-xs font-semibold text-stone-900 dark:text-white mb-1">Consent Strategy Mode</div>
+                  <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] mb-2.5">
+                    Behavior applied when a Consent Management Platform (OneTrust, Cookiebot, Didomi) is encountered.
+                  </p>
+                  <div className="space-y-1.5 text-xs font-medium">
+                    <button
+                      onClick={() => {
+                        if (!settings) return;
+                        const updated = {
+                          ...settings,
+                          cookieConsent: {
+                            ...(settings.cookieConsent || {
+                              enabled: true,
+                              autoMode: 'auto_reject' as const,
+                              hideBanners: true,
+                              autoUnlockScroll: true,
+                              totalBannersHandled: 0,
+                            }),
+                            autoMode: 'auto_reject' as const,
+                          },
+                        };
+                        setSettings(updated);
+                        chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
+                      }}
+                      className={`w-full text-left px-2.5 py-1.5 rounded-lg border text-xs transition ${
+                        (settings?.cookieConsent?.autoMode ?? 'auto_reject') === 'auto_reject'
+                          ? 'border-emerald-600 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-500/50 font-bold'
+                          : 'border-stone-200 dark:border-[#383852] text-stone-600 dark:text-[#A6ADC8]'
+                      }`}
+                    >
+                      Auto-Reject Non-Essential (Recommended)
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!settings) return;
+                        const updated = {
+                          ...settings,
+                          cookieConsent: {
+                            ...(settings.cookieConsent || {
+                              enabled: true,
+                              autoMode: 'auto_reject' as const,
+                              hideBanners: true,
+                              autoUnlockScroll: true,
+                              totalBannersHandled: 0,
+                            }),
+                            autoMode: 'dismiss_hide' as const,
+                          },
+                        };
+                        setSettings(updated);
+                        chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
+                      }}
+                      className={`w-full text-left px-2.5 py-1.5 rounded-lg border text-xs transition ${
+                        settings?.cookieConsent?.autoMode === 'dismiss_hide'
+                          ? 'border-emerald-600 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-500/50 font-bold'
+                          : 'border-stone-200 dark:border-[#383852] text-stone-600 dark:text-[#A6ADC8]'
+                      }`}
+                    >
+                      Dismiss &amp; Cosmestically Hide Banners
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  className="p-3.5 rounded-xl border flex flex-col justify-between"
+                  style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)' }}
+                >
+                  <div>
+                    <div className="text-xs font-semibold text-stone-900 dark:text-white mb-1">Scroll Lock Neutralizer</div>
+                    <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8]">
+                      Automatically removes <code className="text-emerald-700 dark:text-emerald-400 font-mono">overflow: hidden</code> on the document body when cookie modals lock the page.
+                    </p>
+                  </div>
+                  <div className="pt-3 flex items-center justify-between border-t border-stone-200 dark:border-[#383852]">
+                    <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-semibold">
+                      STATUS: ACTIVE (GLOBAL)
+                    </span>
+                    <span className="rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 px-2 py-0.5 text-[10px] font-mono">
+                      UNLOCKED
+                    </span>
+                  </div>
+                </div>
+
+                <div
+                  className="p-3.5 rounded-xl border flex flex-col justify-between"
+                  style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)' }}
+                >
+                  <div>
+                    <div className="text-xs font-semibold text-stone-900 dark:text-white mb-1">Simulated Consent Tokens</div>
+                    <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8]">
+                      Injects minimal consent cookie tokens (OneTrust, Cookiebot) so backends do not re-render the dialog on page transitions.
+                    </p>
+                  </div>
+                  <div className="pt-3 flex items-center justify-between border-t border-stone-200 dark:border-[#383852]">
+                    <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-semibold">
+                      LIFESPAN: 1 YEAR (PERSISTENT)
+                    </span>
+                    <span className="rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 px-2 py-0.5 text-[10px] font-mono">
+                      SYNCED
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* PERSISTENT SITE ZAP RULES MANAGER (uBlock Style) */}
+            <div
+              className="sentry-card p-5 border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors"
+              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+            >
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-stone-100 dark:border-[#383852] pb-3">
+                <div className="flex items-center space-x-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-500/30 text-rose-800 dark:text-rose-300 shrink-0">
+                    <HiBolt className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <h2 className="text-base font-bold text-stone-900 dark:text-white">
+                        Persistent Site Zap Rules Manager
+                      </h2>
+                      <span className="rounded bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30 px-2 py-0.5 text-[10px] font-mono font-bold">
+                        uBlock Origin Parity
+                      </span>
+                    </div>
+                    <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-0.5">
+                      Cosmetic filtering rules saved locally in browser storage and enforced immediately at document load.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <span className="rounded bg-stone-100 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] px-2.5 py-1 text-xs font-mono font-semibold text-stone-700 dark:text-[#CDD6F4]">
+                    {Object.keys(allZapRules).length} Domains • {Object.values(allZapRules).flat().length} Active Rules
+                  </span>
+                </div>
+              </div>
+
+              {/* Add Custom Zap Rule Manually */}
+              <div className="flex flex-col sm:flex-row items-center gap-2 p-3 rounded-xl bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852]">
+                <input
+                  type="text"
+                  placeholder="Target domain (e.g. news.ycombinator.com)"
+                  value={newZapDomain}
+                  onChange={(e) => setNewZapDomain(e.target.value)}
+                  className="rounded-lg bg-white dark:bg-[#252538] border border-stone-300 dark:border-[#383852] px-3 py-1.5 text-xs text-stone-900 dark:text-white placeholder-stone-400 w-full sm:w-64 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400 font-mono"
+                />
+                <input
+                  type="text"
+                  placeholder="CSS Selector (e.g. div.ad-banner or #sponsored-feed)"
+                  value={newZapSelector}
+                  onChange={(e) => setNewZapSelector(e.target.value)}
+                  className="rounded-lg bg-white dark:bg-[#252538] border border-stone-300 dark:border-[#383852] px-3 py-1.5 text-xs text-stone-900 dark:text-white placeholder-stone-400 flex-1 w-full focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400 font-mono"
+                />
+                <button
+                  onClick={handleAddManualZapRule}
+                  className="rounded-lg bg-rose-700 dark:bg-rose-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-rose-800 transition shrink-0 cursor-pointer"
+                >
+                  Save Zap Rule
+                </button>
+              </div>
+
+              {/* Display Domain Zap Rules */}
+              {Object.keys(allZapRules).length > 0 ? (
+                <div className="space-y-3 pt-1">
+                  {Object.entries(allZapRules).map(([domain, rules]) => (
+                    <div
+                      key={domain}
+                      className="p-3 rounded-xl border"
+                      style={{ backgroundColor: 'var(--bg-surface-subtle)', borderColor: 'var(--border-subtle)' }}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-mono text-xs font-bold text-stone-900 dark:text-white">
+                            {domain}
+                          </span>
+                          <span className="rounded bg-stone-200 dark:bg-[#383852] px-1.5 py-0.5 text-[10px] font-mono text-stone-600 dark:text-[#A6ADC8]">
+                            {rules.length} {rules.length === 1 ? 'rule' : 'rules'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        {rules.map((r) => (
+                          <div
+                            key={r.id}
+                            className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] text-xs font-mono"
+                          >
+                            <span className="text-stone-800 dark:text-stone-200 truncate pr-2 font-semibold">
+                              {r.selector}
+                            </span>
+                            <div className="flex items-center space-x-2 shrink-0">
+                              <span className="text-[10px] text-stone-400">
+                                {new Date(r.createdAt).toLocaleDateString()}
+                              </span>
+                              <button
+                                onClick={() => handleDeleteZapRule(domain, r.id)}
+                                title="Delete Rule (Unzap)"
+                                className="p-1 rounded text-stone-400 hover:text-rose-600 transition cursor-pointer"
+                              >
+                                <HiTrash className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-stone-400 text-xs italic">
+                  No persistent zap rules stored yet. Use the Element Zapper in the browser sidebar on any page to permanently hide elements.
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -1267,6 +1590,9 @@ https://news.ycombinator.com/item?id=123456`
                     webgl: 'text-emerald-800 border-emerald-300 bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-950/20',
                     tracker: 'text-rose-800 border-rose-300 bg-rose-50 dark:text-rose-400 dark:border-rose-500/30 dark:bg-rose-950/20',
                     zapper: 'text-amber-800 border-amber-300 bg-amber-50 dark:text-amber-400 dark:border-amber-500/30 dark:bg-amber-950/20',
+                    cookie_consent: 'text-emerald-800 border-emerald-300 bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-950/20',
+                    url_cleaner: 'text-teal-800 border-teal-300 bg-teal-50 dark:text-teal-300 dark:border-teal-500/30 dark:bg-teal-950/20',
+                    ping: 'text-rose-800 border-rose-300 bg-rose-50 dark:text-rose-400 dark:border-rose-500/30 dark:bg-rose-950/20',
                   };
 
                   return (
