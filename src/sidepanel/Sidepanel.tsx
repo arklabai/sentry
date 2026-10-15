@@ -1007,9 +1007,9 @@ export default function Sidepanel() {
               );
             })()}
 
-            {/* PERMANENT SITE ZAP RULES (uBlock Origin Style) */}
+            {/* SITE ELEMENT ZAPPER (Compact overview card with deep link to Matrix) */}
             <div
-              className="sentry-card p-3.5 space-y-3"
+              className="sentry-card p-3.5 space-y-2.5"
               style={{
                 backgroundColor: 'var(--bg-surface)',
                 border: '1px solid var(--border-subtle)',
@@ -1019,7 +1019,7 @@ export default function Sidepanel() {
                 <div className="flex items-center space-x-2">
                   <HiBolt className="h-4 w-4" style={{ color: 'var(--danger-primary)' }} />
                   <span className="font-semibold text-xs" style={{ color: 'var(--text-primary)' }}>
-                    Site Zap Rules
+                    Site Element Zapper
                   </span>
                 </div>
                 <span
@@ -1030,103 +1030,47 @@ export default function Sidepanel() {
                     border: `1px solid ${siteZapRules.length > 0 ? 'var(--green-border)' : 'var(--border-subtle)'}`,
                   }}
                 >
-                  {siteZapRules.length} PERMANENT {siteZapRules.length === 1 ? 'RULE' : 'RULES'}
+                  {siteZapRules.length > 0
+                    ? `${siteZapRules.length} ${siteZapRules.length === 1 ? 'RULE' : 'RULES'} ACTIVE`
+                    : 'NO ACTIVE RULES'}
                 </span>
               </div>
 
               <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                Zapped elements on <strong className="font-mono">{currentDomain}</strong> are stored locally and stay hidden on every revisit.
+                Point and click to permanently zap annoying elements on <strong className="font-mono">{currentDomain}</strong>.
               </p>
 
-              {siteZapRules.length > 0 ? (
-                <div className="space-y-1.5 pt-1">
-                  {siteZapRules.map((rule) => (
-                    <div
-                      key={rule.id}
-                      className="flex items-center justify-between rounded-lg p-2 transition text-xs font-mono"
-                      style={{
-                        backgroundColor: 'var(--bg-surface-subtle)',
-                        border: '1px solid var(--border-subtle)',
-                      }}
-                    >
-                      <div className="min-w-0 pr-2 truncate">
-                        <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                          {rule.selector}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => handleDeleteZapRule(rule.id)}
-                        title="Unzap (Remove saved rule)"
-                        className="p-1 rounded text-stone-400 hover:text-rose-600 transition shrink-0 cursor-pointer"
-                      >
-                        <HiTrash className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  ))}
+              <div className="flex items-center space-x-2 pt-0.5">
+                <button
+                  onClick={handleActivateZapper}
+                  className="flex-1 flex items-center justify-center space-x-1.5 rounded-lg border p-2 text-xs font-semibold transition cursor-pointer hover:opacity-90 active:scale-98"
+                  style={{
+                    backgroundColor: 'var(--danger-subtle)',
+                    borderColor: 'var(--danger-border)',
+                    color: 'var(--danger-primary)',
+                  }}
+                >
+                  <HiBolt className="h-3.5 w-3.5" />
+                  <span>Zap Element</span>
+                </button>
 
-                  <div className="flex items-center justify-between pt-1">
-                    <button
-                      onClick={handleActivateZapper}
-                      className="flex items-center space-x-1 text-[11px] font-semibold transition cursor-pointer"
-                      style={{ color: 'var(--danger-primary)' }}
-                    >
-                      <HiBolt className="h-3.5 w-3.5" />
-                      <span>Zap Another Element</span>
-                    </button>
-
-                    <button
-                      onClick={handleClearSiteZapRules}
-                      className="text-[10px] font-mono text-stone-400 hover:text-rose-500 transition cursor-pointer"
-                    >
-                      Clear All ({siteZapRules.length})
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="pt-1">
-                  <button
-                    onClick={handleActivateZapper}
-                    className="w-full flex items-center justify-center space-x-2 rounded-xl border p-2.5 text-xs font-semibold transition cursor-pointer hover:opacity-90 active:scale-98"
-                    style={{
-                      backgroundColor: 'var(--danger-subtle)',
-                      borderColor: 'var(--danger-border)',
-                      color: 'var(--danger-primary)',
-                    }}
-                  >
-                    <HiBolt className="h-4 w-4" />
-                    <span>Launch Element Zapper</span>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* DOMAIN REPUTATION & QUICK ACTIONS */}
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <button
-                onClick={handleActivateZapper}
-                className="flex items-center justify-center space-x-1.5 rounded-xl border p-2.5 text-xs font-semibold transition cursor-pointer hover:opacity-90 active:scale-98"
-                style={{
-                  backgroundColor: 'var(--danger-subtle)',
-                  borderColor: 'var(--danger-border)',
-                  color: 'var(--danger-primary)',
-                }}
-              >
-                <HiBolt className="h-4 w-4" />
-                <span>Element Zapper</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('matrix')}
-                className="flex items-center justify-center space-x-1.5 rounded-xl border p-2.5 text-xs font-semibold transition cursor-pointer hover:opacity-90 active:scale-98"
-                style={{
-                  backgroundColor: 'var(--bg-surface)',
-                  borderColor: 'var(--border-strong)',
-                  color: 'var(--text-primary)',
-                }}
-              >
-                <HiSquares2X2 className="h-4 w-4" style={{ color: 'var(--green-primary)' }} />
-                <span>Matrix Rules</span>
-              </button>
+                <button
+                  onClick={() => {
+                    setActiveTab('matrix');
+                    setMatrixFilter('rules');
+                  }}
+                  title="View and manage element zap rules in Matrix tab"
+                  className="flex items-center justify-center space-x-1.5 rounded-lg border p-2 px-3 text-xs font-semibold transition cursor-pointer hover:opacity-90 active:scale-98"
+                  style={{
+                    backgroundColor: 'var(--bg-surface-subtle)',
+                    borderColor: 'var(--border-subtle)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <HiSquares2X2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>Manage in Matrix</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -1522,13 +1466,106 @@ export default function Sidepanel() {
                 </div>
               )}
             </div>
-              </>
-            )}
-          </div>
-        )}
+
+            {/* SITE ELEMENT ZAP RULES (Persistent uBlock-style for current page domain) */}
+            <div
+                className="sentry-card p-3.5 space-y-3"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  border: '1px solid var(--border-subtle)',
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <HiBolt className="h-4 w-4" style={{ color: 'var(--danger-primary)' }} />
+                    <span className="font-semibold text-xs" style={{ color: 'var(--text-primary)' }}>
+                      Site Element Zap Rules
+                    </span>
+                  </div>
+                  <span
+                    className="rounded px-2 py-0.5 text-[10px] font-mono font-bold"
+                    style={{
+                      backgroundColor: siteZapRules.length > 0 ? 'var(--green-subtle)' : 'var(--bg-surface-subtle)',
+                      color: siteZapRules.length > 0 ? 'var(--green-primary)' : 'var(--text-muted)',
+                      border: `1px solid ${siteZapRules.length > 0 ? 'var(--green-border)' : 'var(--border-subtle)'}`,
+                    }}
+                  >
+                    {siteZapRules.length} {siteZapRules.length === 1 ? 'RULE' : 'RULES'} ACTIVE
+                  </span>
+                </div>
+
+                <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                  Persistent element hiding rules stored locally for <strong className="font-mono">{currentDomain}</strong>. Elements stay removed on every revisit.
+                </p>
+
+                {siteZapRules.length > 0 ? (
+                  <div className="space-y-1.5 pt-1">
+                    {siteZapRules.map((rule) => (
+                      <div
+                        key={rule.id}
+                        className="flex items-center justify-between rounded-lg p-2 transition text-xs font-mono"
+                        style={{
+                          backgroundColor: 'var(--bg-surface-subtle)',
+                          border: '1px solid var(--border-subtle)',
+                        }}
+                      >
+                        <div className="min-w-0 pr-2 truncate">
+                          <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                            {rule.selector}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteZapRule(rule.id)}
+                          title="Unzap (Remove saved rule)"
+                          className="p-1 rounded text-stone-400 hover:text-rose-600 transition shrink-0 cursor-pointer"
+                        >
+                          <HiTrash className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+
+                    <div className="flex items-center justify-between pt-1">
+                      <button
+                        onClick={handleActivateZapper}
+                        className="flex items-center space-x-1 text-[11px] font-semibold transition cursor-pointer"
+                        style={{ color: 'var(--danger-primary)' }}
+                      >
+                        <HiBolt className="h-3.5 w-3.5" />
+                        <span>Zap Another Element</span>
+                      </button>
+
+                      <button
+                        onClick={handleClearSiteZapRules}
+                        className="text-[10px] font-mono text-stone-400 hover:text-rose-500 transition cursor-pointer"
+                      >
+                        Clear All ({siteZapRules.length})
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="pt-1">
+                    <button
+                      onClick={handleActivateZapper}
+                      className="w-full flex items-center justify-center space-x-2 rounded-xl border p-2.5 text-xs font-semibold transition cursor-pointer hover:opacity-90 active:scale-98"
+                      style={{
+                        backgroundColor: 'var(--danger-subtle)',
+                        borderColor: 'var(--danger-border)',
+                        color: 'var(--danger-primary)',
+                      }}
+                    >
+                      <HiBolt className="h-4 w-4" />
+                      <span>Launch Element Zapper</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
         {/* ========================================================= */}
-        {/* TAB 3: AI GUARD (BROKERS) */}
+        {/* TAB 3: AI GUARD */}
         {/* ========================================================= */}
         {activeTab === 'broker' && (
           <div className="space-y-3.5">
