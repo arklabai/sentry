@@ -24,6 +24,9 @@ import {
   RefreshCw,
   Copy,
   Check,
+  Sun,
+  Moon,
+  Monitor,
 } from 'lucide-react';
 import {
   BrokerEntry,
@@ -37,10 +40,13 @@ import {
 } from '../types';
 import { encryptProfile, decryptProfile } from '../lib/crypto';
 import brokerListJson from '../lib/brokerList.json';
+import SentryShieldLogo from '../components/SentryShieldLogo';
+import { useTheme } from '../hooks/useTheme';
 
 type ActiveTab = 'brokers' | 'ai-shield' | 'matrix' | 'ledger';
 
 export default function Dashboard() {
+  const { themeMode, isDark, cycleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<ActiveTab>('brokers');
   const [brokers, setBrokers] = useState<BrokerEntry[]>([]);
   const [settings, setSettings] = useState<PrivacySettings | null>(null);
@@ -152,10 +158,10 @@ export default function Dashboard() {
     );
   };
 
-  // Add domain to whitelist
+  // Whitelist domain handler
   const handleAddWhitelist = () => {
-    if (!newWhitelistDomain || !settings) return;
-    const cleanDomain = newWhitelistDomain.trim().toLowerCase().replace(/^https?:\/\//, '');
+    if (!newWhitelistDomain.trim() || !settings) return;
+    const cleanDomain = newWhitelistDomain.trim().toLowerCase().replace(/^https?:\/\//, '').split('/')[0];
     if (!settings.whitelistedDomains.includes(cleanDomain)) {
       const updated = {
         ...settings,
@@ -167,7 +173,6 @@ export default function Dashboard() {
     setNewWhitelistDomain('');
   };
 
-  // Remove domain from whitelist
   const handleRemoveWhitelist = (domain: string) => {
     if (!settings) return;
     const updated = {
@@ -178,40 +183,41 @@ export default function Dashboard() {
     chrome.runtime.sendMessage({ action: 'UPDATE_SETTINGS', settings: updated });
   };
 
-  // Filtered brokers
+  // Filter brokers
   const filteredBrokers = brokers.filter((b) => {
+    const matchesCategory = selectedCategory === 'All' || b.category === selectedCategory;
     const matchesSearch =
       b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       b.contactEmail.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      selectedCategory === 'All' || b.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    return matchesCategory && matchesSearch;
   });
 
-  // Calculate broker metrics
-  const totalBrokersCount = brokers.length;
-  const dispatchedCount = brokers.filter(
-    (b) => b.status === 'Dispatched' || b.status === 'In Review'
-  ).length;
+  const totalBrokersCount = brokers.length || 18;
   const removedCount = brokers.filter((b) => b.status === 'Removed').length;
-  const pendingCount = brokers.filter((b) => b.status === 'Pending').length;
 
-  // Format legal email template
+  // Prepare email template text
   const getPreparedEmail = () => {
     if (!selectedBroker) return { subject: '', body: '' };
-    const tpl = brokerListJson.templates[dispatchType];
-    const subject = tpl.subject.replace('{{brokerName}}', selectedBroker.name);
-    const body = tpl.body
+    const template =
+      dispatchType === 'ccpa'
+        ? brokerListJson.templates.ccpa
+        : brokerListJson.templates.gdpr;
+
+    let body = template.body
       .replace(/{{brokerName}}/g, selectedBroker.name)
       .replace(/{{fullName}}/g, profile.fullName || '[Your Full Name]')
       .replace(/{{primaryEmail}}/g, profile.primaryEmail || '[Your Email]')
       .replace(/{{phone}}/g, profile.phone || '[Your Phone]')
       .replace(/{{cityState}}/g, profile.cityState || '[Your City, State]')
       .replace(/{{country}}/g, profile.country || '[Your Country]');
-    return { subject, body };
+
+    return {
+      subject: template.subject.replace(/{{fullName}}/g, profile.fullName || 'Consumer'),
+      body,
+    };
   };
 
-  const handleCopyTemplate = () => {
+  const handleCopyNotice = () => {
     const { subject, body } = getPreparedEmail();
     navigator.clipboard.writeText(`Subject: ${subject}\n\n${body}`);
     setCopiedTemplate(true);
@@ -219,80 +225,95 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#060913] text-slate-100">
-      {/* Top Cyber Navigation Bar */}
-      <header className="border-b border-cyan-500/20 bg-[#080d1b]/90 backdrop-blur sticky top-0 z-50 px-6 py-4">
+    <div className="flex min-h-screen flex-col bg-[#FAF9F6] dark:bg-[#1E1E2E] text-stone-900 dark:text-[#F5E0DC] transition-colors duration-200">
+      {/* Top Navigation Bar */}
+      <header className="border-b border-stone-200/90 dark:border-[#383852] bg-white/95 dark:bg-[#252538]/95 backdrop-blur sticky top-0 z-50 px-6 py-3.5 transition-colors">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="relative flex items-center justify-center">
-              <Shield className="h-8 w-8 text-cyan-400 drop-shadow-[0_0_12px_rgba(0,240,255,0.8)]" />
-              <span className="absolute h-3 w-3 rounded-full bg-cyan-300 animate-ping" />
-            </div>
+            <SentryShieldLogo size={36} armed={true} glow={true} />
             <div>
               <div className="flex items-center space-x-2">
-                <h1 className="text-xl font-black tracking-wider text-white">
-                  SENTRY <span className="text-cyan-400">AI</span>
+                <h1 className="text-xl font-black tracking-tight text-stone-900 dark:text-white">
+                  SENTRY <span className="text-emerald-700 dark:text-emerald-400">AI</span>
                 </h1>
-                <span className="rounded bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 font-mono text-[10px] text-cyan-300">
+                <span className="rounded bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-500/30 px-2 py-0.5 font-mono text-[10px] font-semibold text-emerald-800 dark:text-emerald-300">
                   COMMAND CENTER
                 </span>
               </div>
-              <p className="text-xs text-cyan-400/90 font-mono font-medium tracking-wide">
+              <p className="text-xs text-stone-500 dark:text-[#A6ADC8] font-mono tracking-wide">
                 Be Fearless Online
               </p>
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <nav className="flex space-x-1.5 rounded-xl bg-slate-900/90 border border-slate-800 p-1">
-            <button
-              onClick={() => setActiveTab('brokers')}
-              className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
-                activeTab === 'brokers'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_12px_rgba(0,240,255,0.2)]'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Database className="h-4 w-4" />
-              <span>Data Broker Hub</span>
-            </button>
+          <div className="flex items-center space-x-3">
+            {/* Navigation Tabs */}
+            <nav className="flex space-x-1 rounded-xl bg-stone-100/90 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] p-1">
+              <button
+                onClick={() => setActiveTab('brokers')}
+                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+                  activeTab === 'brokers'
+                    ? 'bg-emerald-700 text-white shadow-xs dark:bg-emerald-600 dark:text-white'
+                    : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
+                }`}
+              >
+                <Database className="h-4 w-4" />
+                <span>Data Broker Hub</span>
+              </button>
 
-            <button
-              onClick={() => setActiveTab('ai-shield')}
-              className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
-                activeTab === 'ai-shield'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_12px_rgba(0,240,255,0.2)]'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Bot className="h-4 w-4" />
-              <span>AI Opt-Out Center</span>
-            </button>
+              <button
+                onClick={() => setActiveTab('ai-shield')}
+                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+                  activeTab === 'ai-shield'
+                    ? 'bg-emerald-700 text-white shadow-xs dark:bg-emerald-600 dark:text-white'
+                    : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
+                }`}
+              >
+                <Bot className="h-4 w-4" />
+                <span>AI Opt-Out Center</span>
+              </button>
 
-            <button
-              onClick={() => setActiveTab('matrix')}
-              className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
-                activeTab === 'matrix'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_12px_rgba(0,240,255,0.2)]'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Sliders className="h-4 w-4" />
-              <span>Domain Matrix</span>
-            </button>
+              <button
+                onClick={() => setActiveTab('matrix')}
+                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+                  activeTab === 'matrix'
+                    ? 'bg-emerald-700 text-white shadow-xs dark:bg-emerald-600 dark:text-white'
+                    : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
+                }`}
+              >
+                <Sliders className="h-4 w-4" />
+                <span>Domain Matrix</span>
+              </button>
 
+              <button
+                onClick={() => setActiveTab('ledger')}
+                className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+                  activeTab === 'ledger'
+                    ? 'bg-emerald-700 text-white shadow-xs dark:bg-emerald-600 dark:text-white'
+                    : 'text-stone-600 dark:text-[#A6ADC8] hover:text-stone-900 dark:hover:text-[#F5E0DC]'
+                }`}
+              >
+                <Activity className="h-4 w-4" />
+                <span>Live Threat Ledger</span>
+              </button>
+            </nav>
+
+            {/* Theme Toggle Button */}
             <button
-              onClick={() => setActiveTab('ledger')}
-              className={`flex items-center space-x-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
-                activeTab === 'ledger'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_12px_rgba(0,240,255,0.2)]'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
+              onClick={cycleTheme}
+              title={`Theme: ${themeMode.toUpperCase()} (Click to toggle)`}
+              className="flex items-center space-x-1.5 rounded-xl border border-stone-200 dark:border-[#4E4E70] bg-stone-100/90 dark:bg-[#181825] px-3 py-1.5 text-xs font-medium text-stone-700 dark:text-[#CDD6F4] hover:bg-stone-200 dark:hover:bg-[#2E2E44] transition"
             >
-              <Activity className="h-4 w-4" />
-              <span>Live Threat Ledger</span>
+              {themeMode === 'system' ? (
+                <Monitor className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+              ) : themeMode === 'light' ? (
+                <Sun className="h-4 w-4 text-amber-600" />
+              ) : (
+                <Moon className="h-4 w-4 text-indigo-400" />
+              )}
+              <span className="capitalize">{themeMode}</span>
             </button>
-          </nav>
+          </div>
         </div>
       </header>
 
@@ -300,65 +321,65 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto w-full flex-1 p-6 space-y-6">
         {/* Global Protection Metrics Banner */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="cyber-card p-4">
-            <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-xs font-mono uppercase">Total Trackers Blocked</span>
-              <ShieldAlert className="h-4 w-4 text-cyan-400" />
+          <div className="sentry-card p-4 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
+            <div className="flex items-center justify-between text-stone-500 dark:text-[#A6ADC8] mb-1">
+              <span className="text-xs font-mono uppercase tracking-wider">Total Trackers Blocked</span>
+              <ShieldAlert className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
             </div>
-            <div className="text-2xl font-bold font-mono text-cyan-300 glow-cyan">
+            <div className="text-2xl font-bold font-mono text-emerald-800 dark:text-emerald-300">
               {globalStats?.totalTrackersBlocked || 0}
             </div>
-            <p className="text-[11px] text-slate-500 mt-1">DNR static & dynamic filters</p>
+            <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">DNR static & dynamic filters</p>
           </div>
 
-          <div className="cyber-card p-4">
-            <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-xs font-mono uppercase">Fingerprints Scrambled</span>
-              <ShieldCheck className="h-4 w-4 text-violet-400" />
+          <div className="sentry-card p-4 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
+            <div className="flex items-center justify-between text-stone-500 dark:text-[#A6ADC8] mb-1">
+              <span className="text-xs font-mono uppercase tracking-wider">Fingerprints Scrambled</span>
+              <ShieldCheck className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
             </div>
-            <div className="text-2xl font-bold font-mono text-violet-300 glow-violet">
+            <div className="text-2xl font-bold font-mono text-emerald-800 dark:text-emerald-300">
               {globalStats?.totalFingerprintsScrambled || 0}
             </div>
-            <p className="text-[11px] text-slate-500 mt-1">Canvas, WebGL & Audio noise</p>
+            <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">Canvas, WebGL & Audio noise</p>
           </div>
 
-          <div className="cyber-card p-4">
-            <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-xs font-mono uppercase">AI Scrapers Blocked</span>
-              <Bot className="h-4 w-4 text-rose-400" />
+          <div className="sentry-card p-4 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
+            <div className="flex items-center justify-between text-stone-500 dark:text-[#A6ADC8] mb-1">
+              <span className="text-xs font-mono uppercase tracking-wider">AI Scrapers Blocked</span>
+              <Bot className="h-4 w-4 text-rose-600 dark:text-rose-400" />
             </div>
-            <div className="text-2xl font-bold font-mono text-rose-300">
+            <div className="text-2xl font-bold font-mono text-rose-700 dark:text-rose-400">
               {globalStats?.totalAiScrapersBlocked || 0}
             </div>
-            <p className="text-[11px] text-slate-500 mt-1">Meta, ByteDance, TikTok pixels</p>
+            <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">Meta, ByteDance, TikTok pixels</p>
           </div>
 
-          <div className="cyber-card p-4">
-            <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-xs font-mono uppercase">Brokers Cleared / Audited</span>
-              <Database className="h-4 w-4 text-emerald-400" />
+          <div className="sentry-card p-4 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
+            <div className="flex items-center justify-between text-stone-500 dark:text-[#A6ADC8] mb-1">
+              <span className="text-xs font-mono uppercase tracking-wider">Brokers Cleared / Audited</span>
+              <Database className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
             </div>
-            <div className="text-2xl font-bold font-mono text-emerald-300 glow-emerald">
+            <div className="text-2xl font-bold font-mono text-emerald-800 dark:text-emerald-300">
               {removedCount} / {totalBrokersCount}
             </div>
-            <p className="text-[11px] text-slate-500 mt-1">CCPA / GDPR Art 17 opt-outs</p>
+            <p className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-1">CCPA / GDPR Art 17 opt-outs</p>
           </div>
         </div>
 
-        {/* TAB 1: DATA BROKER HUB (INCOGNI ALTERNATIVE) */}
+        {/* TAB 1: DATA BROKER HUB */}
         {activeTab === 'brokers' && (
           <div className="space-y-6">
             {/* Identity Profile & Local AES-256 Vault */}
-            <div className="cyber-card p-5">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div className="sentry-card p-5 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-100 dark:border-[#383852] pb-4">
                 <div>
                   <div className="flex items-center space-x-2">
-                    <Lock className="h-5 w-5 text-cyan-400" />
-                    <h2 className="text-base font-bold text-white">
+                    <Lock className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
+                    <h2 className="text-base font-bold text-stone-900 dark:text-white">
                       Encrypted Personal Identity Vault (AES-256-GCM)
                     </h2>
                   </div>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-stone-500 dark:text-[#A6ADC8] mt-1">
                     Your details are encrypted with your local passphrase. Zero unencrypted personal data leaves your browser.
                   </p>
                 </div>
@@ -371,11 +392,11 @@ export default function Dashboard() {
                         placeholder="Enter master passphrase"
                         value={vaultPassphrase}
                         onChange={(e) => setVaultPassphrase(e.target.value)}
-                        className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                        className="rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] px-3 py-1.5 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
                       />
                       <button
                         onClick={handleUnlockVault}
-                        className="flex items-center space-x-1.5 rounded-lg bg-cyan-500/20 border border-cyan-500/40 px-3 py-1.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-900/40"
+                        className="flex items-center space-x-1.5 rounded-lg bg-emerald-700 dark:bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800 transition"
                       >
                         <Unlock className="h-3.5 w-3.5" />
                         <span>Unlock</span>
@@ -384,7 +405,7 @@ export default function Dashboard() {
                   ) : (
                     <button
                       onClick={() => setIsVaultLocked(true)}
-                      className="flex items-center space-x-1.5 rounded-lg bg-slate-800 border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:border-slate-500"
+                      className="flex items-center space-x-1.5 rounded-lg bg-stone-100 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] px-3 py-1.5 text-xs font-semibold text-stone-700 dark:text-[#CDD6F4] hover:border-stone-400"
                     >
                       <Lock className="h-3.5 w-3.5" />
                       <span>Lock Vault</span>
@@ -395,12 +416,12 @@ export default function Dashboard() {
 
               {/* Vault Error / Saved Message */}
               {vaultError && (
-                <div className="mt-3 rounded-lg border border-rose-500/40 bg-rose-950/30 p-2.5 text-xs text-rose-300">
+                <div className="mt-3 rounded-lg border border-rose-300 bg-rose-50 dark:border-rose-900/60 dark:bg-rose-950/30 p-2.5 text-xs text-rose-800 dark:text-rose-300">
                   {vaultError}
                 </div>
               )}
               {vaultSavedNotice && (
-                <div className="mt-3 rounded-lg border border-emerald-500/40 bg-emerald-950/30 p-2.5 text-xs text-emerald-300">
+                <div className="mt-3 rounded-lg border border-emerald-300 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/30 p-2.5 text-xs text-emerald-800 dark:text-emerald-300">
                   Identity Vault encrypted with AES-256 and securely saved locally!
                 </div>
               )}
@@ -409,7 +430,7 @@ export default function Dashboard() {
               {!isVaultLocked && (
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                    <label className="block text-[11px] font-mono text-stone-500 dark:text-[#A6ADC8] mb-1">
                       Full Legal Name
                     </label>
                     <input
@@ -417,12 +438,12 @@ export default function Dashboard() {
                       placeholder="e.g. Jane Doe"
                       value={profile.fullName}
                       onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
-                      className="w-full rounded-lg bg-slate-900 border border-slate-700 p-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                      className="w-full rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] p-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                    <label className="block text-[11px] font-mono text-stone-500 dark:text-[#A6ADC8] mb-1">
                       Primary Contact Email
                     </label>
                     <input
@@ -430,12 +451,12 @@ export default function Dashboard() {
                       placeholder="e.g. jane@example.com"
                       value={profile.primaryEmail}
                       onChange={(e) => setProfile({ ...profile, primaryEmail: e.target.value })}
-                      className="w-full rounded-lg bg-slate-900 border border-slate-700 p-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                      className="w-full rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] p-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                    <label className="block text-[11px] font-mono text-stone-500 dark:text-[#A6ADC8] mb-1">
                       Phone Number
                     </label>
                     <input
@@ -443,12 +464,12 @@ export default function Dashboard() {
                       placeholder="e.g. +1 (555) 019-2834"
                       value={profile.phone}
                       onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                      className="w-full rounded-lg bg-slate-900 border border-slate-700 p-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                      className="w-full rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] p-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                    <label className="block text-[11px] font-mono text-stone-500 dark:text-[#A6ADC8] mb-1">
                       City, State / Region
                     </label>
                     <input
@@ -456,12 +477,12 @@ export default function Dashboard() {
                       placeholder="e.g. San Francisco, CA"
                       value={profile.cityState}
                       onChange={(e) => setProfile({ ...profile, cityState: e.target.value })}
-                      className="w-full rounded-lg bg-slate-900 border border-slate-700 p-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                      className="w-full rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] p-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                    <label className="block text-[11px] font-mono text-stone-500 dark:text-[#A6ADC8] mb-1">
                       Country
                     </label>
                     <input
@@ -469,12 +490,12 @@ export default function Dashboard() {
                       placeholder="e.g. United States"
                       value={profile.country}
                       onChange={(e) => setProfile({ ...profile, country: e.target.value })}
-                      className="w-full rounded-lg bg-slate-900 border border-slate-700 p-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                      className="w-full rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] p-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                    <label className="block text-[11px] font-mono text-stone-500 dark:text-[#A6ADC8] mb-1">
                       Passphrase (for AES-256)
                     </label>
                     <input
@@ -482,14 +503,14 @@ export default function Dashboard() {
                       placeholder="Min 6 characters"
                       value={vaultPassphrase}
                       onChange={(e) => setVaultPassphrase(e.target.value)}
-                      className="w-full rounded-lg bg-slate-900 border border-slate-700 p-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                      className="w-full rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] p-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
                     />
                   </div>
 
                   <div className="md:col-span-3 flex justify-end">
                     <button
                       onClick={handleSaveVault}
-                      className="rounded-lg bg-cyan-500 px-4 py-2 text-xs font-bold text-black shadow-lg shadow-cyan-500/20 hover:bg-cyan-400"
+                      className="rounded-lg bg-emerald-700 dark:bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition"
                     >
                       Save & Re-Encrypt Identity Vault
                     </button>
@@ -499,13 +520,13 @@ export default function Dashboard() {
             </div>
 
             {/* Broker Registry & Workflow Table */}
-            <div className="cyber-card p-5 space-y-4">
+            <div className="sentry-card p-5 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-base font-bold text-white">
+                  <h3 className="text-base font-bold text-stone-900 dark:text-white">
                     Data Broker Remediation Registry ({filteredBrokers.length} of {totalBrokersCount})
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-stone-500 dark:text-[#A6ADC8]">
                     Direct automated CCPA/CPRA & GDPR Article 17 erasure requests.
                   </p>
                 </div>
@@ -513,20 +534,20 @@ export default function Dashboard() {
                 {/* Filter and Search Bar */}
                 <div className="flex items-center space-x-2">
                   <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-500" />
+                    <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-stone-400" />
                     <input
                       type="text"
                       placeholder="Search broker name..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="rounded-lg bg-slate-900 border border-slate-700 pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                      className="rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] pl-8 pr-3 py-1.5 text-xs text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
                     />
                   </div>
 
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400"
+                    className="rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] px-3 py-1.5 text-xs text-stone-900 dark:text-white focus:outline-none focus:border-emerald-600"
                   >
                     <option value="All">All Categories</option>
                     <option value="People Search">People Search</option>
@@ -538,9 +559,9 @@ export default function Dashboard() {
               </div>
 
               {/* Broker Table */}
-              <div className="overflow-x-auto rounded-lg border border-slate-800">
+              <div className="overflow-x-auto rounded-lg border border-stone-200 dark:border-[#383852]">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-900/90 text-slate-400 uppercase font-mono text-[10px]">
+                  <thead className="bg-stone-50 dark:bg-[#181825] text-stone-500 dark:text-[#A6ADC8] uppercase font-mono text-[10px]">
                     <tr>
                       <th className="p-3">Data Broker</th>
                       <th className="p-3">Category</th>
@@ -549,41 +570,41 @@ export default function Dashboard() {
                       <th className="p-3 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60 font-mono">
+                  <tbody className="divide-y divide-stone-200/80 dark:divide-[#383852] font-mono">
                     {filteredBrokers.map((broker) => {
                       const statusStyles: Record<OptOutStatus, string> = {
-                        Pending: 'bg-slate-800 text-slate-400 border-slate-700',
-                        Dispatched: 'bg-cyan-950/60 text-cyan-300 border-cyan-500/40',
-                        'In Review': 'bg-amber-950/60 text-amber-300 border-amber-500/40',
-                        Removed: 'bg-emerald-950/60 text-emerald-300 border-emerald-500/40',
+                        Pending: 'bg-stone-100 text-stone-700 border-stone-300 dark:bg-[#181825] dark:text-[#9399B2] dark:border-[#383852]',
+                        Dispatched: 'bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-500/40',
+                        'In Review': 'bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-500/40',
+                        Removed: 'bg-emerald-100 text-emerald-900 border-emerald-400 dark:bg-emerald-900/60 dark:text-emerald-200 dark:border-emerald-500',
                       };
 
                       return (
-                        <tr key={broker.id} className="hover:bg-slate-900/40 transition">
+                        <tr key={broker.id} className="hover:bg-stone-50/80 dark:hover:bg-[#2E2E44] transition">
                           <td className="p-3">
-                            <div className="font-sans font-semibold text-white">
+                            <div className="font-sans font-semibold text-stone-900 dark:text-white">
                               {broker.name}
                             </div>
-                            <span className="text-[10px] text-slate-500">
+                            <span className="text-[10px] text-stone-400 dark:text-[#9399B2]">
                               Jurisdiction: {broker.jurisdiction}
                             </span>
                           </td>
                           <td className="p-3">
-                            <span className="rounded bg-slate-800/80 px-2 py-0.5 text-[10px] text-slate-300">
+                            <span className="rounded bg-stone-100 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] px-2 py-0.5 text-[10px] text-stone-600 dark:text-[#CDD6F4]">
                               {broker.category}
                             </span>
                           </td>
-                          <td className="p-3 text-slate-400">
+                          <td className="p-3 text-stone-500 dark:text-[#A6ADC8]">
                             <a
                               href={broker.optOutUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-cyan-400 hover:underline flex items-center space-x-1"
+                              className="text-emerald-700 dark:text-emerald-400 hover:underline flex items-center space-x-1"
                             >
                               <span>Opt-Out Portal</span>
                               <ExternalLink className="h-3 w-3" />
                             </a>
-                            <div className="text-[10px] text-slate-500">{broker.contactEmail}</div>
+                            <div className="text-[10px] text-stone-400 dark:text-[#9399B2]">{broker.contactEmail}</div>
                           </td>
                           <td className="p-3">
                             <select
@@ -604,7 +625,7 @@ export default function Dashboard() {
                           <td className="p-3 text-right">
                             <button
                               onClick={() => setSelectedBroker(broker)}
-                              className="rounded border border-cyan-500/30 bg-cyan-950/30 px-2.5 py-1 text-[11px] font-sans text-cyan-300 hover:bg-cyan-900/50 hover:border-cyan-400"
+                              className="rounded border border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 text-[11px] font-sans text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 transition"
                             >
                               Generate Notice
                             </button>
@@ -622,14 +643,14 @@ export default function Dashboard() {
         {/* TAB 2: AI TRAINING OPT-OUT HUB */}
         {activeTab === 'ai-shield' && (
           <div className="space-y-6">
-            <div className="cyber-card p-5">
-              <div className="flex items-center space-x-2 border-b border-slate-800 pb-3">
-                <Bot className="h-6 w-6 text-cyan-400" />
+            <div className="sentry-card p-5 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs transition-colors">
+              <div className="flex items-center space-x-2 border-b border-stone-100 dark:border-[#383852] pb-3">
+                <Bot className="h-6 w-6 text-emerald-700 dark:text-emerald-400" />
                 <div>
-                  <h2 className="text-base font-bold text-white">
+                  <h2 className="text-base font-bold text-stone-900 dark:text-white">
                     Commercial AI Model Training Defenses
                   </h2>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-stone-500 dark:text-[#A6ADC8]">
                     Sentry AI injects automated signals and blocks surveillance telemetry feeding LLM datasets.
                   </p>
                 </div>
@@ -637,66 +658,65 @@ export default function Dashboard() {
 
               {/* Protocol Defense Status */}
               <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="cyber-card p-4 bg-slate-900/40">
-                  <div className="flex items-center space-x-2 text-cyan-400 mb-2">
+                <div className="sentry-card p-4 bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] rounded-xl">
+                  <div className="flex items-center space-x-2 text-emerald-700 dark:text-emerald-400 mb-2">
                     <CheckCircle2 className="h-4 w-4" />
                     <h3 className="text-xs font-bold font-mono uppercase tracking-wider">
                       Global Privacy Control (Sec-GPC: 1)
                     </h3>
                   </div>
-                  <p className="text-xs text-slate-300">
-                    Sentry automatically injects the <code className="text-cyan-300">Sec-GPC: 1</code> and{' '}
-                    <code className="text-cyan-300">DNT: 1</code> headers onto 100% of outgoing requests via DeclarativeNetRequest.
+                  <p className="text-xs text-stone-600 dark:text-[#CDD6F4]">
+                    Sentry automatically injects the <code className="text-emerald-800 dark:text-emerald-300 font-bold">Sec-GPC: 1</code> and{' '}
+                    <code className="text-emerald-800 dark:text-emerald-300 font-bold">DNT: 1</code> headers onto 100% of outgoing requests via DeclarativeNetRequest.
                   </p>
-                  <span className="inline-block mt-2 rounded bg-emerald-950/60 border border-emerald-500/40 px-2 py-0.5 text-[10px] text-emerald-300 font-mono">
+                  <span className="inline-block mt-2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40 px-2 py-0.5 text-[10px] font-mono">
                     STATUS: ACTIVE ON ALL BROWSING
                   </span>
                 </div>
 
-                <div className="cyber-card p-4 bg-slate-900/40">
-                  <div className="flex items-center space-x-2 text-violet-400 mb-2">
+                <div className="sentry-card p-4 bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] rounded-xl">
+                  <div className="flex items-center space-x-2 text-emerald-700 dark:text-emerald-400 mb-2">
                     <CheckCircle2 className="h-4 w-4" />
                     <h3 className="text-xs font-bold font-mono uppercase tracking-wider">
-                      Anti-AI Scraping Crawler Nullifier
+                      Anti AI Scraping Crawler Nullifier
                     </h3>
                   </div>
-                  <p className="text-xs text-slate-300">
-                    Declares <code className="text-violet-300">X-Robots-Tag: noai, noimageai</code> and blocks commercial web harvesters from indexing your private page sessions.
+                  <p className="text-xs text-stone-600 dark:text-[#CDD6F4]">
+                    Declares <code className="text-emerald-800 dark:text-emerald-300 font-bold">X-Robots-Tag: noai, noimageai</code> and blocks commercial web harvesters from indexing your private page sessions.
                   </p>
-                  <span className="inline-block mt-2 rounded bg-emerald-950/60 border border-emerald-500/40 px-2 py-0.5 text-[10px] text-emerald-300 font-mono">
+                  <span className="inline-block mt-2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40 px-2 py-0.5 text-[10px] font-mono">
                     STATUS: ARMED
                   </span>
                 </div>
               </div>
 
-              {/* Platform-Specific Training Locks */}
-              <h3 className="text-sm font-bold text-white mt-6 mb-3">
+              {/* Major Platform Direct Opt-Out Portals */}
+              <h3 className="text-sm font-bold text-stone-900 dark:text-white mt-6 mb-3">
                 Platform-Specific AI Model Training Locks
               </h3>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Meta AI */}
-                <div className="cyber-card p-4 flex flex-col justify-between">
+                <div className="sentry-card p-4 flex flex-col justify-between bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] rounded-xl">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-bold text-white">Meta / Facebook AI Training</h4>
-                      <span className="rounded bg-rose-950/60 text-rose-300 border border-rose-500/30 text-[10px] px-2 py-0.5">
+                      <h4 className="text-sm font-bold text-stone-900 dark:text-white">Meta / Facebook AI Training</h4>
+                      <span className="rounded bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30 text-[10px] px-2 py-0.5">
                         High Exploitation Risk
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-stone-500 dark:text-[#A6ADC8]">
                       Meta uses all user posts, comments, photos, and captions to train Llama generative models by default.
                     </p>
                   </div>
-                  <div className="mt-4 flex items-center justify-between pt-3 border-t border-slate-800">
-                    <span className="text-[11px] font-mono text-cyan-400">
+                  <div className="mt-4 flex items-center justify-between pt-3 border-t border-stone-200 dark:border-[#383852]">
+                    <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-medium">
                       Telemetry & Pixels: Blocked
                     </span>
                     <a
                       href="https://www.facebook.com/privacy/genai"
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center space-x-1 rounded bg-slate-800 px-3 py-1 text-xs text-slate-200 hover:bg-cyan-900/40 hover:text-cyan-300 transition"
+                      className="flex items-center space-x-1 rounded bg-stone-200/80 dark:bg-[#2E2E44] px-3 py-1 text-xs text-stone-800 dark:text-stone-200 hover:bg-emerald-700 hover:text-white transition"
                     >
                       <span>Opt-Out Form</span>
                       <ExternalLink className="h-3 w-3" />
@@ -704,28 +724,28 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* X / Grok */}
-                <div className="cyber-card p-4 flex flex-col justify-between">
+                {/* X Grok AI */}
+                <div className="sentry-card p-4 flex flex-col justify-between bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] rounded-xl">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-bold text-white">X (Twitter) Grok Model Training</h4>
-                      <span className="rounded bg-rose-950/60 text-rose-300 border border-rose-500/30 text-[10px] px-2 py-0.5">
+                      <h4 className="text-sm font-bold text-stone-900 dark:text-white">X (Twitter) Grok Model Training</h4>
+                      <span className="rounded bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30 text-[10px] px-2 py-0.5">
                         Opt-in by Default
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-stone-500 dark:text-[#A6ADC8]">
                       X automatically opts all users into sharing interactions, posts, and search inputs with xAI Grok.
                     </p>
                   </div>
-                  <div className="mt-4 flex items-center justify-between pt-3 border-t border-slate-800">
-                    <span className="text-[11px] font-mono text-cyan-400">
+                  <div className="mt-4 flex items-center justify-between pt-3 border-t border-stone-200 dark:border-[#383852]">
+                    <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-medium">
                       Beacon Telemetry: Blocked
                     </span>
                     <a
                       href="https://x.com/settings/grok_settings"
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center space-x-1 rounded bg-slate-800 px-3 py-1 text-xs text-slate-200 hover:bg-cyan-900/40 hover:text-cyan-300 transition"
+                      className="flex items-center space-x-1 rounded bg-stone-200/80 dark:bg-[#2E2E44] px-3 py-1 text-xs text-stone-800 dark:text-stone-200 hover:bg-emerald-700 hover:text-white transition"
                     >
                       <span>Grok Settings</span>
                       <ExternalLink className="h-3 w-3" />
@@ -734,27 +754,27 @@ export default function Dashboard() {
                 </div>
 
                 {/* Google Gemini */}
-                <div className="cyber-card p-4 flex flex-col justify-between">
+                <div className="sentry-card p-4 flex flex-col justify-between bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] rounded-xl">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-bold text-white">Google Gemini Activity Lock</h4>
-                      <span className="rounded bg-amber-950/60 text-amber-300 border border-amber-500/30 text-[10px] px-2 py-0.5">
+                      <h4 className="text-sm font-bold text-stone-900 dark:text-white">Google Gemini Activity Lock</h4>
+                      <span className="rounded bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30 text-[10px] px-2 py-0.5">
                         Continuous Ingestion
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-stone-500 dark:text-[#A6ADC8]">
                       Google associates web activity, Chrome sync, and search history with Gemini assistant model fine-tuning.
                     </p>
                   </div>
-                  <div className="mt-4 flex items-center justify-between pt-3 border-t border-slate-800">
-                    <span className="text-[11px] font-mono text-cyan-400">
+                  <div className="mt-4 flex items-center justify-between pt-3 border-t border-stone-200 dark:border-[#383852]">
+                    <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-medium">
                       Google Analytics: Intercepted
                     </span>
                     <a
                       href="https://myactivity.google.com/product/gemini"
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center space-x-1 rounded bg-slate-800 px-3 py-1 text-xs text-slate-200 hover:bg-cyan-900/40 hover:text-cyan-300 transition"
+                      className="flex items-center space-x-1 rounded bg-stone-200/80 dark:bg-[#2E2E44] px-3 py-1 text-xs text-stone-800 dark:text-stone-200 hover:bg-emerald-700 hover:text-white transition"
                     >
                       <span>Gemini Privacy</span>
                       <ExternalLink className="h-3 w-3" />
@@ -763,27 +783,27 @@ export default function Dashboard() {
                 </div>
 
                 {/* LinkedIn AI */}
-                <div className="cyber-card p-4 flex flex-col justify-between">
+                <div className="sentry-card p-4 flex flex-col justify-between bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] rounded-xl">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-bold text-white">LinkedIn Model Training Shield</h4>
-                      <span className="rounded bg-amber-950/60 text-amber-300 border border-amber-500/30 text-[10px] px-2 py-0.5">
+                      <h4 className="text-sm font-bold text-stone-900 dark:text-white">LinkedIn Model Training Shield</h4>
+                      <span className="rounded bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30 text-[10px] px-2 py-0.5">
                         Professional Dossiers
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-stone-500 dark:text-[#A6ADC8]">
                       LinkedIn trains generative writing and matching models on user resumes, articles, and recommendations.
                     </p>
                   </div>
-                  <div className="mt-4 flex items-center justify-between pt-3 border-t border-slate-800">
-                    <span className="text-[11px] font-mono text-cyan-400">
+                  <div className="mt-4 flex items-center justify-between pt-3 border-t border-stone-200 dark:border-[#383852]">
+                    <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-medium">
                       Insight Pixel: Blocked
                     </span>
                     <a
                       href="https://www.linkedin.com/mypreferences/d/data-for-ai-improvement"
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center space-x-1 rounded bg-slate-800 px-3 py-1 text-xs text-slate-200 hover:bg-cyan-900/40 hover:text-cyan-300 transition"
+                      className="flex items-center space-x-1 rounded bg-stone-200/80 dark:bg-[#2E2E44] px-3 py-1 text-xs text-stone-800 dark:text-stone-200 hover:bg-emerald-700 hover:text-white transition"
                     >
                       <span>LinkedIn AI Toggle</span>
                       <ExternalLink className="h-3 w-3" />
@@ -798,10 +818,12 @@ export default function Dashboard() {
         {/* TAB 3: DOMAIN MATRIX & CUSTOM RULES */}
         {activeTab === 'matrix' && (
           <div className="space-y-6">
-            <div className="cyber-card p-5 space-y-4">
+            <div className="sentry-card p-5 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors">
               <div>
-                <h2 className="text-base font-bold text-white">Domain Whitelist & Exception Matrix</h2>
-                <p className="text-xs text-slate-400">
+                <h2 className="text-base font-bold text-stone-900 dark:text-white">
+                  Domain Whitelist & Exception Matrix
+                </h2>
+                <p className="text-xs text-stone-500 dark:text-[#A6ADC8]">
                   Whitelisted domains bypass network filtering and noise scrambling to ensure maximum compatibility when needed.
                 </p>
               </div>
@@ -813,33 +835,33 @@ export default function Dashboard() {
                   placeholder="e.g. internal.company.com"
                   value={newWhitelistDomain}
                   onChange={(e) => setNewWhitelistDomain(e.target.value)}
-                  className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-xs text-white placeholder-slate-500 w-80 focus:outline-none focus:border-cyan-400"
+                  className="rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-300 dark:border-[#383852] px-3 py-2 text-xs text-stone-900 dark:text-white placeholder-stone-400 w-80 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
                 />
                 <button
                   onClick={handleAddWhitelist}
-                  className="flex items-center space-x-1 rounded-lg bg-cyan-500 px-3 py-2 text-xs font-bold text-black hover:bg-cyan-400 transition"
+                  className="flex items-center space-x-1 rounded-lg bg-emerald-700 dark:bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   <span>Add Whitelist</span>
                 </button>
               </div>
 
-              {/* Whitelist Tag Cloud */}
+              {/* Whitelisted Domains Tags */}
               <div className="pt-2">
-                <h4 className="text-xs font-mono text-slate-400 uppercase mb-2">
+                <h4 className="text-xs font-mono text-stone-500 dark:text-[#A6ADC8] uppercase mb-2">
                   Currently Whitelisted Domains ({settings?.whitelistedDomains.length || 0})
                 </h4>
                 {settings?.whitelistedDomains && settings.whitelistedDomains.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    {settings.whitelistedDomains.map((domain) => (
+                    {settings.whitelistedDomains.map((d) => (
                       <span
-                        key={domain}
-                        className="flex items-center space-x-1.5 rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200"
+                        key={d}
+                        className="flex items-center space-x-1.5 rounded-lg border border-stone-300 dark:border-[#383852] bg-stone-100 dark:bg-[#181825] px-2.5 py-1 text-xs text-stone-800 dark:text-[#CDD6F4]"
                       >
-                        <span className="font-mono">{domain}</span>
+                        <span className="font-mono">{d}</span>
                         <button
-                          onClick={() => handleRemoveWhitelist(domain)}
-                          className="text-slate-400 hover:text-rose-400"
+                          onClick={() => handleRemoveWhitelist(d)}
+                          className="text-stone-400 hover:text-rose-600"
                         >
                           <Trash2 className="h-3 w-3" />
                         </button>
@@ -847,35 +869,43 @@ export default function Dashboard() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-500 italic">No domains whitelisted. Full active shield enforced.</p>
+                  <p className="text-xs text-stone-400 italic">
+                    No domains whitelisted. Full active shield enforced.
+                  </p>
                 )}
               </div>
             </div>
 
-            {/* Static Rulesets Info */}
-            <div className="cyber-card p-5 space-y-3">
-              <h3 className="text-sm font-bold text-white">DeclarativeNetRequest Static Engine Rulesets</h3>
+            {/* DeclarativeNetRequest Active Filters Status */}
+            <div className="sentry-card p-5 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-3 transition-colors">
+              <h3 className="text-sm font-bold text-stone-900 dark:text-white">
+                DeclarativeNetRequest Static Engine Rulesets
+              </h3>
               <div className="space-y-2 text-xs font-mono">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/60 border border-slate-800">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852]">
                   <div>
-                    <span className="text-cyan-400 font-semibold">rules_ai_trackers.json</span>
-                    <p className="text-[11px] text-slate-400 font-sans mt-0.5">
+                    <span className="text-emerald-800 dark:text-emerald-300 font-semibold">
+                      rules_ai_trackers.json
+                    </span>
+                    <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] font-sans mt-0.5">
                       Meta Pixel, TikTok Insight, LinkedIn Analytics, Google Analytics v4, ByteDance, FPJS fingerprinting bots.
                     </p>
                   </div>
-                  <span className="rounded bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 text-[10px]">
+                  <span className="rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 px-2 py-0.5 text-[10px]">
                     ENABLED (25 Rules)
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/60 border border-slate-800">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852]">
                   <div>
-                    <span className="text-cyan-400 font-semibold">rules_privacy_headers.json</span>
-                    <p className="text-[11px] text-slate-400 font-sans mt-0.5">
+                    <span className="text-emerald-800 dark:text-emerald-300 font-semibold">
+                      rules_privacy_headers.json
+                    </span>
+                    <p className="text-[11px] text-stone-500 dark:text-[#A6ADC8] font-sans mt-0.5">
                       Sec-GPC: 1 (Global Privacy Control) & DNT: 1 header injection across all web requests.
                     </p>
                   </div>
-                  <span className="rounded bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 text-[10px]">
+                  <span className="rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 px-2 py-0.5 text-[10px]">
                     ENABLED (GLOBAL)
                   </span>
                 </div>
@@ -884,155 +914,160 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* TAB 4: REAL-TIME THREAT INSPECTION LEDGER */}
+        {/* TAB 4: LIVE THREAT LEDGER */}
         {activeTab === 'ledger' && (
-          <div className="cyber-card p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="sentry-card p-5 bg-white dark:bg-[#252538] border border-stone-200 dark:border-[#383852] rounded-2xl shadow-xs space-y-4 transition-colors">
+            <div className="flex items-center justify-between border-b border-stone-100 dark:border-[#383852] pb-3">
               <div>
-                <h2 className="text-base font-bold text-white">Live Interception Telemetry Ledger</h2>
-                <p className="text-xs text-slate-400">
+                <h2 className="text-base font-bold text-stone-900 dark:text-white">
+                  Live Interception Telemetry Ledger
+                </h2>
+                <p className="text-xs text-stone-500 dark:text-[#A6ADC8]">
                   Real-time chronological audit trail of all blocked trackers, scrambled canvas probes, and modified headers.
                 </p>
               </div>
-              <span className="rounded bg-cyan-950/60 text-cyan-300 border border-cyan-500/30 px-2 py-1 text-xs font-mono">
+              <span className="rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 px-2 py-1 text-xs font-mono">
                 {threatEvents.length} Events Logged
               </span>
             </div>
 
             {threatEvents.length > 0 ? (
               <div className="space-y-2 overflow-y-auto max-h-[500px] font-mono text-xs">
-                {threatEvents.map((evt) => {
+                {threatEvents.map((ev) => {
                   const typeColors: Record<string, string> = {
-                    canvas: 'text-violet-400 border-violet-500/30 bg-violet-950/20',
-                    audio: 'text-emerald-400 border-emerald-500/30 bg-emerald-950/20',
-                    webgl: 'text-cyan-400 border-cyan-500/30 bg-cyan-950/20',
-                    tracker: 'text-rose-400 border-rose-500/30 bg-rose-950/20',
-                    zapper: 'text-amber-400 border-amber-500/30 bg-amber-950/20',
+                    canvas: 'text-emerald-800 border-emerald-300 bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-950/20',
+                    audio: 'text-emerald-800 border-emerald-300 bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-950/20',
+                    webgl: 'text-emerald-800 border-emerald-300 bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-950/20',
+                    tracker: 'text-rose-800 border-rose-300 bg-rose-50 dark:text-rose-400 dark:border-rose-500/30 dark:bg-rose-950/20',
+                    zapper: 'text-amber-800 border-amber-300 bg-amber-50 dark:text-amber-400 dark:border-amber-500/30 dark:bg-amber-950/20',
                   };
 
                   return (
                     <div
-                      key={evt.id}
-                      className="flex items-start justify-between p-3 rounded-lg bg-slate-900/60 border border-slate-800/80 hover:border-slate-700 transition"
+                      key={ev.id}
+                      className="flex items-start justify-between p-3 rounded-lg bg-stone-50 dark:bg-[#181825] border border-stone-200/80 dark:border-[#383852] hover:bg-stone-100 dark:hover:bg-[#2E2E44] transition"
                     >
                       <div className="flex items-start space-x-3">
                         <span
                           className={`rounded border px-2 py-0.5 text-[10px] uppercase font-bold shrink-0 ${
-                            typeColors[evt.type] || 'text-slate-400'
+                            typeColors[ev.type] || 'text-stone-600'
                           }`}
                         >
-                          {evt.type}
+                          {ev.type}
                         </span>
                         <div>
-                          <div className="text-slate-200 font-sans font-medium">
-                            {evt.description}
+                          <div className="text-stone-800 dark:text-[#CDD6F4] font-sans font-medium">
+                            {ev.description}
                           </div>
-                          <div className="text-[11px] text-slate-500 mt-0.5 truncate max-w-lg">
-                            Source: {evt.source}
+                          <div className="text-[11px] text-stone-400 dark:text-[#9399B2] mt-0.5 truncate max-w-lg">
+                            Source: {ev.source}
                           </div>
                         </div>
                       </div>
-
-                      <div className="text-[10px] text-slate-500 shrink-0">
-                        {new Date(evt.timestamp).toLocaleTimeString()}
+                      <div className="text-[10px] text-stone-400 dark:text-[#9399B2] shrink-0">
+                        {new Date(ev.timestamp).toLocaleTimeString()}
                       </div>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <div className="text-center py-12 text-slate-500 font-mono text-xs">
+              <div className="text-center py-12 text-stone-400 font-mono text-xs">
                 Active monitoring in progress. Threat events will stream here live as pages load.
               </div>
             )}
           </div>
         )}
-      </main>
 
-      {/* Legal Notice Generation Modal */}
-      {selectedBroker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="cyber-card max-w-2xl w-full p-6 space-y-4 bg-[#090e1c] border border-cyan-500/40">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div>
-                <h3 className="text-base font-bold text-white">
-                  Formal Deletion Demand: {selectedBroker.name}
-                </h3>
-                <span className="text-xs text-slate-400 font-mono">
-                  Recipient: {selectedBroker.contactEmail}
-                </span>
-              </div>
-              <button
-                onClick={() => setSelectedBroker(null)}
-                className="text-slate-400 hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Jurisdiction Select */}
-            <div className="flex space-x-2">
-              <button
-                onClick={() => setDispatchType('ccpa')}
-                className={`px-3 py-1 rounded text-xs font-semibold border ${
-                  dispatchType === 'ccpa'
-                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
-                    : 'bg-slate-900 text-slate-400 border-slate-800'
-                }`}
-              >
-                CCPA / CPRA Notice (US)
-              </button>
-              <button
-                onClick={() => setDispatchType('gdpr')}
-                className={`px-3 py-1 rounded text-xs font-semibold border ${
-                  dispatchType === 'gdpr'
-                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
-                    : 'bg-slate-900 text-slate-400 border-slate-800'
-                }`}
-              >
-                GDPR Article 17 Erasure (EU/Global)
-              </button>
-            </div>
-
-            {/* Subject and Body Preview */}
-            <div className="space-y-2">
-              <div className="rounded bg-slate-900 border border-slate-800 p-2 text-xs font-mono text-cyan-300">
-                Subject: {getPreparedEmail().subject}
-              </div>
-              <textarea
-                readOnly
-                rows={10}
-                value={getPreparedEmail().body}
-                className="w-full rounded bg-slate-950 border border-slate-800 p-3 font-mono text-xs text-slate-300 leading-relaxed focus:outline-none"
-              />
-            </div>
-
-            {/* Modal Actions */}
-            <div className="flex items-center justify-between pt-2">
-              <button
-                onClick={handleCopyTemplate}
-                className="flex items-center space-x-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-200 hover:border-cyan-400"
-              >
-                {copiedTemplate ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                <span>{copiedTemplate ? 'Copied to Clipboard!' : 'Copy Demand Text'}</span>
-              </button>
-
-              <div className="flex space-x-2">
-                <a
-                  href={`mailto:${selectedBroker.contactEmail}?subject=${encodeURIComponent(
-                    getPreparedEmail().subject
-                  )}&body=${encodeURIComponent(getPreparedEmail().body)}`}
-                  onClick={() => handleStatusChange(selectedBroker.id, 'Dispatched')}
-                  className="flex items-center space-x-1.5 rounded-lg bg-cyan-500 px-4 py-2 text-xs font-bold text-black hover:bg-cyan-400 transition"
+        {/* Modal: Formal Deletion Demand Notice */}
+        {selectedBroker && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+            <div className="sentry-card max-w-2xl w-full p-6 space-y-4 bg-white dark:bg-[#252538] border border-stone-300 dark:border-[#383852] rounded-2xl shadow-xl">
+              <div className="flex items-center justify-between border-b border-stone-200 dark:border-[#383852] pb-3">
+                <div>
+                  <h3 className="text-base font-bold text-stone-900 dark:text-white">
+                    Formal Deletion Demand: {selectedBroker.name}
+                  </h3>
+                  <span className="text-xs text-stone-500 dark:text-[#A6ADC8] font-mono">
+                    Recipient: {selectedBroker.contactEmail}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setSelectedBroker(null)}
+                  className="text-stone-400 hover:text-stone-700 dark:hover:text-white"
                 >
-                  <Send className="h-3.5 w-3.5" />
-                  <span>Send via Email Client</span>
-                </a>
+                  ✕
+                </button>
+              </div>
+
+              {/* Statute Selector */}
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setDispatchType('ccpa')}
+                  className={`px-3 py-1 rounded text-xs font-semibold border ${
+                    dispatchType === 'ccpa'
+                      ? 'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300'
+                      : 'bg-stone-100 text-stone-600 border-stone-200 dark:bg-[#181825] dark:text-[#A6ADC8] dark:border-[#383852]'
+                  }`}
+                >
+                  CCPA / CPRA Notice (US)
+                </button>
+                <button
+                  onClick={() => setDispatchType('gdpr')}
+                  className={`px-3 py-1 rounded text-xs font-semibold border ${
+                    dispatchType === 'gdpr'
+                      ? 'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300'
+                      : 'bg-stone-100 text-stone-600 border-stone-200 dark:bg-[#181825] dark:text-[#A6ADC8] dark:border-[#383852]'
+                  }`}
+                >
+                  GDPR Article 17 Erasure (EU/Global)
+                </button>
+              </div>
+
+              {/* Rendered Email Preview */}
+              <div className="space-y-2">
+                <div className="rounded bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] p-2 text-xs font-mono text-emerald-800 dark:text-emerald-300">
+                  Subject: {getPreparedEmail().subject}
+                </div>
+                <textarea
+                  readOnly
+                  rows={10}
+                  value={getPreparedEmail().body}
+                  className="w-full rounded bg-stone-50 dark:bg-[#181825] border border-stone-200 dark:border-[#383852] p-3 font-mono text-xs text-stone-700 dark:text-[#CDD6F4] leading-relaxed focus:outline-none"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-between pt-2">
+                <button
+                  onClick={handleCopyNotice}
+                  className="flex items-center space-x-1.5 rounded-lg border border-stone-300 dark:border-[#4E4E70] bg-stone-100 dark:bg-[#181825] px-3 py-2 text-xs font-semibold text-stone-800 dark:text-stone-200 hover:border-emerald-600 transition"
+                >
+                  {copiedTemplate ? (
+                    <Check className="h-3.5 w-3.5 text-emerald-600" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" />
+                  )}
+                  <span>{copiedTemplate ? 'Copied to Clipboard!' : 'Copy Demand Text'}</span>
+                </button>
+
+                <div className="flex space-x-2">
+                  <a
+                    href={`mailto:${selectedBroker.contactEmail}?subject=${encodeURIComponent(
+                      getPreparedEmail().subject
+                    )}&body=${encodeURIComponent(getPreparedEmail().body)}`}
+                    onClick={() => handleStatusChange(selectedBroker.id, 'Dispatched')}
+                    className="flex items-center space-x-1.5 rounded-lg bg-emerald-700 dark:bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    <span>Send via Email Client</span>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </main>
     </div>
   );
 }

@@ -1,88 +1,169 @@
 @import "tailwindcss";
 
 @layer base {
+  /* ========================================================
+     1. LIGHT MODE: SOLID WHITE & WARM LINEN BEIGE WITH NATURAL GREENS
+     ======================================================== */
   :root {
-    --bg-primary: #070b14;
-    --bg-secondary: #0c1222;
-    --bg-card: rgba(13, 20, 36, 0.75);
-    --border-subtle: rgba(255, 255, 255, 0.08);
-    --border-glow: rgba(56, 189, 248, 0.25);
-    --cyan-accent: #00d2ff;
-    --blue-accent: #3b82f6;
-    --emerald-safe: #10b981;
-    --ruby-danger: #f43f5e;
-    --amber-warning: #f59e0b;
+    --bg-canvas: #FAF9F6;
+    --bg-surface: #FFFFFF;
+    --bg-surface-elevated: #F4F2EC;
+    --bg-surface-subtle: #F0EDE5;
+    
+    --border-subtle: #E7E4DC;
+    --border-strong: #D3CEBE;
+    --border-accent: #15803D;
+
+    --text-primary: #1C1917;
+    --text-secondary: #57534E;
+    --text-muted: #8B857D;
+    --text-inverse: #FFFFFF;
+
+    /* Natural Botanical Greens */
+    --green-primary: #15803D;
+    --green-dark: #14532D;
+    --green-subtle: #E8F5E9;
+    --green-border: #A7F3D0;
+    --green-text: #166534;
+
+    /* Organic Earth Terracotta / Warning */
+    --danger-primary: #DC2626;
+    --danger-subtle: #FEF2F2;
+    --danger-border: #FECACA;
+    --danger-text: #991B1B;
+
+    --amber-primary: #D97706;
+    --amber-subtle: #FFFBEB;
+    --amber-border: #FDE68A;
+
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+    --card-shadow-hover: 0 4px 14px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  /* ========================================================
+     2. DARK MODE: CATPPUCCIN MACCHIATO / WARM ESPRESSO CAPPUCCINO
+     ======================================================== */
+  :root.dark,
+  body.dark,
+  @media (prefers-color-scheme: dark) {
+    :root:not(.light) {
+      --bg-canvas: #1E1E2E;
+      --bg-surface: #252538;
+      --bg-surface-elevated: #2E2E44;
+      --bg-surface-subtle: #181825;
+
+      --border-subtle: #383852;
+      --border-strong: #4E4E70;
+      --border-accent: #A6E3A1;
+
+      --text-primary: #F5E0DC;
+      --text-secondary: #CDD6F4;
+      --text-muted: #9399B2;
+      --text-inverse: #11111B;
+
+      /* Natural Sage / Mint Green in Dark Mode */
+      --green-primary: #A6E3A1;
+      --green-dark: #81C784;
+      --green-subtle: rgba(166, 227, 161, 0.12);
+      --green-border: rgba(166, 227, 161, 0.28);
+      --green-text: #A6E3A1;
+
+      /* Soft Rose / Terracotta */
+      --danger-primary: #F38BA8;
+      --danger-subtle: rgba(243, 139, 168, 0.12);
+      --danger-border: rgba(243, 139, 168, 0.28);
+      --danger-text: #F38BA8;
+
+      --amber-primary: #F9E2AF;
+      --amber-subtle: rgba(249, 226, 175, 0.12);
+      --amber-border: rgba(249, 226, 175, 0.28);
+
+      --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+      --card-shadow-hover: 0 8px 28px -4px rgba(0, 0, 0, 0.45);
+    }
   }
 
   body {
-    background-color: var(--bg-primary);
-    color: #e2e8f0;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 }
 
-/* Glassmorphism tactical card */
-.cyber-card {
-  background: rgba(12, 18, 33, 0.82);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* ========================================================
+   3. TACTILE NATURAL CARDS (REPLACES ARTIFICIAL CYBER CARDS)
+   ======================================================== */
+.sentry-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   border-radius: 14px;
-  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--card-shadow);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sentry-card:hover {
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--border-strong);
+}
+
+/* Backward-compatibility alias for cyber-card to avoid breaking existing classes */
+.cyber-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .cyber-card:hover {
-  border-color: rgba(59, 130, 246, 0.3);
-  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.6), 0 0 16px -2px rgba(59, 130, 246, 0.15);
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--border-strong);
 }
 
-/* Radar pulse animation for armed shield */
-@keyframes shield-pulse {
+/* Organic breathing pulse for armed shield (calm, trustworthy, not strobe) */
+@keyframes natural-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
+    box-shadow: 0 0 0 0 rgba(21, 128, 61, 0.45);
   }
   70% {
-    box-shadow: 0 0 0 14px rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 10px rgba(21, 128, 61, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 0 rgba(21, 128, 61, 0);
   }
 }
 
 .shield-armed-pulse {
-  animation: shield-pulse 2.4s infinite;
+  animation: natural-pulse 2.8s infinite ease-in-out;
 }
 
-@keyframes shield-disarmed-pulse {
+@keyframes paused-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
   }
   70% {
-    box-shadow: 0 0 0 10px rgba(244, 63, 94, 0);
+    box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
   }
 }
 
 .shield-disarmed-pulse {
-  animation: shield-disarmed-pulse 2.8s infinite;
+  animation: paused-pulse 3s infinite ease-in-out;
 }
 
-/* Subtle background grid */
-.cyber-grid {
-  background-size: 28px 28px;
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+/* Subtle organic grain / linen texture background */
+.natural-canvas {
+  background-color: var(--bg-canvas);
 }
 
-/* Custom sleek scrollbars */
+/* Sleek minimalist scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -91,22 +172,22 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: var(--border-strong);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3b82f6;
+  background: var(--text-muted);
 }
 
-/* Monospace font styling */
+/* Monospace numbers for tabular alignment */
 .font-mono-num {
-  font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  font-family: ui-monospace, "SF Mono", "Menlo", monospace;
   font-variant-numeric: tabular-nums;
 }
 
-/* Toggle Switch Switcher */
+/* Custom organic switch */
 .switch-input:checked + .switch-track {
-  background-color: #2563eb;
+  background-color: var(--green-primary);
 }
 .switch-input:checked + .switch-track .switch-thumb {
   transform: translateX(16px);

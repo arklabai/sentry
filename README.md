@@ -1,4 +1,4 @@
-# Sentry AI — Be Fearless Online
+# Sentry AI Be Fearless Online
 
 **Sentry AI** is the next-generation browser privacy shield and AI data defense extension for Manifest V3 (Chrome, Brave, Edge, Arc, Opera).
 

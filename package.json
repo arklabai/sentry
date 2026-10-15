@@ -1,7 +1,7 @@
 {
   "name": "sentry-ai-extension",
   "version": "1.0.0",
-  "description": "Sentry AI — Be Fearless Online",
+  "description": "Sentry AI: Be Fearless Online",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,7 +13,8 @@
   "dependencies": {
     "lucide-react": "^1.16.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-icons": "^5.7.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.9",
