@@ -26,6 +26,7 @@ import {
   HiCheck,
   HiSparkles,
   HiCursorArrowRays,
+  HiArrowRight,
 } from 'react-icons/hi2';
 import {
   PrivacySettings,
@@ -1054,7 +1055,7 @@ export default function Sidepanel() {
                   }}
                 >
                   <span>Tune Matrix</span>
-                  <span>→</span>
+                  <HiArrowRight className="w-2.5 h-2.5" />
                 </button>
               </div>
 
