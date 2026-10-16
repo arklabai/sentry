@@ -13,6 +13,9 @@
           "none"
         ]
       }
+    },
+    "gecko_android": {
+      "strict_min_version": "142.0"
     }
   },
   "permissions": [
@@ -44,6 +47,7 @@
     }
   },
   "action": {
+    "default_popup": "popup.html",
     "default_title": "Sentry AI - Be Fearless Online",
     "default_icon": {
       "16": "icons/icon-16.png",
