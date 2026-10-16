@@ -743,22 +743,7 @@ chrome.contextMenus?.onClicked.addListener(async (info, tab) => {
     return;
   }
 
-  // 2. ENTER ELEMENT ZAPPER MODE (Interactive point & click)
-  if (info.menuItemId === 'sentry-zap-mode' || info.menuItemId === 'sentry-zap-page') {
-    const targetTab = tab?.id ? tab : await getTargetWebTab();
-    if (targetTab && targetTab.id) {
-      try {
-        await chrome.scripting.executeScript({
-          target: { tabId: targetTab.id },
-          files: ['content/domZapper.js'],
-        });
-      } catch {}
-      chrome.tabs.sendMessage(targetTab.id, { action: 'ACTIVATE_ZAPPER' }, () => {
-        if (chrome.runtime.lastError) {}
-      });
-    }
-    return;
-  }
+
 
   // 3. COPY UNTRACKABLE LINK (Link clicked)
   if (info.menuItemId === 'sentry-copy-untrackable-link' || info.menuItemId === 'sentry-copy-clean-link') {

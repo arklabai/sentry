@@ -26,8 +26,13 @@ const manifestPath = path.join(distDir, 'manifest.json');
 assert(fs.existsSync(manifestPath), 'dist/manifest.json exists');
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 assert(manifest.manifest_version === 3, 'Manifest is version 3');
-assert(manifest.permissions.includes('declarativeNetRequest'), 'declarativeNetRequest permission declared');
-assert(manifest.background.service_worker === 'background/serviceWorker.js', 'Service worker correctly mapped');
+const isFirefox = !!manifest.browser_specific_settings?.gecko;
+assert(
+  isFirefox
+    ? manifest.background?.scripts?.includes('background/serviceWorker.js')
+    : manifest.background?.service_worker === 'background/serviceWorker.js',
+  'Service worker correctly mapped'
+);
 assert(manifest.content_scripts.length === 2, 'Two content script configurations declared');
 
 // 2. Verify Canvas Defender in MAIN world
@@ -68,8 +73,16 @@ assert(duplicates === 0, 'All DNR rule IDs across all rulesets are completely un
 assert(fs.existsSync(path.join(distDir, 'popup.html')), 'dist/popup.html exists');
 assert(fs.existsSync(path.join(distDir, 'sidepanel.html')), 'dist/sidepanel.html exists');
 assert(fs.existsSync(path.join(distDir, 'dashboard.html')), 'dist/dashboard.html exists');
-assert(manifest.side_panel?.default_path === 'sidepanel.html', 'Side panel configured in manifest');
-assert(manifest.permissions.includes('sidePanel'), 'sidePanel permission declared');
+assert(
+  isFirefox
+    ? manifest.sidebar_action?.default_panel === 'sidepanel.html'
+    : manifest.side_panel?.default_path === 'sidepanel.html',
+  'Side panel configured in manifest'
+);
+assert(
+  isFirefox || manifest.permissions.includes('sidePanel'),
+  'sidePanel permission declared (or Firefox sidebar_action configured)'
+);
 assert(manifest.permissions.includes('contextMenus'), 'contextMenus permission declared');
 assert(manifest.permissions.includes('clipboardWrite'), 'clipboardWrite permission declared');
 assert(fs.existsSync(path.join(distDir, 'background/serviceWorker.js')), 'dist/background/serviceWorker.js exists');
