@@ -8,7 +8,7 @@ import {
   GlobalPrivacyStats,
   NetworkLogEntry,
   DomainTrackerStat,
-} from '../types';
+} from '../types/index.ts';
 import {
   getSettings,
   applySettings,
@@ -123,8 +123,50 @@ function recordDomainStat(stats: TabThreatStats, targetUrl: string, blocked: boo
   }
 }
 
-// Reset tab stats on new navigation
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+export const AD_CHOICE_OPTOUT_REGEX =
+  /^(https?:\/\/)?([a-z0-9.-]+\.)?(choice\.microsoft\.com|aboutads\.info|optout\.networkadvertising\.org|youronlinechoices\.com)/i;
+
+export const SEARCH_ENGINE_REGEX =
+  /^(https?:\/\/)?([a-z0-9.-]+\.)?(duckduckgo\.com|google\.[a-z.]+|bing\.com|search\.brave\.com|ecosia\.org|startpage\.com|yahoo\.com)/i;
+
+// Reset tab stats on new navigation & detect stray opt-out pages spawned from search
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  const currentUrl = tab.url || changeInfo.url || '';
+
+  // Auto-close unwanted ad-choice / opt-out tabs opened from search engines
+  if (currentUrl && AD_CHOICE_OPTOUT_REGEX.test(currentUrl)) {
+    let searchTabId: number | null = null;
+    if (tab.openerTabId) {
+      try {
+        const opener = await chrome.tabs.get(tab.openerTabId);
+        if (opener.url && SEARCH_ENGINE_REGEX.test(opener.url)) {
+          searchTabId = opener.id || null;
+        }
+      } catch {}
+    }
+
+    if (!searchTabId) {
+      try {
+        const allTabs = await chrome.tabs.query({ currentWindow: true });
+        const found = allTabs.find((t) => t.id !== tabId && t.url && SEARCH_ENGINE_REGEX.test(t.url));
+        if (found && found.id) {
+          searchTabId = found.id;
+        }
+      } catch {}
+    }
+
+    if (searchTabId) {
+      try {
+        await chrome.tabs.update(searchTabId, { active: true });
+        if (tab.windowId) {
+          await chrome.windows.update(tab.windowId, { focused: true });
+        }
+        await chrome.tabs.remove(tabId);
+        return;
+      } catch {}
+    }
+  }
+
   if (changeInfo.status === 'loading' && tab.url) {
     let domain = '';
     try {
@@ -610,6 +652,53 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
         sendResponse({ status: 'cleared' });
       });
+      return true;
+    }
+
+    case 'CLOSE_TAB_AND_FOCUS_SEARCH': {
+      const currentTabId = sender.tab?.id;
+      const openerId = sender.tab?.openerTabId;
+
+      (async () => {
+        let targetSearchId: number | null = null;
+        if (openerId) {
+          try {
+            const opener = await chrome.tabs.get(openerId);
+            if (opener.url && SEARCH_ENGINE_REGEX.test(opener.url)) {
+              targetSearchId = opener.id || null;
+            }
+          } catch {}
+        }
+
+        if (!targetSearchId) {
+          try {
+            const allTabs = await chrome.tabs.query({});
+            const searchTab = allTabs.find(
+              (t) => t.id !== currentTabId && t.url && SEARCH_ENGINE_REGEX.test(t.url)
+            );
+            if (searchTab && searchTab.id) {
+              targetSearchId = searchTab.id;
+            }
+          } catch {}
+        }
+
+        if (targetSearchId) {
+          try {
+            await chrome.tabs.update(targetSearchId, { active: true });
+            if (sender.tab?.windowId) {
+              await chrome.windows.update(sender.tab.windowId, { focused: true });
+            }
+          } catch {}
+        }
+
+        if (currentTabId) {
+          try {
+            await chrome.tabs.remove(currentTabId);
+          } catch {}
+        }
+      })();
+
+      sendResponse({ status: 'closing' });
       return true;
     }
 

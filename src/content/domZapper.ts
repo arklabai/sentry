@@ -26,6 +26,21 @@ import type { ZapRule, PrivacySettings } from '../types/index.ts';
   }
   (window as unknown as { __sentryZapperInitialized?: boolean }).__sentryZapperInitialized = true;
 
+  // Auto-close stray ad-choice / opt-out pages if navigated from search engines
+  const AD_CHOICE_PAGE_REGEX =
+    /^(https?:\/\/)?([a-z0-9.-]+\.)?(choice\.microsoft\.com|aboutads\.info|optout\.networkadvertising\.org|youronlinechoices\.com)/i;
+  const SEARCH_REFERRER_REGEX =
+    /^(https?:\/\/)?([a-z0-9.-]+\.)?(duckduckgo\.com|google\.[a-z.]+|bing\.com|search\.brave\.com|ecosia\.org|startpage\.com|yahoo\.com)/i;
+
+  if (
+    AD_CHOICE_PAGE_REGEX.test(window.location.href) &&
+    SEARCH_REFERRER_REGEX.test(document.referrer || '')
+  ) {
+    try {
+      chrome.runtime.sendMessage({ action: 'CLOSE_TAB_AND_FOCUS_SEARCH' });
+    } catch {}
+  }
+
   const currentHost = normalizeDomain(window.location.hostname);
   let persistentStyleEl: HTMLStyleElement | null = null;
   let activeZapRules: ZapRule[] = [];

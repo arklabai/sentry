@@ -151,7 +151,118 @@ export const SAVE_PREFERENCES_TEXT_REGEX =
  * Fallback dismiss button text regex
  */
 export const DISMISS_TEXT_REGEX =
-  /(^|\s)(dismiss|continue without accepting|close without accepting|opt out)(\s|$)/i;
+  /(^|\s)(dismiss|continue without accepting|close without accepting)(\s|$)/i;
+
+/**
+ * Ad-choice / third-party opt-out landing pages that should never be spawned from search engines
+ */
+export const AD_CHOICE_OPTOUT_REGEX =
+  /^(https?:\/\/)?([a-z0-9.-]+\.)?(choice\.microsoft\.com|aboutads\.info|optout\.networkadvertising\.org|youronlinechoices\.com)/i;
+
+/**
+ * Known search engine patterns
+ */
+export const SEARCH_ENGINE_REGEX =
+  /^(https?:\/\/)?([a-z0-9.-]+\.)?(duckduckgo\.com|google\.[a-z.]+|bing\.com|search\.brave\.com|ecosia\.org|startpage\.com|yahoo\.com)/i;
+
+/**
+ * Known search engine domains where general page links/buttons must NOT be treated as cookie banners
+ */
+export const SEARCH_ENGINE_HOSTNAMES: string[] = [
+  'duckduckgo.com',
+  'google.',
+  'bing.com',
+  'search.brave.com',
+  'ecosia.org',
+  'startpage.com',
+  'yahoo.com',
+  'baidu.com',
+  'yandex.com',
+];
+
+/**
+ * Validates whether a candidate clickable element is a legitimate consent button/trigger
+ * rather than a general page link, ad choice notice, or external navigation element.
+ */
+export function isLegitimateConsentElement(el: HTMLElement): boolean {
+  if (!el || typeof el.getAttribute !== 'function') return false;
+
+  // 1. Must be currently visible
+  if (el.offsetParent === null && el.style.display !== 'contents') {
+    return false;
+  }
+
+  // 2. Reject navigation links: NEVER click <a> tags with real URLs
+  const tagName = el.tagName.toLowerCase();
+  if (tagName === 'a') {
+    const href = (el.getAttribute('href') || '').trim();
+    // Allow empty href, #, or javascript: (often used by modal triggers)
+    if (href && !href.startsWith('#') && !href.toLowerCase().startsWith('javascript:')) {
+      return false;
+    }
+  }
+
+  // 3. Reject elements opening in new tabs
+  if (el.getAttribute('target') === '_blank' || el.closest('[target="_blank"]')) {
+    return false;
+  }
+
+  // 4. Exclude third-party ad choice / opt-out containers and search result ads
+  const adChoiceParent = el.closest(
+    '[id*="ad-choice" i], [class*="ad-choice" i], [id*="adchoice" i], [class*="adchoice" i], ' +
+    '[class*="feedback" i], [class*="ad-feedback" i], .badge--ad, [data-testid*="ad" i], ' +
+    '.results--ads, .js-ad-link, [aria-label*="advertisement" i]'
+  );
+  if (adChoiceParent) {
+    return false;
+  }
+
+  // 5. If on a search engine, strictly enforce that the element must be inside an explicit CMP banner
+  const currentHost = typeof window !== 'undefined' ? (window.location?.hostname || '') : '';
+  const isSearchEngine = SEARCH_ENGINE_HOSTNAMES.some((se) => currentHost.includes(se));
+
+  if (isSearchEngine) {
+    const inCmp = el.closest(
+      COOKIE_BANNER_SELECTORS.join(', ') +
+      ', [id*="cookie-notice" i], [id*="consent-banner" i], [id*="cookie-banner" i], [class*="cookie-banner" i], #CXQnmb'
+    );
+    if (!inCmp) {
+      return false;
+    }
+  }
+
+  // 6. Check if element is within an active cookie banner container or dialog
+  const inCookieContainer = el.closest(
+    COOKIE_BANNER_SELECTORS.join(', ') +
+    ', [role="dialog"], [role="alertdialog"], [aria-modal="true"], dialog, ' +
+    '[id*="cookie" i], [class*="cookie" i], [id*="consent" i], [class*="consent" i], ' +
+    '[id*="privacy-prompt" i], [class*="privacy-prompt" i], [id*="gdpr" i], [class*="gdpr" i]'
+  );
+
+  if (inCookieContainer) {
+    const containerText = (inCookieContainer.textContent || '').toLowerCase();
+    const hasConsentContext =
+      containerText.includes('cookie') ||
+      containerText.includes('consent') ||
+      containerText.includes('gdpr') ||
+      containerText.includes('tracking') ||
+      containerText.includes('personal data') ||
+      containerText.includes('privac');
+    if (!hasConsentContext) {
+      return false;
+    }
+    return true;
+  }
+
+  // 7. If not inside an explicit container, only allow if the element matches an explicit reject selector
+  return REJECT_BUTTON_SELECTORS.some((sel) => {
+    try {
+      return el.matches(sel);
+    } catch {
+      return false;
+    }
+  });
+}
 
 /**
  * Injects CSS to suppress cookie banners and unlock scrolling immediately
@@ -227,7 +338,7 @@ export function autoClickRejectButtons(): boolean {
   for (const sel of REJECT_BUTTON_SELECTORS) {
     try {
       const btn = document.querySelector<HTMLElement>(sel);
-      if (btn && btn.offsetParent !== null) {
+      if (btn && btn.offsetParent !== null && isLegitimateConsentElement(btn)) {
         btn.click();
         return true;
       }
@@ -239,6 +350,7 @@ export function autoClickRejectButtons(): boolean {
   // 2. Scan buttons/links for rejection text within banner containers
   const buttons = Array.from(document.querySelectorAll<HTMLElement>('button, a[role="button"], a, input[type="button"]'));
   for (const btn of buttons) {
+    if (!isLegitimateConsentElement(btn)) continue;
     const text = (btn.textContent || btn.getAttribute('aria-label') || '').trim();
     if (text && REJECT_TEXT_REGEX.test(text)) {
       btn.click();
@@ -248,6 +360,7 @@ export function autoClickRejectButtons(): boolean {
 
   // 3. Scan for dismiss text
   for (const btn of buttons) {
+    if (!isLegitimateConsentElement(btn)) continue;
     const text = (btn.textContent || btn.getAttribute('aria-label') || '').trim();
     if (text && DISMISS_TEXT_REGEX.test(text)) {
       btn.click();
@@ -265,7 +378,7 @@ export function findManageSettingsButton(): HTMLElement | null {
   for (const sel of MANAGE_SETTINGS_BUTTON_SELECTORS) {
     try {
       const btn = document.querySelector<HTMLElement>(sel);
-      if (btn && btn.offsetParent !== null) {
+      if (btn && btn.offsetParent !== null && isLegitimateConsentElement(btn)) {
         return btn;
       }
     } catch {}
@@ -275,6 +388,7 @@ export function findManageSettingsButton(): HTMLElement | null {
     document.querySelectorAll<HTMLElement>('button, a[role="button"], a, input[type="button"]')
   );
   for (const el of candidates) {
+    if (!isLegitimateConsentElement(el)) continue;
     const text = (el.textContent || el.getAttribute('aria-label') || '').trim();
     if (text && MANAGE_SETTINGS_TEXT_REGEX.test(text)) {
       // Avoid false positive matching 'Accept all'
@@ -293,7 +407,7 @@ export function findSavePreferencesButton(): HTMLElement | null {
   for (const sel of SAVE_PREFERENCES_BUTTON_SELECTORS) {
     try {
       const btn = document.querySelector<HTMLElement>(sel);
-      if (btn && btn.offsetParent !== null) {
+      if (btn && btn.offsetParent !== null && isLegitimateConsentElement(btn)) {
         return btn;
       }
     } catch {}
@@ -303,6 +417,7 @@ export function findSavePreferencesButton(): HTMLElement | null {
     document.querySelectorAll<HTMLElement>('button, a[role="button"], a, input[type="button"]')
   );
   for (const el of candidates) {
+    if (!isLegitimateConsentElement(el)) continue;
     const text = (el.textContent || el.getAttribute('aria-label') || '').trim();
     if (text && SAVE_PREFERENCES_TEXT_REGEX.test(text)) {
       return el;
