@@ -15,9 +15,10 @@ const target = targetArg ? targetArg.split('=')[1].toLowerCase() : 'chrome';
 async function buildAll() {
   console.log(`=== Sentry AI Extension Builder (Target: ${target.toUpperCase()}) ===`);
 
-  const distDir = resolve(rootDir, 'dist');
+  const outDirName = target === 'firefox' ? 'dist-firefox' : 'dist';
+  const distDir = resolve(rootDir, outDirName);
   if (fs.existsSync(distDir)) {
-    console.log('--- Cleaning previous dist directory ---');
+    console.log(`--- Cleaning previous ${outDirName} directory ---`);
     fs.rmSync(distDir, { recursive: true, force: true });
   }
 
@@ -27,7 +28,7 @@ async function buildAll() {
     base: '',
     plugins: [react(), tailwindcss()],
     build: {
-      outDir: 'dist',
+      outDir: outDirName,
       emptyOutDir: false,
       target: 'esnext',
       rollupOptions: {
@@ -65,7 +66,7 @@ async function buildAll() {
       root: rootDir,
       configFile: false,
       build: {
-        outDir: 'dist',
+        outDir: outDirName,
         emptyOutDir: false,
         target: 'esnext',
         rollupOptions: {
@@ -88,6 +89,12 @@ async function buildAll() {
     if (fs.existsSync(firefoxManifest)) {
       fs.copyFileSync(firefoxManifest, resolve(distDir, 'manifest.json'));
       console.log('Injected Firefox AMO Manifest (gecko ID + sidebar_action).');
+    }
+  } else {
+    const chromeManifest = resolve(rootDir, 'public/manifest.json');
+    if (fs.existsSync(chromeManifest)) {
+      fs.copyFileSync(chromeManifest, resolve(distDir, 'manifest.json'));
+      console.log('Injected Chrome MV3 Manifest (service_worker + side_panel).');
     }
   }
 

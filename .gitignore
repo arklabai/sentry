@@ -14,5 +14,5 @@ Thumbs.db
 *.tmp
 *.bak
 *.zip
-_metadata/
-**/_metadata/
+# Build outputs
+dist-firefox/

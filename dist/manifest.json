@@ -4,18 +4,8 @@
   "short_name": "Sentry AI",
   "version": "1.0.0",
   "description": "Sentry AI: Be Fearless Online. Stop surveillance trackers, scramble browser fingerprints, block unconsented AI training scrapers, and manage personal data broker deletions.",
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "sentry-ai@arklab.ai",
-      "strict_min_version": "142.0",
-      "data_collection_permissions": {
-        "required": [
-          "none"
-        ]
-      }
-    }
-  },
   "permissions": [
+    "sidePanel",
     "declarativeNetRequest",
     "storage",
     "activeTab",
@@ -30,18 +20,11 @@
     "<all_urls>"
   ],
   "background": {
-    "scripts": ["background/serviceWorker.js"],
+    "service_worker": "background/serviceWorker.js",
     "type": "module"
   },
-  "sidebar_action": {
-    "default_panel": "sidepanel.html",
-    "default_title": "Sentry AI - Be Fearless Online",
-    "default_icon": {
-      "16": "icons/icon-16.png",
-      "32": "icons/icon-32.png",
-      "48": "icons/icon-48.png",
-      "128": "icons/icon-128.png"
-    }
+  "side_panel": {
+    "default_path": "sidepanel.html"
   },
   "action": {
     "default_title": "Sentry AI - Be Fearless Online",
@@ -53,7 +36,7 @@
     }
   },
   "commands": {
-    "_execute_sidebar_action": {
+    "open_side_panel": {
       "suggested_key": {
         "default": "Ctrl+Shift+S",
         "mac": "Command+Shift+S"
@@ -68,10 +51,7 @@
       "description": "Activate Sentry AI Element Zapper"
     }
   },
-  "options_ui": {
-    "page": "dashboard.html",
-    "open_in_tab": true
-  },
+  "options_page": "dashboard.html",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
