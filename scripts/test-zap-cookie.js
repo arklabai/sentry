@@ -87,11 +87,9 @@ import {
   MANAGE_SETTINGS_BUTTON_SELECTORS,
   isLegitimateConsentElement,
   SEARCH_ENGINE_HOSTNAMES,
-} from '../src/lib/cookieGuard.ts';
-import {
   AD_CHOICE_OPTOUT_REGEX,
   SEARCH_ENGINE_REGEX,
-} from '../src/background/serviceWorker.ts';
+} from '../src/lib/cookieGuard.ts';
 
 assert(MANAGE_SETTINGS_TEXT_REGEX.test('Manage settings'), 'Matches "Manage settings"');
 assert(MANAGE_SETTINGS_TEXT_REGEX.test('manage cookies'), 'Matches "manage cookies"');

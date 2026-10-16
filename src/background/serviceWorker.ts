@@ -3,7 +3,7 @@
  * Central coordinator for DNR rules, side panel management, threat telemetry, and broker workflows.
  */
 
-import {
+import type {
   TabThreatStats,
   GlobalPrivacyStats,
   NetworkLogEntry,
