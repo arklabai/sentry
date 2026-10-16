@@ -106,7 +106,8 @@ This generates:
 4. Press `Command+Shift+S` or click the toolbar icon to launch the Side Panel.
 
 ### 4. Load in Mozilla Firefox (Desktop & Android)
-- **Firefox Desktop**:
+- **Official Firefox Add-ons (AMO) Store**: [addons.mozilla.org/en-GB/firefox/addon/sentry-ai-be-fearless-online](https://addons.mozilla.org/en-GB/firefox/addon/sentry-ai-be-fearless-online/)
+- **Firefox Desktop (Temporary Sideload)**:
   1. Navigate to `about:debugging#/runtime/this-firefox`.
   2. Click **Load Temporary Add-on...**.
   3. Select `sentry-extension/dist-firefox/manifest.json`.
