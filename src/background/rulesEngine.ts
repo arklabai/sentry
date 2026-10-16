@@ -210,10 +210,10 @@ export async function applySettings(settings: PrivacySettings): Promise<void> {
         addRules.push({
           id: MATRIX_RULE_BASE + 1,
           priority: 5,
-          action: { type: chrome.declarativeNetRequest.RuleActionType.BLOCK },
+          action: { type: 'block' as chrome.declarativeNetRequest.RuleActionType },
           condition: {
-            domainType: chrome.declarativeNetRequest.DomainType.THIRD_PARTY,
-            resourceTypes: [chrome.declarativeNetRequest.ResourceType.SCRIPT],
+            domainType: 'thirdParty' as chrome.declarativeNetRequest.DomainType,
+            resourceTypes: ['script' as chrome.declarativeNetRequest.ResourceType],
             excludedRequestDomains: ['challenges.cloudflare.com', 'hcaptcha.com', 'recaptcha.net'],
           },
         });
@@ -223,10 +223,10 @@ export async function applySettings(settings: PrivacySettings): Promise<void> {
         addRules.push({
           id: MATRIX_RULE_BASE + 2,
           priority: 5,
-          action: { type: chrome.declarativeNetRequest.RuleActionType.BLOCK },
+          action: { type: 'block' as chrome.declarativeNetRequest.RuleActionType },
           condition: {
-            domainType: chrome.declarativeNetRequest.DomainType.THIRD_PARTY,
-            resourceTypes: [chrome.declarativeNetRequest.ResourceType.SUB_FRAME],
+            domainType: 'thirdParty' as chrome.declarativeNetRequest.DomainType,
+            resourceTypes: ['sub_frame' as chrome.declarativeNetRequest.ResourceType],
             excludedRequestDomains: ['challenges.cloudflare.com', 'hcaptcha.com', 'recaptcha.net'],
           },
         });
@@ -236,9 +236,9 @@ export async function applySettings(settings: PrivacySettings): Promise<void> {
         addRules.push({
           id: MATRIX_RULE_BASE + 3,
           priority: 5,
-          action: { type: chrome.declarativeNetRequest.RuleActionType.BLOCK },
+          action: { type: 'block' as chrome.declarativeNetRequest.RuleActionType },
           condition: {
-            resourceTypes: [chrome.declarativeNetRequest.ResourceType.WEBSOCKET],
+            resourceTypes: ['websocket' as chrome.declarativeNetRequest.ResourceType],
           },
         });
       }
@@ -248,29 +248,29 @@ export async function applySettings(settings: PrivacySettings): Promise<void> {
           id: MATRIX_RULE_BASE + 4,
           priority: 4,
           action: {
-            type: chrome.declarativeNetRequest.RuleActionType.MODIFY_HEADERS,
+            type: 'modifyHeaders' as chrome.declarativeNetRequest.RuleActionType,
             requestHeaders: [
               {
                 header: 'cookie',
-                operation: chrome.declarativeNetRequest.HeaderOperation.REMOVE,
+                operation: 'remove' as chrome.declarativeNetRequest.HeaderOperation,
               },
             ],
             responseHeaders: [
               {
                 header: 'set-cookie',
-                operation: chrome.declarativeNetRequest.HeaderOperation.REMOVE,
+                operation: 'remove' as chrome.declarativeNetRequest.HeaderOperation,
               },
             ],
           },
           condition: {
-            domainType: chrome.declarativeNetRequest.DomainType.THIRD_PARTY,
+            domainType: 'thirdParty' as chrome.declarativeNetRequest.DomainType,
             resourceTypes: [
-              chrome.declarativeNetRequest.ResourceType.SCRIPT,
-              chrome.declarativeNetRequest.ResourceType.SUB_FRAME,
-              chrome.declarativeNetRequest.ResourceType.XMLHTTPREQUEST,
-              chrome.declarativeNetRequest.ResourceType.IMAGE,
-              chrome.declarativeNetRequest.ResourceType.OTHER,
-            ],
+              'script',
+              'sub_frame',
+              'xmlhttprequest',
+              'image',
+              'other',
+            ] as chrome.declarativeNetRequest.ResourceType[],
           },
         });
       }

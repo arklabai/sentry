@@ -157,9 +157,10 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   tabStatsMap.delete(tabId);
 });
 
-// Capture DNR rule matches (dynamic network telemetry logger)
-if (chrome.declarativeNetRequest && chrome.declarativeNetRequest.onRuleMatchedDebug) {
-  chrome.declarativeNetRequest.onRuleMatchedDebug.addListener((info) => {
+// Capture DNR rule matches (dynamic network telemetry logger when supported)
+const dnrApi = chrome.declarativeNetRequest as any;
+if (dnrApi && typeof dnrApi['onRuleMatchedDebug']?.addListener === 'function') {
+  dnrApi['onRuleMatchedDebug'].addListener((info: any) => {
     const tabId = info.request.tabId;
     if (tabId && tabId > 0) {
       const stats = getOrCreateTabStats(tabId, info.request.url);
@@ -214,18 +215,32 @@ if (chrome.declarativeNetRequest && chrome.declarativeNetRequest.onRuleMatchedDe
   });
 }
 
-// Configure Side Panel behavior so clicking the extension action icon opens the side panel directly
-if (chrome.sidePanel && (chrome.sidePanel as any).setPanelBehavior) {
-  (chrome.sidePanel as any)
-    .setPanelBehavior({ openPanelOnActionClick: true })
-    .catch(() => {});
+// Cross-browser side panel / sidebar opener (Chrome sidePanel + Firefox sidebarAction)
+function openSidePanelOrSidebar(windowId?: number) {
+  const sidePanelApi = (chrome as any)['sidePanel'];
+  if (sidePanelApi && typeof sidePanelApi['open'] === 'function' && windowId) {
+    sidePanelApi['open']({ windowId });
+  } else if (typeof (globalThis as any).browser?.sidebarAction?.open === 'function') {
+    (globalThis as any).browser.sidebarAction.open();
+  } else if (typeof (globalThis as any).browser?.sidebarAction?.toggle === 'function') {
+    (globalThis as any).browser.sidebarAction.toggle();
+  }
 }
 
-// Fallback action click handler: opens the side panel on toolbar icon click
+// Configure Side Panel behavior so clicking the extension action icon opens the side panel directly (Chromium)
+function configureSidePanelBehavior() {
+  const sidePanelApi = (chrome as any)['sidePanel'];
+  if (sidePanelApi && typeof sidePanelApi['setPanelBehavior'] === 'function') {
+    sidePanelApi['setPanelBehavior']({ openPanelOnActionClick: true }).catch(() => {});
+  }
+}
+
+configureSidePanelBehavior();
+
+// Fallback action click handler: opens the side panel or Firefox sidebar on toolbar icon click
 chrome.action?.onClicked?.addListener(async (tab) => {
   if (tab?.windowId) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (chrome as any).sidePanel?.open?.({ windowId: tab.windowId });
+    openSidePanelOrSidebar(tab.windowId);
   }
 });
 
@@ -318,8 +333,7 @@ chrome.commands.onCommand.addListener(async (command) => {
   if (command === 'open_side_panel') {
     const tab = await getTargetWebTab();
     if (tab?.windowId) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (chrome as any).sidePanel?.open?.({ windowId: tab.windowId });
+      openSidePanelOrSidebar(tab.windowId);
     }
   } else if (command === 'activate_element_zapper') {
     const tab = await getTargetWebTab();
@@ -436,8 +450,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case 'OPEN_SIDE_PANEL': {
       getTargetWebTab().then((activeTab) => {
         if (activeTab?.windowId) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (chrome as any).sidePanel?.open?.({ windowId: activeTab.windowId });
+          openSidePanelOrSidebar(activeTab.windowId);
         }
       });
       sendResponse({ status: 'ok' });
@@ -773,11 +786,7 @@ chrome.contextMenus?.onClicked.addListener(async (info, tab) => {
 // Extension install / update lifecycle
 chrome.runtime.onInstalled.addListener(async () => {
   console.log('[Sentry AI] Extension initialized.');
-  if (chrome.sidePanel && (chrome.sidePanel as any).setPanelBehavior) {
-    (chrome.sidePanel as any)
-      .setPanelBehavior({ openPanelOnActionClick: true })
-      .catch(() => {});
-  }
+  configureSidePanelBehavior();
   setupContextMenus();
   const settings = await getSettings();
   await applySettings(settings);
