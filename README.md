@@ -82,17 +82,22 @@ npm install
 ### 2. Build Production Bundle & Packages
 
 ```bash
-# Compile TypeScript and bundle with Vite:
-npm run build
+# Compile and build for Chromium (Chrome, Brave, Edge, Arc):
+npm run build:chrome
 
-# Package production zip artifacts for Chrome and Firefox:
+# Compile and build for Mozilla Firefox (Desktop & Android):
+npm run build:firefox
+
+# Package production zip artifacts (Chrome, Firefox, and clean source code for AMO review):
 npm run package
 ```
 
 This generates:
-- `dist/` (unpacked extension directory)
+- `dist/` (Chromium unpacked extension directory)
+- `dist-firefox/` (Firefox & Android Firefox unpacked directory)
 - `sentry-ai-v1.0.0.zip` (Chromium Manifest V3 package for Chrome, Brave, Edge, Arc)
-- `sentry-ai-firefox-v1.0.0.zip` (Gecko AMO package for Mozilla Firefox)
+- `sentry-ai-firefox-v1.0.0.zip` (Gecko AMO package for Mozilla Firefox Desktop & Android)
+- `sentry-ai-source.zip` (Clean source code archive for Mozilla AMO reviewers)
 
 ### 3. Load in Chromium (Chrome / Brave / Edge / Arc)
 1. Open your browser and navigate to `chrome://extensions/`.
@@ -100,10 +105,21 @@ This generates:
 3. Click **Load unpacked** and select `sentry-extension/dist/`.
 4. Press `Command+Shift+S` or click the toolbar icon to launch the Side Panel.
 
-### 4. Load in Mozilla Firefox
-1. Navigate to `about:debugging#/runtime/this-firefox`.
-2. Click **Load Temporary Add-on...**.
-3. Select `sentry-extension/dist/manifest.json`.
+### 4. Load in Mozilla Firefox (Desktop & Android)
+- **Firefox Desktop**:
+  1. Navigate to `about:debugging#/runtime/this-firefox`.
+  2. Click **Load Temporary Add-on...**.
+  3. Select `sentry-extension/dist-firefox/manifest.json`.
+- **Firefox for Android**:
+  1. Install directly from **Firefox Add-ons (AMO)** on your mobile device.
+  2. For developer testing: Use **Firefox Nightly** > Settings > About Firefox Nightly (tap logo 5 times) > Custom Add-on Collection.
+  3. Tapping Sentry AI from the three-dot extensions menu opens the responsive privacy popup bottom-sheet.
+
+### 5. Mozilla AMO Source Code Submission Instructions
+When submitting to AMO:
+- **"Do You Need to Submit Source Code?"**: Select **YES** (extension is built using TypeScript, Vite/Rollup bundling, and Tailwind CSS).
+- **Upload Archive**: `sentry-extension/sentry-ai-source.zip` (generated via `npm run package:source`).
+- **Reviewer Instructions**: Copy-paste the build commands from `../docs/PUBLISH.md`.
 
 ---
 

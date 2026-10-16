@@ -11,7 +11,9 @@
     "build:firefox": "tsc && node scripts/build-extension.js --target=firefox",
     "package:chrome": "rm -f sentry-ai-v1.0.0.zip && npm run build:chrome && (cd dist && zip -r ../sentry-ai-v1.0.0.zip .)",
     "package:firefox": "rm -f sentry-ai-firefox-v1.0.0.zip && npm run build:firefox && (cd dist-firefox && zip -r ../sentry-ai-firefox-v1.0.0.zip .)",
-    "package": "npm run package:chrome && npm run package:firefox",
+    "package:source": "rm -f sentry-ai-source.zip && zip -r sentry-ai-source.zip . -x 'node_modules/*' -x 'dist/*' -x 'dist-firefox/*' -x '*.zip' -x '.DS_Store' -x '*/.DS_Store'",
+    "package": "npm run package:chrome && npm run package:firefox && npm run package:source",
+    "lint:firefox": "npx web-ext lint --source-dir dist-firefox",
     "test": "node scripts/test-crypto.js && node scripts/test-format-utils.js && node scripts/test-hardened-masking.js && node scripts/test-rightclick-zapper.js && node scripts/test-url-cleaner.js && node scripts/test-zap-cookie.js && node scripts/verify-extension.js && node scripts/test-e2e-all.js",
     "preview": "vite preview"
   },
