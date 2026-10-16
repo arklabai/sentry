@@ -3,7 +3,7 @@
   "name": "Sentry AI - Be Fearless Online",
   "short_name": "Sentry AI",
   "version": "1.0.0",
-  "description": "Be Fearless Online: Block AI Scrapers, Stop Surveillance Trackers, Cloak Device Fingerprints, and Auto-Decline Cookies.",
+  "description": "Be Fearless Online: Block AI Scrapers, Stop Surveillance Trackers, Cloak Device Fingerprints, And Auto-Decline Cookies.",
   "browser_specific_settings": {
     "gecko": {
       "id": "sentry-ai@arklab.ai",
